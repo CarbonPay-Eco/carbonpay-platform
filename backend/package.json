@@ -1,28 +1,55 @@
 {
-  "name": "backend",
+  "name": "carbonpay-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Backend for CarbonPay - a platform for carbon credit tokenization and retirement",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "test": "jest",
+    "db:migrate": "ts-node src/database/migration.ts",
+    "db:sync": "ts-node -e \"import { AppDataSource } from './src/database/data-source'; AppDataSource.initialize().then(() => console.log('Database synchronized'))\""
+  },
+  "keywords": [
+    "carbon",
+    "credits",
+    "blockchain",
+    "solana",
+    "tokenization"
+  ],
+  "author": "CarbonPay Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^5.1.0",
+    "@project-serum/anchor": "^0.26.0",
+    "@solana/web3.js": "^1.73.0",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
-    "helmet": "^7.1.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "helmet": "8.1.0",
     "morgan": "^1.10.0",
-    "pg": "^8.11.3",
-    "dotenv": "^16.4.1"
+    "pg": "^8.14.1",
+    "reflect-metadata": "^0.2.2",
+    "tweetnacl": "^1.0.3",
+    "typeorm": "^0.3.12",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
-    "@types/cors": "^2.8.17",
-    "@types/morgan": "^1.9.9",
-    "@types/pg": "^8.11.0",
-    "@types/node": "^20.11.0",
+    "@types/cors": "^2.8.13",
+    "@types/express": "5.0.1",
+    "@types/jest": "^29.5.0",
+    "@types/morgan": "^1.9.4",
+    "@types/node": "^18.14.0",
+    "@types/pg": "^8.11.13",
+    "@types/uuid": "^9.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^4.9.5"
   },
-  "scripts": {
-    "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

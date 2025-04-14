@@ -1,23 +1,28 @@
-# Dependencies
+# Dependências
 node_modules/
 yarn.lock
 package-lock.json
 
-# Build output
+# Arquivos de build
 dist/
 build/
 
-# Environment variables
+# Arquivos de ambiente
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# IDE and editor files
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 logs/
@@ -30,6 +35,7 @@ yarn-error.log*
 *.tsbuildinfo
 
 # Testing
+src/__tests__/
 coverage/
 
 # Temporary files
@@ -38,3 +44,8 @@ temp/
 
 # Debug
 .debug/
+
+# Docker
+docker-volume-data
+
+

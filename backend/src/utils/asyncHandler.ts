@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 /**
  * Type for Express controller functions
  */
-type ControllerFn = (req: Request, res: Response, next: NextFunction) => Promise<any>;
+type ControllerFn = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
 /**
  * Wrapper for asynchronous functions in controllers

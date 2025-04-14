@@ -84,6 +84,155 @@ export const commonValidations = {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     message: 'Invalid email'
   },
-  
+};
 
+/**
+ * Auth validations
+ */
+export const authValidations = {
+  verifySignature: validate({
+    address: {
+      required: true,
+      type: 'string',
+      message: 'Wallet address is required'
+    },
+    message: {
+      required: true,
+      type: 'string',
+      message: 'Signature message is required'
+    },
+    signature: {
+      required: true,
+      type: 'string',
+      message: 'Signature is required'
+    }
+  })
+};
+
+/**
+ * Organization validations
+ */
+export const organizationValidations = {
+  createOrganization: validate({
+    name: {
+      required: true,
+      type: 'string',
+      minLength: 2,
+      maxLength: 100,
+      message: 'Organization name is required and must be between 2 and 100 characters'
+    },
+    description: {
+      type: 'string',
+      maxLength: 1000,
+      message: 'Description must not exceed 1000 characters'
+    },
+    logo: {
+      type: 'string',
+      maxLength: 500,
+      message: 'Logo URL must not exceed 500 characters'
+    }
+  }),
+  
+  updateOrganization: validate({
+    name: {
+      type: 'string',
+      minLength: 2,
+      maxLength: 100,
+      message: 'Organization name must be between 2 and 100 characters'
+    },
+    description: {
+      type: 'string',
+      maxLength: 1000,
+      message: 'Description must not exceed 1000 characters'
+    },
+    logo: {
+      type: 'string',
+      maxLength: 500,
+      message: 'Logo URL must not exceed 500 characters'
+    }
+  })
+};
+
+/**
+ * Project validations
+ */
+export const projectValidations = {
+  createProject: validate({
+    name: {
+      required: true,
+      type: 'string',
+      minLength: 3,
+      maxLength: 100,
+      message: 'Project name is required and must be between 3 and 100 characters'
+    },
+    description: {
+      required: true,
+      type: 'string',
+      minLength: 10,
+      maxLength: 2000,
+      message: 'Project description is required and must be between 10 and 2000 characters'
+    },
+    location: {
+      required: true,
+      type: 'string',
+      minLength: 2,
+      maxLength: 100,
+      message: 'Project location is required and must be between 2 and 100 characters'
+    },
+    vintage: {
+      required: true,
+      type: 'string',
+      message: 'Project vintage (year) is required'
+    },
+    standard: {
+      required: true,
+      type: 'string',
+      message: 'Carbon standard is required (e.g., VCS, Gold Standard)'
+    },
+    totalSupply: {
+      required: true,
+      type: 'number',
+      custom: (value) => value > 0,
+      message: 'Total supply must be a positive number'
+    },
+    certificationUrl: {
+      type: 'string',
+      maxLength: 500,
+      message: 'Certification URL must not exceed 500 characters'
+    },
+    imageUrl: {
+      type: 'string',
+      maxLength: 500,
+      message: 'Image URL must not exceed 500 characters'
+    }
+  })
+};
+
+/**
+ * Retirement validations
+ */
+export const retirementValidations = {
+  retireCredits: validate({
+    projectId: {
+      required: true,
+      type: 'string',
+      message: 'Project ID is required'
+    },
+    amount: {
+      required: true,
+      type: 'number',
+      custom: (value) => value > 0,
+      message: 'Amount must be a positive number'
+    },
+    beneficiary: {
+      type: 'string',
+      maxLength: 200,
+      message: 'Beneficiary must not exceed 200 characters'
+    },
+    retirementMessage: {
+      type: 'string',
+      maxLength: 1000,
+      message: 'Retirement message must not exceed 1000 characters'
+    }
+  })
 }; 
