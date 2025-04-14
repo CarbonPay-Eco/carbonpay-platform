@@ -1,19 +1,10 @@
-import express from 'express'
+import app from './config/app';
+import { PORT } from './config/constants';
 
-import { Router, Request, Response } from 'express'
+import routes from './routes/index';
 
-const app = express();
+app.use('/api', routes);
 
-const route = Router();
-
-app.use(express.json());
-
-
-route.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'hello world with Typescript' })
-  })
-  
-app.use(route)
-
-
-app.listen(3333, () => console.log('Server running on port 3333'))
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
