@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AdminService } from '../services/admin.service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const adminService = new AdminService();
 

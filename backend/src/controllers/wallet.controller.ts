@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { SolanaService } from '../services/solana.service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const solanaService = new SolanaService();
 

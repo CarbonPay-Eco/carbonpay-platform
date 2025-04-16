@@ -15,9 +15,6 @@ services:
       - ./src:/app/src
     networks:
       - carbonpay-network
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     environment:
       - NODE_ENV=${NODE_ENV:-development}
     healthcheck:
@@ -34,9 +31,23 @@ services:
       POSTGRES_DB: carbonpay
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../database:/docker-entrypoint-initdb.d
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3001}:${PORT:-3001}"
+    env_file:
+      - .env
+    volumes:
+      - ../client:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm start
 
 networks:
   carbonpay-network:

@@ -12,10 +12,10 @@ export const AppDataSource = new DataSource({
   type: 'postgres',
   url: DB_URL,
   ssl: {
-    rejectUnauthorized: false // Necessário para conexões Supabase
+    rejectUnauthorized: false
   },
-  synchronize: NODE_ENV === 'development', // Only auto-synchronize in development
-  logging: false, // Desabilitar logs SQL
+  synchronize: NODE_ENV === 'development',
+  logging: false, 
   entities: [Wallet, Organization, TokenizedProject, Retirement, AuditLog],
   migrations: [__dirname + '/migrations/**/*.{js,ts}'],
   subscribers: []

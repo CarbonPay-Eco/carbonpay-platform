@@ -3,7 +3,7 @@ import { SolanaService } from '../services/solana.service';
 import { AdminService } from '../services/admin.service';
 import { WalletSignature } from '../types/solana';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const solanaService = new SolanaService();
 const adminService = new AdminService();

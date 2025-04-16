@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ProjectService } from '../services/project.service';
 import { AdminService } from '../services/admin.service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const projectService = new ProjectService();
 const adminService = new AdminService();

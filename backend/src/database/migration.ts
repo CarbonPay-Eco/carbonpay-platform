@@ -2,54 +2,54 @@ import { AppDataSource } from './data-source';
 import { NODE_ENV } from '../config/constants';
 
 /**
- * Função para executar a migração do banco de dados
+ * Function to execute the database migration
  */
 export const runMigration = async () => {
   try {
-    console.log(`Iniciando migração para o ambiente: ${NODE_ENV}`);
+    console.log(`Starting migration for environment: ${NODE_ENV}`);
     
-    // Inicializar conexão com o banco de dados
+    // Initialize the database connection
     await AppDataSource.initialize();
-    console.log('Conexão com o banco de dados estabelecida.');
+    console.log('Database connection established.');
     
-    // Verificar se há migrações pendentes (se não estiver usando synchronize)
+    // Check if there are pending migrations (if not using synchronize)
     if (!AppDataSource.options.synchronize) {
-      console.log('Executando migrações...');
+      console.log('Running migrations...');
       const migrations = await AppDataSource.runMigrations();
-      console.log(`${migrations.length} migrações executadas.`);
+      console.log(`${migrations.length} migrations executed.`);
     } else {
-      console.log('Modo synchronize ativado. O esquema será sincronizado automaticamente.');
+      console.log('Synchronize mode activated. The schema will be synchronized automatically.');
     }
     
-    console.log('Migração concluída com sucesso.');
+    console.log('Migration completed successfully.');
     
     return true;
   } catch (error) {
-    console.error('Erro durante a migração:', error);
+    console.error('Error during migration:', error);
     return false;
   } finally {
-    // Encerrar a conexão
+    // Close the connection
     if (AppDataSource.isInitialized) {
       await AppDataSource.destroy();
-      console.log('Conexão com o banco de dados encerrada.');
+      console.log('Database connection closed.');
     }
   }
 };
 
-// Executar a migração se este arquivo for chamado diretamente
+// Execute the migration if this file is called directly
 if (require.main === module) {
   runMigration()
     .then((result) => {
       if (result) {
-        console.log('Migração executada com sucesso.');
+        console.log('Migration executed successfully.');
         process.exit(0);
       } else {
-        console.error('Erro ao executar migração.');
+        console.error('Error executing migration.');
         process.exit(1);
       }
     })
     .catch((error) => {
-      console.error('Erro inesperado:', error);
+      console.error('Unexpected error:', error);
       process.exit(1);
     });
-} 
+}

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { OrganizationService } from '../services/organization.service';
 import { AdminService } from '../services/admin.service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const organizationService = new OrganizationService();
 const adminService = new AdminService();

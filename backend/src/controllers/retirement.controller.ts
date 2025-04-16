@@ -3,7 +3,7 @@ import { RetirementService } from '../services/retirement.service';
 import { OrganizationService } from '../services/organization.service';
 import { AdminService } from '../services/admin.service';
 import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 const retirementService = new RetirementService();
 const organizationService = new OrganizationService();

@@ -36,7 +36,7 @@
     "reflect-metadata": "^0.2.2",
     "tweetnacl": "^1.0.3",
     "typeorm": "^0.3.12",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {

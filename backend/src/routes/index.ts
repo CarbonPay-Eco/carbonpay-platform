@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { healthCheck } from '../middlewares/helthCheck';
+import { healthCheck } from '../middlewares/healthCheck';
 import { authValidations, organizationValidations, projectValidations, retirementValidations } from '../middlewares/validator';
 import { verifyWallet, verifyAdmin } from '../middlewares/auth.middleware';
 
@@ -11,7 +11,7 @@ import { ProjectController } from '../controllers/project.controller';
 import { RetirementController } from '../controllers/retirement.controller';
 import { AdminController } from '../controllers/admin.controller';
 
-// Instanciar controllers
+// Instatiating controllers
 const authController = new AuthController();
 const walletController = new WalletController();
 const organizationController = new OrganizationController();

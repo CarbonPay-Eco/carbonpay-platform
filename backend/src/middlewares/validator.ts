@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createError } from '../utils/erroHandler';
+import { createError } from '../utils/errorHandler';
 
 /**
  * Interface for validation rules
