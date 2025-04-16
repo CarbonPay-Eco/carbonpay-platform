@@ -19,14 +19,17 @@ pub struct InitializeCarbonCreditsAccountConstraints<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn initialize_carbon_credits_handler(
-    context: Context<InitializeCarbonCreditsAccountConstraints>,
-) -> Result<()> {
-    let carbon_credits = &mut context.accounts.carbon_credits;
+impl<'info> InitializeCarbonCreditsAccountConstraints<'info> {
+    pub fn initialize_carbon_credits_handler(
+        &mut self,
+        bumps: &InitializeCarbonCreditsAccountConstraintsBumps,
+    ) -> Result<()> {
+        let carbon_credits = &mut self.carbon_credits;
 
-    // Initialize the global carbon credits metrics
-    carbon_credits.initialize(context.accounts.admin.key(), context.bumps.carbon_credits)?;
+        carbon_credits.initialize(self.admin.key(), bumps.carbon_credits)?;
 
-    msg!("CarbonCredits global account initialized");
-    Ok(())
+        msg!("CarbonCredits global account initialized");
+
+        Ok(())
+    }
 }

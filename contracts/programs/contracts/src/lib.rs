@@ -16,7 +16,7 @@ pub mod contracts {
     pub fn initialize_carbon_credits(
         context: Context<InitializeCarbonCreditsAccountConstraints>,
     ) -> Result<()> {
-        instructions::initialize_carbon_credits_handler(context)
+        context.accounts.initialize_carbon_credits_handler(&context.bumps)
     }
 
     pub fn initialize_project(
