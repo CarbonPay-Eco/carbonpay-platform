@@ -23,24 +23,14 @@ pub struct OffsetRequest {
 
 impl OffsetRequest {
     pub const DISCRIMINATOR_SIZE: usize = 8;
-    pub const PUBKEY_SIZE: usize = 32;
-    pub const BUMP_SIZE: usize = 1;
-    pub const U64_SIZE: usize = 8;
-    pub const I64_SIZE: usize = 8;
-    pub const U8_SIZE: usize = 1;
-    pub const OPTION_SIZE: usize = 1;
-    pub const REQUEST_ID_MAX_LEN: usize = 64;
-    pub const STRING_PREFIX_SIZE: usize = 4; // For string length prefix
-    pub const ENUM_SIZE: usize = 1; // Enum is u8 under the hood
-
-    pub const INIT_SPACE: usize = Self::PUBKEY_SIZE +       // offset_requester
-        Self::PUBKEY_SIZE +       // purchase
-        Self::PUBKEY_SIZE +       // project
-        Self::U64_SIZE +          // amount
-        Self::STRING_PREFIX_SIZE + Self::REQUEST_ID_MAX_LEN + // request_id
-        Self::ENUM_SIZE +         // status
-        Self::I64_SIZE +          // request_date
-        Self::I64_SIZE +          // processed_date
-        Self::BUMP_SIZE +         // request_bump
-        Self::OPTION_SIZE + Self::PUBKEY_SIZE; // processor (Option<Pubkey>)
+    pub const INIT_SPACE: usize = 32 + // offset_requester
+        32 + // purchase
+        32 + // project
+        8 + // amount
+        4 + 64 + // request_id (prefix + max length)
+        1 + // status enum
+        8 + // request_date
+        8 + // processed_date
+        1 + // request_bump
+        1 + 32; // processor (Option<Pubkey>)
 }
