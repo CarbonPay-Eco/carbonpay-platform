@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import app from './config/app';
-import { PORT, NODE_ENV } from './config/constants';
+import { SERVER_PORT, NODE_ENV } from './config/constants';
 import routes from './routes/index';
 import { initializeDatabase } from './database';
 
-console.log(`Ambiente: ${NODE_ENV}`);
-console.log('Conectando ao banco de dados Supabase...');
+console.log(`Environment: ${NODE_ENV}`);
+console.log('Connecting to database...');
 
 // Register API routes
 app.use('/api', routes);
@@ -17,10 +17,10 @@ const startServer = async () => {
     await initializeDatabase();
     
     // Start the server
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    app.listen(SERVER_PORT, () => {
+      console.log(`Server is running on port ${SERVER_PORT}`);
       console.log(`Environment: ${NODE_ENV}`);
-      console.log(`API URL: http://localhost:${PORT}/api`);
+      console.log(`API URL: http://localhost:${SERVER_PORT}/api`);
     });
   } catch (error) {
     console.error('Error during server startup:', error);

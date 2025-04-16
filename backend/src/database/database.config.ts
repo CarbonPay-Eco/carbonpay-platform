@@ -1,12 +1,16 @@
 import { Pool } from 'pg';
-import { DB_URL } from '../config/constants';
+import { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, DB_HOST, DB_PORT } from '../config/constants';
 
 // Create a PostgreSQL connection pool using Supabase URL
 const pool = new Pool({
-  connectionString: DB_URL,
+  user: POSTGRES_USER,
+  password: POSTGRES_PASSWORD,
+  database: POSTGRES_DB,
+  host: DB_HOST,
+  port: parseInt((DB_PORT || '5432').toString(), 10),
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 // Function to test the database connection

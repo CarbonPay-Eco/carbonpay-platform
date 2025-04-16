@@ -3,39 +3,45 @@ version: '3.8'
 services:
   backend:
     build:
-      context: .
+      context: ../backend
       dockerfile: Dockerfile
     container_name: carbonpay-backend
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "${SERVER_PORT:-3000}:${SERVER_PORT:-3000}"
     env_file:
-      - .env
+      - ../.env
     volumes:
-      - ./src:/app/src
+      - ../backend/src:/app/src
     networks:
       - carbonpay-network
     environment:
       - NODE_ENV=${NODE_ENV:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-3000}/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
   postgres:
     image: postgres:13
-    environment:
-      POSTGRES_USER: carbonpay
-      POSTGRES_PASSWORD: carbonpay
-      POSTGRES_DB: carbonpay
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
     env_file:
-      - .env
+      - ../.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../database:/docker-entrypoint-initdb.d
+    networks:
+      - carbonpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   # frontend:
   #   build:
   #     context: ../frontend
@@ -52,6 +58,6 @@ services:
 networks:
   carbonpay-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16 
+
+volumes:
+  postgres_data:

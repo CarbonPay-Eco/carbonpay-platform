@@ -1,11 +1,13 @@
 import { Pool } from 'pg';
-import { DB_USER, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT } from './constants';
+import { POSTGRES_USER, DB_HOST, POSTGRES_DB, POSTGRES_PASSWORD, DB_PORT } from './constants';
+
+// Create a PostgreSQL connection pool
 const pool = new Pool({
-  user: DB_USER,
+  user: POSTGRES_USER,
   host: DB_HOST,
-  database: DB_NAME,
-  password: DB_PASSWORD,
-  port: DB_PORT,
+  database: POSTGRES_DB,
+  password: POSTGRES_PASSWORD, 
+  port: parseInt((DB_PORT || '5432').toString(), 10),
 });
 
 export default pool; 

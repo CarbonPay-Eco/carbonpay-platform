@@ -5,20 +5,22 @@ import { Organization } from './entities/Organization';
 import { TokenizedProject } from './entities/TokenizedProject';
 import { Retirement } from './entities/Retirement';
 import { AuditLog } from './entities/AuditLog';
-import { DB_URL, NODE_ENV } from '../config/constants';
+import { DB_HOST, NODE_ENV, DB_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } from '../config/constants';
 
 // Define the AppDataSource
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: DB_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
+  host: DB_HOST,
+  port: parseInt((DB_PORT || '5432').toString(), 10),
+  username: POSTGRES_USER,
+  password: POSTGRES_PASSWORD,
+  database: POSTGRES_DB,
+  ssl: NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   synchronize: NODE_ENV === 'development',
-  logging: false, 
+  logging: false,
   entities: [Wallet, Organization, TokenizedProject, Retirement, AuditLog],
   migrations: [__dirname + '/migrations/**/*.{js,ts}'],
-  subscribers: []
+  subscribers: [],
 });
 
 // Para uso em testes com SQLite
