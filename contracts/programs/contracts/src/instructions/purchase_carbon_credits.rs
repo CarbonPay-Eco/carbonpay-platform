@@ -45,7 +45,7 @@ pub struct PurchaseCarbonCreditsAccountConstraints<'info> {
     #[account(
         init,
         payer = buyer,
-        space = 8 + 32 + 32 + 8 + 8 + 8 + 1 + 32, 
+        space = Purchase::DISCRIMINATOR_SIZE + Purchase::INIT_SPACE, 
         seeds = [b"purchase", buyer.key().as_ref(), project.key().as_ref(), nft_mint.key().as_ref()],
         bump
     )]
