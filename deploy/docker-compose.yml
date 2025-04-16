@@ -36,18 +36,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../database:/docker-entrypoint-initdb.d
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    ports:
-      - "${PORT:-3001}:${PORT:-3001}"
-    env_file:
-      - .env
-    volumes:
-      - ../client:/usr/src/app
-      - /usr/src/app/node_modules
-    command: npm start
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${PORT:-3001}:${PORT:-3001}"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ../client:/usr/src/app
+  #     - /usr/src/app/node_modules
+  #   command: npm start
 
 networks:
   carbonpay-network:
