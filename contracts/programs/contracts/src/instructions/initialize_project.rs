@@ -1,15 +1,15 @@
+use crate::state::{CarbonCredits, Project};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount, MintTo, mint_to, SetAuthority, set_authority};
-use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::associated_token::AssociatedToken;
-use crate::state::{Project, CarbonCredits};
+use anchor_spl::token::spl_token::instruction::AuthorityType;
+use anchor_spl::token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(amount: u64, price_per_token: u64, carbon_pay_fee: u64)]
 pub struct InitializeProjectAccountConstraints<'info> {
     #[account(mut)]
     pub project_owner: Signer<'info>,
-    
+
     #[account(
         init,
         payer = project_owner,
@@ -18,7 +18,7 @@ pub struct InitializeProjectAccountConstraints<'info> {
         bump
     )]
     pub project: Account<'info, Project>,
-    
+
     /// Mint account for the project token
     #[account(
         init,
@@ -27,7 +27,7 @@ pub struct InitializeProjectAccountConstraints<'info> {
         mint::authority = project_owner,
     )]
     pub mint: Account<'info, Mint>,
-    
+
     #[account(
         init,
         payer = project_owner,
@@ -35,24 +35,23 @@ pub struct InitializeProjectAccountConstraints<'info> {
         associated_token::authority = carbon_pay_authority,
     )]
     pub carbon_pay_token_account: Account<'info, TokenAccount>,
-    
+
     /// CHECK: This is the CarbonPay authority that receives fees and initially holds tokens
     pub carbon_pay_authority: UncheckedAccount<'info>,
-    
+
     #[account(
         mut,
         seeds = [b"carbon_credits"],
         bump = carbon_credits.bump,
     )]
     pub carbon_credits: Account<'info, CarbonCredits>,
-    
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 impl<'info> InitializeProjectAccountConstraints<'info> {
-
     pub fn initialize_project_handler(
         &mut self,
         amount: u64,
@@ -76,17 +75,17 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
         });
         // Update global carbon credits metrics
         self.carbon_credits.add_project_credits(amount)?;
-        
+
         // Mint tokens to CarbonPay authority
         let cpi_accounts = MintTo {
             mint: self.mint.to_account_info(),
             to: self.carbon_pay_token_account.to_account_info(),
             authority: self.project_owner.to_account_info(),
         };
-        
+
         let cpi_program = self.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program.clone(), cpi_accounts);
-        
+
         mint_to(cpi_ctx, amount)?;
 
         // Transfer the mint authority from the project owner to the carbon authority
@@ -94,16 +93,20 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
             account_or_mint: self.mint.to_account_info(),
             current_authority: self.project_owner.to_account_info(),
         };
-        
+
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        
+
         set_authority(
             cpi_ctx,
             AuthorityType::MintTokens,
             Some(self.carbon_pay_authority.key()),
         )?;
-        
-        msg!("Project initialized successfully with {} tokens at price {}", amount, price_per_token);
+
+        msg!(
+            "Project initialized successfully with {} tokens at price {}",
+            amount,
+            price_per_token
+        );
         Ok(())
     }
 }
