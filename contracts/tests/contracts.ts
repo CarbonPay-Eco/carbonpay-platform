@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { before, describe, test } from "node:test";
 import assert from "node:assert";
 import { Contracts } from "../target/types/contracts";
-import { PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, Keypair, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 describe("CarbonPay Contracts", async () => {
@@ -21,18 +21,29 @@ describe("CarbonPay Contracts", async () => {
   let carbonCreditsKey: PublicKey;
   let carbonPayAuthorityKey: PublicKey;
   let projectKey: PublicKey;
-  let purchaseKey: PublicKey; // To store the purchase PDA
+  let purchaseKey: PublicKey;
   
   // Define constants for project
   const PROJECT_AMOUNT = 1000;
-  const PRICE_PER_TOKEN = 0.1 * LAMPORTS_PER_SOL; // 0.1 SOL per token
-  const CARBON_PAY_FEE = 500; // 5% fee (out of 10000)
+  const PRICE_PER_TOKEN = 0.1 * LAMPORTS_PER_SOL;
+  const CARBON_PAY_FEE = 500;
   
   // Define constants for offset
-  const OFFSET_AMOUNT = 500; // Offset 500 tokens
-  const REQUEST_ID = "REQ-123"; // Unique request ID
+  const OFFSET_AMOUNT = 500;
+  const REQUEST_ID = "REQ-123";
+
+  // Token Metadata Program ID
+  const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 
   before(async () => {
+    // Airdrop SOL to admin if needed
+    const connection = new Connection("http://localhost:8899", "confirmed");
+    const balance = await connection.getBalance(admin);
+    if (balance < LAMPORTS_PER_SOL) {
+      const signature = await connection.requestAirdrop(admin, 2 * LAMPORTS_PER_SOL);
+      await connection.confirmTransaction(signature);
+    }
+
     // Find the PDA for carbon_credits
     const [carbonCreditsAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from("carbon_credits")],
@@ -40,10 +51,8 @@ describe("CarbonPay Contracts", async () => {
     );
     carbonCreditsKey = carbonCreditsAddress;
     
-    // Use admin as carbon pay authority for testing
     carbonPayAuthorityKey = admin;
     
-    // Find the PDA for project
     const [projectPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("project"),
@@ -53,83 +62,119 @@ describe("CarbonPay Contracts", async () => {
       program.programId
     );
     projectKey = projectPDA;
-    
-    // Purchase PDA will be set after purchase is made
   });
 
   test("Initialize Carbon Credits", async () => {
-    // Initialize the global carbon credits account
-    const tx = await program.methods
-      .initializeCarbonCredits()
-      .accountsPartial({
-        admin: admin,
-        carbonCredits: carbonCreditsKey, 
-      })
-      .rpc();
-    
-    console.log("Transaction signature:", tx);
-    
-    // Fetch the account data to verify it's properly initialized
-    const carbonCreditsAccount = await program.account.carbonCredits.fetch(carbonCreditsKey);
-    assert.strictEqual(carbonCreditsAccount.authority.toString(), admin.toString());
-    console.log("carbonCreditsAccount.totalCredits", carbonCreditsAccount);
-    assert.strictEqual(carbonCreditsAccount.totalCredits.toNumber(), 0);
-    assert.strictEqual(carbonCreditsAccount.offsetCredits.toNumber(), 0);
-    assert.strictEqual(carbonCreditsAccount.totalFeesEarned.toNumber(), 0);
+    try {
+      const tx = await program.methods
+        .initializeCarbonCredits()
+        .accountsPartial({
+          admin: admin,
+          carbonCredits: carbonCreditsKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc();
+      
+      console.log("Transaction signature:", tx);
+      
+      const carbonCreditsAccount = await program.account.carbonCredits.fetch(carbonCreditsKey);
+      assert.strictEqual(carbonCreditsAccount.authority.toString(), admin.toString());
+      assert.strictEqual(carbonCreditsAccount.totalCredits.toNumber(), 0);
+      assert.strictEqual(carbonCreditsAccount.offsetCredits.toNumber(), 0);
+      assert.strictEqual(carbonCreditsAccount.totalFeesEarned.toNumber(), 0);
+    } catch (error) {
+      console.error("Error initializing carbon credits:", error);
+      throw error;
+    }
   });
   
   test("Initialize Project", async () => {
-    // Get token account address for carbon pay authority
-    const carbonPayTokenAccount = await anchor.utils.token.associatedAddress({
-      mint: mintKeypair.publicKey,
-      owner: carbonPayAuthorityKey,
-    });
-    
-    // Initialize project
-    const tx = await program.methods
-      .initializeProject(
-        new anchor.BN(PROJECT_AMOUNT),
-        new anchor.BN(PRICE_PER_TOKEN),
-        new anchor.BN(CARBON_PAY_FEE)
-      )
-      .accountsPartial({
-        projectOwner: admin,
-        project: projectKey,
+    try {
+      const carbonPayTokenAccount = await anchor.utils.token.associatedAddress({
         mint: mintKeypair.publicKey,
-        carbonPayTokenAccount: carbonPayTokenAccount,
-        carbonPayAuthority: carbonPayAuthorityKey,
-        carbonCredits: carbonCreditsKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-      })
-      .signers([mintKeypair])
-      .rpc();
-    
-    console.log("Project initialized: ", tx);
-    
-    // Verify project data
-    const projectAccount = await program.account.project.fetch(projectKey);
-    console.log("projectAccount", projectAccount);
-    assert.strictEqual(projectAccount.owner.toString(), admin.toString());
-    assert.strictEqual(projectAccount.mint.toString(), mintKeypair.publicKey.toString());
-    assert.strictEqual(projectAccount.amount.toNumber(), PROJECT_AMOUNT);
-    assert.strictEqual(projectAccount.remainingAmount.toNumber(), PROJECT_AMOUNT);
-    assert.strictEqual(projectAccount.offsetAmount.toNumber(), 0);
-    assert.strictEqual(projectAccount.pricePerToken.toNumber(), PRICE_PER_TOKEN);
-    assert.strictEqual(projectAccount.carbonPayFee.toNumber(), CARBON_PAY_FEE);
-    assert.strictEqual(projectAccount.carbonPayAuthority.toString(), carbonPayAuthorityKey.toString());
-    assert.strictEqual(projectAccount.isActive, true);
-    
-    // Verify carbon credits metrics were updated
-    const carbonCredits = await program.account.carbonCredits.fetch(carbonCreditsKey);
-    assert.strictEqual(carbonCredits.totalCredits.toNumber(), PROJECT_AMOUNT);
-    assert.strictEqual(carbonCredits.activeCredits.toNumber(), PROJECT_AMOUNT);
-    
-    // Verify tokens were minted to the carbon pay authority
-    const tokenAccountInfo = await provider.connection.getTokenAccountBalance(carbonPayTokenAccount);
-    assert.strictEqual(parseInt(tokenAccountInfo.value.amount), PROJECT_AMOUNT);
+        owner: carbonPayAuthorityKey,
+      });
+      
+      // Find PDA for metadata account
+      const metadataSeeds = [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBytes(),
+        mintKeypair.publicKey.toBytes(),
+      ];
+      const [metadataAddress] = PublicKey.findProgramAddressSync(
+        metadataSeeds,
+        TOKEN_METADATA_PROGRAM_ID
+      );
+
+      // Find PDA for master edition account
+      const masterEditionSeeds = [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBytes(),
+        mintKeypair.publicKey.toBytes(),
+        Buffer.from("edition"),
+      ];
+      const [masterEditionAddress] = PublicKey.findProgramAddressSync(
+        masterEditionSeeds,
+        TOKEN_METADATA_PROGRAM_ID
+      );
+      
+      const tx = await program.methods
+        .initializeProject(
+          new anchor.BN(PROJECT_AMOUNT),
+          new anchor.BN(PRICE_PER_TOKEN),
+          new anchor.BN(CARBON_PAY_FEE),
+          "https://arweave.net/your-project-metadata",
+          "Carbon Credits Project",
+          "CRBN"
+        )
+        .accountsPartial({
+          projectOwner: admin,
+          project: projectKey,
+          mint: mintKeypair.publicKey,
+          carbonPayTokenAccount: carbonPayTokenAccount,
+          carbonPayAuthority: carbonPayAuthorityKey,
+          carbonCredits: carbonCreditsKey,
+          metadata: metadataAddress,
+          masterEdition: masterEditionAddress,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        })
+        .signers([mintKeypair])
+        .rpc();
+      
+      console.log("Project initialized: ", tx);
+      
+      const projectAccount = await program.account.project.fetch(projectKey);
+      console.log("projectAccount", projectAccount);
+      assert.strictEqual(projectAccount.owner.toString(), admin.toString());
+      assert.strictEqual(projectAccount.mint.toString(), mintKeypair.publicKey.toString());
+      assert.strictEqual(projectAccount.amount.toNumber(), PROJECT_AMOUNT);
+      assert.strictEqual(projectAccount.remainingAmount.toNumber(), PROJECT_AMOUNT);
+      assert.strictEqual(projectAccount.offsetAmount.toNumber(), 0);
+      assert.strictEqual(projectAccount.pricePerToken.toNumber(), PRICE_PER_TOKEN);
+      assert.strictEqual(projectAccount.carbonPayFee.toNumber(), CARBON_PAY_FEE);
+      assert.strictEqual(projectAccount.carbonPayAuthority.toString(), carbonPayAuthorityKey.toString());
+      assert.strictEqual(projectAccount.isActive, true);
+      
+      const carbonCredits = await program.account.carbonCredits.fetch(carbonCreditsKey);
+      assert.strictEqual(carbonCredits.totalCredits.toNumber(), PROJECT_AMOUNT);
+      assert.strictEqual(carbonCredits.activeCredits.toNumber(), PROJECT_AMOUNT);
+      
+      const tokenAccountInfo = await provider.connection.getTokenAccountBalance(carbonPayTokenAccount);
+      assert.strictEqual(parseInt(tokenAccountInfo.value.amount), PROJECT_AMOUNT);
+
+      const metadataAccount = await program.provider.connection.getAccountInfo(metadataAddress);
+      assert.notStrictEqual(metadataAccount, null, "Metadata account should exist");
+
+      const masterEditionAccount = await program.provider.connection.getAccountInfo(masterEditionAddress);
+      assert.notStrictEqual(masterEditionAccount, null, "Master edition account should exist");
+    } catch (error) {
+      console.error("Error initializing project:", error);
+      throw error;
+    }
   });
   
   test("Purchase Carbon Credits", async () => {

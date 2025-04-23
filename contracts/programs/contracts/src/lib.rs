@@ -24,11 +24,17 @@ pub mod contracts {
         amount: u64,
         price_per_token: u64,
         carbon_pay_fee: u64,
+        uri: String,
+        name: String,
+        symbol: String,
     ) -> Result<()> {
         context.accounts.initialize_project_handler(
             amount,
             price_per_token,
             carbon_pay_fee,
+            uri,
+            name,
+            symbol,
             &context.bumps,
         )
     }
