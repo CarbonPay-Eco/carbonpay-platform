@@ -103,7 +103,7 @@ Written in Rust with the Anchor framework.
 carbonpay-platform/
 ├── frontend/       # Next.js + Tailwind UI
 ├── backend/        # Node.js + Express + Prisma + IPFS + Anchor
-├── contracts/      # Anchor-based Solana smart contracts
+├── carbonpay      # Anchor-based Solana smart contracts
 └── README.md
 ```
 

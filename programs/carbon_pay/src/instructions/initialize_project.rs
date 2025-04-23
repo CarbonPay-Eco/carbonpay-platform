@@ -2,17 +2,13 @@ use crate::state::{CarbonCredits, Project};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
-    token::spl_token::instruction::AuthorityType,
     metadata::{
-        create_metadata_accounts_v3,
-        create_master_edition_v3,
-        mpl_token_metadata::types::DataV2,
-        mpl_token_metadata::types::Creator,
-        CreateMetadataAccountsV3,
-        CreateMasterEditionV3,
+        create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::Creator,
+        mpl_token_metadata::types::DataV2, CreateMasterEditionV3, CreateMetadataAccountsV3,
         Metadata,
     },
+    token::spl_token::instruction::AuthorityType,
+    token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
 };
 
 #[derive(Accounts)]
@@ -80,6 +76,7 @@ pub struct InitializeProjectAccountConstraints<'info> {
 }
 
 impl<'info> InitializeProjectAccountConstraints<'info> {
+    #[allow(clippy::too_many_arguments)]
     pub fn initialize_project_handler(
         &mut self,
         amount: u64,
@@ -95,11 +92,11 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
             owner: self.project_owner.key(),
             mint: self.mint.key(),
             token_bump: 0,
-            amount: amount,
+            amount,
             remaining_amount: amount,
             offset_amount: 0,
-            price_per_token: price_per_token,
-            carbon_pay_fee: carbon_pay_fee,
+            price_per_token,
+            carbon_pay_fee,
             carbon_pay_authority: self.carbon_pay_authority.clone().key(),
             project_bump: bumps.project,
             is_active: true,
@@ -153,9 +150,9 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
         create_metadata_accounts_v3(
             metadata_ctx,
             data,
-            true, // is_mutable
-            true, // update_authority_is_signer
-            None, // collection_details
+            true,
+            true,
+            None,
         )?;
 
         // Create master edition
@@ -178,7 +175,7 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
 
         create_master_edition_v3(
             master_edition_ctx,
-            Some(0), // Max supply of 0 means this is a limited edition
+            Some(0),
         )?;
 
         // Transfer the mint authority from the project owner to the carbon authority

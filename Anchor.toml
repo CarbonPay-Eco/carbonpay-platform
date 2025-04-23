@@ -6,7 +6,7 @@ skip-lint = false
 seeds = false
 
 [programs.localnet]
-contracts = "9YH9M52ZzPGQXyeq7dsUbKWrRHt2Ucv4p7RQnvLvdLtd"
+carbon_pay = "9YH9M52ZzPGQXyeq7dsUbKWrRHt2Ucv4p7RQnvLvdLtd"
 
 [registry]
 url = "https://api.apr.dev"

@@ -2,16 +2,16 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { before, describe, test } from "node:test";
 import assert from "node:assert";
-import { Contracts } from "../target/types/contracts";
+import { CarbonPay } from "../target/types/carbon_pay";
 import { PublicKey, Keypair, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-describe("CarbonPay Contracts", async () => {
+describe("CarbonPay", async () => {
   // Configure the client to use the local cluster
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Contracts as Program<Contracts>;
+  const program = anchor.workspace.CarbonPay as Program<CarbonPay>;
   const admin = provider.wallet.publicKey;
   
   // Generate keypair for the mint

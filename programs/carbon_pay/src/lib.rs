@@ -10,7 +10,7 @@ use instructions::*;
 declare_id!("9YH9M52ZzPGQXyeq7dsUbKWrRHt2Ucv4p7RQnvLvdLtd");
 
 #[program]
-pub mod contracts {
+pub mod carbon_pay {
     use super::*;
 
     pub fn initialize_carbon_credits(
