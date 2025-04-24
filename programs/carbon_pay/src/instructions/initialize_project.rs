@@ -9,7 +9,7 @@ use anchor_spl::{
     token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
 };
 
-/// ATAs PARA `project_owner_nft_account` E `vault` DEVEM EXISTIR ANTES DA CHAMADA
+/// ATAs for `project_owner_nft_account` and `vault` must exist before the call
 #[derive(Accounts)]
 #[instruction(
     amount: u64,
@@ -20,11 +20,11 @@ use anchor_spl::{
     symbol: String,
 )]
 pub struct InitializeProject<'info> {
-    /// quem paga a tx e será authority inicial do mint
+   
     #[account(mut)]
     pub project_owner: Signer<'info>,
 
-    /// estado on-chain do projeto
+    /// On-chain state of the project
     #[account(
         init,
         payer = project_owner,
@@ -34,7 +34,7 @@ pub struct InitializeProject<'info> {
     )]
     pub project: Box<Account<'info, Project>>,
 
-    /// o mint (inicialmente NFT, depois fungível)
+    /// The mint (initially NFT, then fungible)
     #[account(
         init,
         payer = project_owner,
@@ -44,7 +44,7 @@ pub struct InitializeProject<'info> {
     )]
     pub mint: Box<Account<'info, Mint>>,
 
-    /// ATA do owner para o NFT (deve existir antes; crie com `spl-token create-account`)
+    /// Owner's ATA for the NFT (must exist before; create with `spl-token create-account`)
     #[account(
         mut,
         constraint = project_owner_nft_account.owner == project_owner.key(),
@@ -52,7 +52,7 @@ pub struct InitializeProject<'info> {
     )]
     pub project_owner_nft_account: Box<Account<'info, TokenAccount>>,
 
-    /// ATA do PDA `carbon_credits` para os tokens fungíveis (idem: crie off-chain)
+    /// ATA of the `carbon_credits` PDA for fungible tokens (create off-chain)
     #[account(
         mut,
         constraint = vault.owner == carbon_credits.key(),
@@ -60,7 +60,7 @@ pub struct InitializeProject<'info> {
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
 
-    /// PDA que controla totais e vira mint authority dos fungíveis
+    /// PDA that controls totals and becomes mint authority of fungibles
     #[account(
         mut,
         seeds = [b"carbon_credits"],
@@ -68,7 +68,7 @@ pub struct InitializeProject<'info> {
     )]
     pub carbon_credits: Box<Account<'info, CarbonCredits>>,
 
-  /// Metadata account managed by the Token Metadata Program
+    /// Metadata account managed by the Token Metadata Program
     /// CHECK: This account is created via CPI to the token metadata program
     #[account(mut)] 
     pub metadata: UncheckedAccount<'info>,
@@ -95,7 +95,7 @@ impl<'info> InitializeProject<'info> {
         symbol: String,
         bumps: &InitializeProjectBumps,
     ) -> Result<()> {
-        // 1. initialize on-chain project state and update totals
+        // 1. Initialize on-chain project state and update totals
         self.project.set_inner(Project {
             owner: self.project_owner.key(),
             mint: self.mint.key(),
@@ -111,7 +111,7 @@ impl<'info> InitializeProject<'info> {
         });
         self.carbon_credits.add_project_credits(amount)?;
 
-        // 2. mint do NFT (1 token)
+        // 2. Mint the NFT (1 token)
         let cpi = CpiContext::new(
             self.token_program.to_account_info(),
             MintTo {
@@ -122,7 +122,7 @@ impl<'info> InitializeProject<'info> {
         );
         mint_to(cpi, 1)?;
 
-        // 3. metadata + master edition
+        // 3. Metadata + master edition
         let data = DataV2 {
             name,
             symbol,
@@ -135,7 +135,7 @@ impl<'info> InitializeProject<'info> {
             collection: None,
             uses: None,
         };
-        // metadata
+        // Metadata
         create_metadata_accounts_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -154,7 +154,7 @@ impl<'info> InitializeProject<'info> {
             true,
             None,
         )?;
-        // master edition
+        // Master edition
         create_master_edition_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -173,7 +173,7 @@ impl<'info> InitializeProject<'info> {
             Some(amount),
         )?;
 
-        // 4. mint of fungible tokens + transfer authority
+        // 4. Mint of fungible tokens + transfer authority
         let cpi_mint = CpiContext::new(
             self.token_program.to_account_info(),
             MintTo {
