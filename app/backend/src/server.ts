@@ -3,12 +3,15 @@ import app from './config/app';
 import { SERVER_PORT, NODE_ENV } from './config/constants';
 import routes from './routes/index';
 import { initializeDatabase } from './database';
+import { swaggerUi, swaggerSpec } from './config/swagger';
+
 
 console.log(`Environment: ${NODE_ENV}`);
 console.log('Connecting to database...');
 
 // Register API routes
 app.use('/api', routes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Start the server
 const startServer = async () => {
