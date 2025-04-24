@@ -2,6 +2,7 @@ use crate::state::{CarbonCredits, OffsetRequest, Project, Purchase, RequestStatu
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Token, TokenAccount};
+use crate::errors::*;
 
 #[derive(Accounts)]
 #[instruction(amount: u64, request_id: String)]
@@ -11,8 +12,8 @@ pub struct RequestOffsetAccountConstraints<'info> {
 
     #[account(
         mut,
-        constraint = purchase.buyer == offset_requester.key() @ crate::errors::ContractError::NotPurchaseOwner,
-        constraint = purchase.remaining_amount >= amount @ crate::errors::ContractError::InsufficientRemainingTokens,
+        constraint = purchase.buyer == offset_requester.key() @ ContractError::NotPurchaseOwner,
+        constraint = purchase.remaining_amount >= amount @ ContractError::InsufficientRemainingTokens,
         seeds = [b"purchase", offset_requester.key().as_ref(), purchase.project.as_ref(), purchase.nft_mint.as_ref()],
         bump = purchase.purchase_bump,
     )]
@@ -20,7 +21,7 @@ pub struct RequestOffsetAccountConstraints<'info> {
 
     #[account(
         mut,
-        constraint = project.key() == purchase.project @ crate::errors::ContractError::InvalidProject,
+        constraint = project.key() == purchase.project @ ContractError::InvalidProject,
         seeds = [b"project", project.owner.as_ref(), project.mint.as_ref()],
         bump = project.project_bump,
     )]
@@ -30,13 +31,13 @@ pub struct RequestOffsetAccountConstraints<'info> {
         mut,
         token::mint = purchase.nft_mint,
         token::authority = offset_requester,
-        constraint = buyer_nft_account.amount > 0 @ crate::errors::ContractError::InvalidNFTAccount,
+        constraint = buyer_nft_account.amount > 0 @ ContractError::InvalidNFTAccount,
     )]
     pub buyer_nft_account: Account<'info, TokenAccount>,
 
     /// CHECK: This is the CarbonPay authority that will approve the offset
     #[account(
-        constraint = project.carbon_pay_authority == carbon_pay_authority.key() @ crate::errors::ContractError::InvalidCarbonPayAuthority,
+        constraint = project.carbon_pay_authority == carbon_pay_authority.key() @ ContractError::InvalidCarbonPayAuthority,
     )]
     pub carbon_pay_authority: UncheckedAccount<'info>,
 

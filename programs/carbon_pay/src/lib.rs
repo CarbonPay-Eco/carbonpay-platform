@@ -7,7 +7,7 @@ mod errors;
 
 use instructions::*;
 
-declare_id!("9YH9M52ZzPGQXyeq7dsUbKWrRHt2Ucv4p7RQnvLvdLtd");
+declare_id!("6CQ4FxzFPcHAS391UD56TyC9qiwiSKB4wAXRQDP9HfaS");
 
 #[program]
 pub mod carbon_pay {
@@ -48,17 +48,13 @@ pub mod carbon_pay {
     }
 
     pub fn purchase_carbon_credits(
-        context: Context<PurchaseCarbonCreditsAccountConstraints>,
+        context: Context<PurchaseCarbonCredits>,
         amount: u64,
-        
     ) -> Result<()> {
-       context.accounts.purchase_carbon_credits_handler(amount, &context.bumps)
+        context.accounts.purchase_carbon_credits(amount, &context.bumps)
     }
 
-    // pub fn offset_carbon_credits(
-    //     context: Context<OffsetCarbonCreditsAccountConstraints>,
-    //     amount: u64,
-    // ) -> Result<()> {
-    //     instructions::offset_carbon_credits_handler(context, amount)
-    // }
+   
+
+    
 }

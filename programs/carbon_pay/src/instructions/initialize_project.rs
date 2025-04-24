@@ -3,11 +3,10 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     metadata::{
-        create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::Creator,
-        mpl_token_metadata::types::DataV2, CreateMasterEditionV3, CreateMetadataAccountsV3,
-        Metadata,
+        create_master_edition_v3, create_metadata_accounts_v3,
+        mpl_token_metadata::types::{Creator, DataV2},
+        CreateMasterEditionV3, CreateMetadataAccountsV3, Metadata,
     },
-    token::spl_token::instruction::AuthorityType,
     token::{mint_to, set_authority, Mint, MintTo, SetAuthority, Token, TokenAccount},
 };
 
@@ -21,9 +20,11 @@ use anchor_spl::{
     symbol: String,
 )]
 pub struct InitializeProjectAccountConstraints<'info> {
+    /// The creator of this project, pays for everything
     #[account(mut)]
     pub project_owner: Signer<'info>,
 
+    /// On‐chain project state
     #[account(
         init,
         payer = project_owner,
@@ -31,40 +32,42 @@ pub struct InitializeProjectAccountConstraints<'info> {
         seeds = [b"project", project_owner.key().as_ref(), mint.key().as_ref()],
         bump
     )]
-    pub project: Account<'info, Project>,
+    pub project: Box<Account<'info, Project>>,
 
-    /// Mint account for the project token
+    /// The NFT mint for this project (also will become the fungible‐mint later)
     #[account(
         init,
         payer = project_owner,
         mint::decimals = 0,
         mint::authority = project_owner,
+        mint::freeze_authority = project_owner,
     )]
-    pub mint: Account<'info, Mint>,
+    pub mint: Box<Account<'info, Mint>>,
 
+    /// Vault holds both the single NFT and fungible tokens
     #[account(
         init,
         payer = project_owner,
         associated_token::mint = mint,
-        associated_token::authority = carbon_pay_authority,
+        associated_token::authority = project_owner,
     )]
-    pub carbon_pay_token_account: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: This is the CarbonPay authority that receives fees and initially holds tokens
-    pub carbon_pay_authority: UncheckedAccount<'info>,
-
+    /// Global CarbonCredits account (PDA), which tracks totals & will hold mint authority
     #[account(
         mut,
         seeds = [b"carbon_credits"],
         bump = carbon_credits.bump,
     )]
-    pub carbon_credits: Account<'info, CarbonCredits>,
+    pub carbon_credits: Box<Account<'info, CarbonCredits>>,
 
-    /// CHECK: This is the metadata account that will be created
+    /// Metadata account for the NFT
+    /// CHECK: This account is initialized by Token Metadata Program
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: This is the master edition account that will be created
+    /// Master edition account for the NFT
+    /// CHECK: This account is initialized by Token Metadata Program
     #[account(mut)]
     pub master_edition: UncheckedAccount<'info>,
 
@@ -85,115 +88,137 @@ impl<'info> InitializeProjectAccountConstraints<'info> {
         uri: String,
         name: String,
         symbol: String,
-        bumps: &InitializeProjectAccountConstraintsBumps,
+        bumps: &InitializeProjectAccountConstraintsBumps, 
     ) -> Result<()> {
-        // Set up the project
+        // 0️⃣ Populate project struct
         self.project.set_inner(Project {
-            owner: self.project_owner.key(),
-            mint: self.mint.key(),
-            token_bump: 0,
+            owner:                   self.project_owner.key(),
+            mint:                    self.mint.key(),
+            token_bump:              0,
             amount,
-            remaining_amount: amount,
-            offset_amount: 0,
+            remaining_amount:        amount,
+            offset_amount:           0,
             price_per_token,
             carbon_pay_fee,
-            carbon_pay_authority: self.carbon_pay_authority.clone().key(),
-            project_bump: bumps.project,
-            is_active: true,
+            carbon_pay_authority:    self.carbon_credits.key(),
+            project_bump:            bumps.project,
+            is_active:               true,
         });
 
-        // Update global carbon credits metrics
+        // 1️⃣ Update global totals
         self.carbon_credits.add_project_credits(amount)?;
 
-        // Mint tokens to CarbonPay authority
-        let cpi_accounts = MintTo {
-            mint: self.mint.to_account_info(),
-            to: self.carbon_pay_token_account.to_account_info(),
-            authority: self.project_owner.to_account_info(),
-        };
+        // 2️⃣ Mint exactly one NFT into `vault`
+        {
+            let cpi_accounts = MintTo {
+                mint:      self.mint.to_account_info(),
+                to:        self.vault.to_account_info(),
+                authority: self.project_owner.to_account_info(),
+            };
+            let cpi_ctx = CpiContext::new(
+                self.token_program.to_account_info(),
+                cpi_accounts,
+            );
+            mint_to(cpi_ctx, 1)?;
+        }
 
-        let cpi_program = self.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program.clone(), cpi_accounts);
+        // 3️⃣ Reassign mint authority from the signer → your PDA
+        {
+            let cpi_accounts = SetAuthority {
+                account_or_mint:    self.mint.to_account_info(),
+                current_authority:  self.project_owner.to_account_info(),
+            };
+            let cpi_ctx = CpiContext::new(
+                self.token_program.to_account_info(),
+                cpi_accounts,
+            );
+            set_authority(
+                cpi_ctx,
+                anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
+                Some(self.carbon_credits.key()),
+            )?;
+        }
 
-        mint_to(cpi_ctx, amount)?;
+        // 4️⃣ Prepare PDA seeds array for the rest of the CPIs
+        let bump = self.carbon_credits.bump;
+        let authority_seeds: &[&[u8]] = &[
+            b"carbon_credits",
+            &[bump],
+        ];
 
-        // Create metadata for the token
-        let metadata_accounts = CreateMetadataAccountsV3 {
-            metadata: self.metadata.to_account_info(),
-            mint: self.mint.to_account_info(),
-            mint_authority: self.project_owner.to_account_info(),
-            payer: self.project_owner.to_account_info(),
-            update_authority: self.carbon_pay_authority.to_account_info(),
-            system_program: self.system_program.to_account_info(),
-            rent: self.rent.to_account_info(),
-        };
+        // 5️⃣ Create Metadata (signed by PDA)
+        {
+            let data = DataV2 {
+                name,
+                symbol,
+                uri,
+                seller_fee_basis_points: carbon_pay_fee as u16,
+                creators: Some(vec![Creator {
+                    address:  self.carbon_credits.key(),
+                    verified: false,
+                    share:    100,
+                }]),
+                collection: None,
+                uses:       None,
+            };
+            let accounts = CreateMetadataAccountsV3 {
+                metadata:         self.metadata.to_account_info(),
+                mint:             self.mint.to_account_info(),
+                mint_authority:   self.carbon_credits.to_account_info(),
+                payer:            self.project_owner.to_account_info(),
+                update_authority: self.carbon_credits.to_account_info(),
+                system_program:   self.system_program.to_account_info(),
+                rent:             self.rent.to_account_info(),
+            };
+            let seeds = &[authority_seeds];
+            let ctx = CpiContext::new_with_signer(
+                self.token_metadata_program.to_account_info(),
+                accounts,
+                seeds,
+            );
+            create_metadata_accounts_v3(ctx, data, true, true, None)?;
+        }
 
-        let metadata_ctx = CpiContext::new(
-            self.token_metadata_program.to_account_info(),
-            metadata_accounts,
-        );
+        // 6️⃣ Create Master Edition (signed by PDA)
+        {
+            let accounts = CreateMasterEditionV3 {
+                edition:           self.master_edition.to_account_info(),
+                mint:              self.mint.to_account_info(),
+                update_authority:  self.carbon_credits.to_account_info(),
+                mint_authority:    self.carbon_credits.to_account_info(),
+                metadata:          self.metadata.to_account_info(),
+                payer:             self.project_owner.to_account_info(),
+                token_program:     self.token_program.to_account_info(),
+                system_program:    self.system_program.to_account_info(),
+                rent:              self.rent.to_account_info(),
+            };
+            let seeds = &[authority_seeds];
+            let ctx = CpiContext::new_with_signer(
+                self.token_metadata_program.to_account_info(),
+                accounts,
+                seeds,
+            );
+            create_master_edition_v3(ctx, Some(0))?;
+        }
 
-        let data = DataV2 {
-            name,
-            symbol,
-            uri,
-            seller_fee_basis_points: carbon_pay_fee as u16,
-            creators: Some(vec![Creator {
-                address: self.carbon_pay_authority.key(),
-                verified: false,
-                share: 100,
-            }]),
-            collection: None,
-            uses: None,
-        };
-
-        create_metadata_accounts_v3(
-            metadata_ctx,
-            data,
-            true,
-            true,
-            None,
-        )?;
-
-        // Create master edition
-        let master_edition_accounts = CreateMasterEditionV3 {
-            edition: self.master_edition.to_account_info(),
-            mint: self.mint.to_account_info(),
-            update_authority: self.carbon_pay_authority.to_account_info(),
-            mint_authority: self.project_owner.to_account_info(),
-            metadata: self.metadata.to_account_info(),
-            payer: self.project_owner.to_account_info(),
-            token_program: self.token_program.to_account_info(),
-            system_program: self.system_program.to_account_info(),
-            rent: self.rent.to_account_info(),
-        };
-
-        let master_edition_ctx = CpiContext::new(
-            self.token_metadata_program.to_account_info(),
-            master_edition_accounts,
-        );
-
-        create_master_edition_v3(
-            master_edition_ctx,
-            Some(0),
-        )?;
-
-        // Transfer the mint authority from the project owner to the carbon authority
-        let cpi_accounts = SetAuthority {
-            account_or_mint: self.mint.to_account_info(),
-            current_authority: self.project_owner.to_account_info(),
-        };
-
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-
-        set_authority(
-            cpi_ctx,
-            AuthorityType::MintTokens,
-            Some(self.carbon_pay_authority.key()),
-        )?;
+        // 7️⃣ Mint the full fungible supply into `vault` (signed by PDA)
+        {
+            let cpi_accounts = MintTo {
+                mint:      self.mint.to_account_info(),
+                to:        self.vault.to_account_info(),
+                authority: self.carbon_credits.to_account_info(),
+            };
+            let seeds = &[authority_seeds];
+            let cpi_ctx = CpiContext::new_with_signer(
+                self.token_program.to_account_info(),
+                cpi_accounts,
+                seeds,
+            );
+            mint_to(cpi_ctx, amount)?;
+        }
 
         msg!(
-            "Project initialized successfully with {} tokens at price {}",
+            "Project initialized: {} tokens @ {} lamports each",
             amount,
             price_per_token
         );

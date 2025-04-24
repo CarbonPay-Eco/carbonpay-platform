@@ -12,19 +12,28 @@ pub enum ErrorCode {
 
 #[error_code]
 pub enum ContractError {
-    #[msg("The project is inactive")]
-    ProjectInactive,
+    #[msg("The amount must be greater than 0")]
+    InvalidAmount,
 
-    #[msg("Insufficient tokens available in the project")]
+    #[msg("Insufficient tokens available")]
     InsufficientTokens,
+
+    #[msg("Project is not active")]
+    ProjectInactive,
 
     #[msg("Invalid project owner")]
     InvalidProjectOwner,
 
+    #[msg("Invalid project mint")]
+    InvalidProjectMint,
+
+    #[msg("Arithmetic overflow")]
+    ArithmeticOverflow,
+
     #[msg("Invalid CarbonPay authority")]
     InvalidCarbonPayAuthority,
 
-    #[msg("You are not the owner of this purchase")]
+    #[msg("Only the purchase owner can request an offset")]
     NotPurchaseOwner,
 
     #[msg("Insufficient remaining tokens in the purchase")]
@@ -33,9 +42,15 @@ pub enum ContractError {
     #[msg("Invalid project for this purchase")]
     InvalidProject,
 
-    #[msg("Invalid NFT account")]
+    #[msg("NFT account must hold at least one token")]
     InvalidNFTAccount,
 
     #[msg("Invalid NFT mint")]
     InvalidNFTMint,
+
+    #[msg("Offset request already exists")]
+    OffsetRequestExists,
+
+    #[msg("Invalid offset request status")]
+    InvalidRequestStatus,
 }
