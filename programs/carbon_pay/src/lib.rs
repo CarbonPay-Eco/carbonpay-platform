@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 mod instructions;
 mod state;
-
 mod errors;
 
 use instructions::*;
@@ -14,13 +13,13 @@ pub mod carbon_pay {
     use super::*;
 
     pub fn initialize_carbon_credits(
-        context: Context<InitializeCarbonCreditsAccountConstraints>,
+        ctx: Context<InitializeCarbonCreditsAccountConstraints>,
     ) -> Result<()> {
-        context.accounts.initialize_carbon_credits_handler(&context.bumps)
+        ctx.accounts.initialize_carbon_credits_handler(&ctx.bumps)
     }
 
     pub fn initialize_project(
-        context: Context<InitializeProjectAccountConstraints>,
+        ctx: Context<InitializeProject>,
         amount: u64,
         price_per_token: u64,
         carbon_pay_fee: u64,
@@ -28,33 +27,29 @@ pub mod carbon_pay {
         name: String,
         symbol: String,
     ) -> Result<()> {
-        context.accounts.initialize_project_handler(
+        ctx.accounts.handler(
             amount,
             price_per_token,
             carbon_pay_fee,
             uri,
             name,
             symbol,
-            &context.bumps,
+            &ctx.bumps,
         )
     }
 
     pub fn request_offset(
-        context: Context<RequestOffsetAccountConstraints>,
+        ctx: Context<RequestOffset>,
         amount: u64,
         request_id: String,
     ) -> Result<()> {
-        context.accounts.request_offset_handler(amount, request_id, &context.bumps)
+        ctx.accounts.handler(amount, request_id, &ctx.bumps)
     }
 
     pub fn purchase_carbon_credits(
-        context: Context<PurchaseCarbonCredits>,
+        ctx: Context<PurchaseCarbonCredits>,
         amount: u64,
     ) -> Result<()> {
-        context.accounts.purchase_carbon_credits(amount, &context.bumps)
+        ctx.accounts.purchase_carbon_credits(amount, &ctx.bumps)
     }
-
-   
-
-    
 }
