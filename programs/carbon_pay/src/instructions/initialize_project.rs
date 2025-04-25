@@ -1,6 +1,7 @@
 use crate::state::{CarbonCredits, Project};
 use anchor_lang::prelude::*;
 use anchor_spl::{
+    associated_token::AssociatedToken,
     metadata::{
         create_master_edition_v3, create_metadata_accounts_v3,
         mpl_token_metadata::types::{Creator, DataV2},
@@ -29,34 +30,41 @@ pub struct InitializeProject<'info> {
         init,
         payer = project_owner,
         space = Project::DISCRIMINATOR_SIZE + Project::INIT_SPACE,
-        seeds = [b"project", project_owner.key().as_ref(), mint.key().as_ref()],
+        seeds = [b"project", project_owner.key().as_ref(), nft_mint.key().as_ref()],
         bump
     )]
     pub project: Box<Account<'info, Project>>,
 
-    /// The mint (initially NFT, then fungible)
+    /// The NFT mint - will be used to create a Master Edition NFT
     #[account(
-        init,
-        payer = project_owner,
+        mut,
         mint::decimals = 0,
         mint::authority = project_owner,
         mint::freeze_authority = project_owner,
     )]
-    pub mint: Box<Account<'info, Mint>>,
+    pub nft_mint: Box<Account<'info, Mint>>,
+
+    /// The token mint - will be used for fungible tokens
+    #[account(
+        mut,
+        mint::decimals = 0,
+        mint::authority = project_owner,
+        mint::freeze_authority = project_owner,
+    )]
+    pub token_mint: Box<Account<'info, Mint>>,
 
     /// Owner's ATA for the NFT (must exist before; create with `spl-token create-account`)
     #[account(
         mut,
         constraint = project_owner_nft_account.owner == project_owner.key(),
-        constraint = project_owner_nft_account.mint  == mint.key(),
+        constraint = project_owner_nft_account.mint  == nft_mint.key(),
     )]
     pub project_owner_nft_account: Box<Account<'info, TokenAccount>>,
 
     /// ATA of the `carbon_credits` PDA for fungible tokens (create off-chain)
     #[account(
         mut,
-        constraint = vault.owner == carbon_credits.key(),
-        constraint = vault.mint  == mint.key(),
+        token::mint = token_mint,
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
 
@@ -82,6 +90,7 @@ pub struct InitializeProject<'info> {
     pub token_metadata_program: Program<'info, Metadata>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl<'info> InitializeProject<'info> {
@@ -98,7 +107,8 @@ impl<'info> InitializeProject<'info> {
         // 1. Initialize on-chain project state and update totals
         self.project.set_inner(Project {
             owner: self.project_owner.key(),
-            mint: self.mint.key(),
+            mint: self.nft_mint.key(),
+            token_mint: self.token_mint.key(),  // Added token_mint field
             token_bump: 0,
             amount,
             remaining_amount: amount,
@@ -111,18 +121,44 @@ impl<'info> InitializeProject<'info> {
         });
         self.carbon_credits.add_project_credits(amount)?;
 
-        // 2. Mint the NFT (1 token)
-        let cpi = CpiContext::new(
+        // 2. Mint the NFT (1 token) for project owner
+        let cpi_mint_nft = CpiContext::new(
             self.token_program.to_account_info(),
             MintTo {
-                mint:     self.mint.to_account_info(),
-                to:       self.project_owner_nft_account.to_account_info(),
-                authority:self.project_owner.to_account_info(),
+                mint: self.nft_mint.to_account_info(),
+                to: self.project_owner_nft_account.to_account_info(),
+                authority: self.project_owner.to_account_info(),
             },
         );
-        mint_to(cpi, 1)?;
+        mint_to(cpi_mint_nft, 1)?;
 
-        // 3. Metadata + master edition
+        // 3. Mint the fungible tokens (amount) to the vault
+        let cpi_mint_tokens = CpiContext::new(
+            self.token_program.to_account_info(),
+            MintTo {
+                mint: self.token_mint.to_account_info(),
+                to: self.vault.to_account_info(),
+                authority: self.project_owner.to_account_info(),
+            },
+        );
+        mint_to(cpi_mint_tokens, amount)?;
+
+        // 4. Transfer the fungible token mint authority to the carbon_credits PDA
+        let cpi_set_authority = CpiContext::new(
+            self.token_program.to_account_info(),
+            SetAuthority {
+                account_or_mint: self.token_mint.to_account_info(),
+                current_authority: self.project_owner.to_account_info(),
+            },
+        );
+        
+        set_authority(
+            cpi_set_authority,
+            anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
+            Some(self.carbon_credits.key()),
+        )?;
+
+        // 5. Metadata + master edition for the NFT
         let data = DataV2 {
             name,
             symbol,
@@ -141,7 +177,7 @@ impl<'info> InitializeProject<'info> {
                 self.token_metadata_program.to_account_info(),
                 CreateMetadataAccountsV3 {
                     metadata:        self.metadata.to_account_info(),
-                    mint:            self.mint.to_account_info(),
+                    mint:            self.nft_mint.to_account_info(),
                     mint_authority:  self.project_owner.to_account_info(),
                     payer:           self.project_owner.to_account_info(),
                     update_authority:self.project_owner.to_account_info(),
@@ -160,7 +196,7 @@ impl<'info> InitializeProject<'info> {
                 self.token_metadata_program.to_account_info(),
                 CreateMasterEditionV3 {
                     edition:         self.master_edition.to_account_info(),
-                    mint:            self.mint.to_account_info(),
+                    mint:            self.nft_mint.to_account_info(),
                     update_authority:self.project_owner.to_account_info(),
                     mint_authority:  self.project_owner.to_account_info(),
                     metadata:        self.metadata.to_account_info(),
@@ -170,30 +206,7 @@ impl<'info> InitializeProject<'info> {
                     rent:            self.rent.to_account_info(),
                 },
             ),
-            Some(amount),
-        )?;
-
-        // 4. Mint of fungible tokens + transfer authority
-        let cpi_mint = CpiContext::new(
-            self.token_program.to_account_info(),
-            MintTo {
-                mint:     self.mint.to_account_info(),
-                to:       self.vault.to_account_info(),
-                authority:self.project_owner.to_account_info(),
-            },
-        );
-        mint_to(cpi_mint, amount)?;
-        let cpi_set = CpiContext::new(
-            self.token_program.to_account_info(),
-            SetAuthority {
-                account_or_mint: self.mint.to_account_info(),
-                current_authority:self.project_owner.to_account_info(),
-            },
-        );
-        set_authority(
-            cpi_set,
-            anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
-            Some(self.carbon_credits.key()),
+            Some(0), // Max supply of 0 means there will be no prints (editions) of this NFT
         )?;
 
         Ok(())

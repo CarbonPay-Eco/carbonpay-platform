@@ -139,19 +139,19 @@ impl<'info> PurchaseCarbonCredits<'info> {
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
                 CreateMetadataAccountsV3 {
-                    metadata:         self.purchase_metadata.to_account_info(),
-                    mint:             self.purchase_nft_mint.to_account_info(),
-                    mint_authority:   self.buyer.to_account_info(),
-                    payer:            self.buyer.to_account_info(),
-                    update_authority: self.buyer.to_account_info(),
-                    system_program:   self.system_program.to_account_info(),
-                    rent:             self.rent.to_account_info(),
+                    metadata:self.purchase_metadata.to_account_info(),
+                    mint: self.purchase_nft_mint.to_account_info(),
+                    mint_authority:self.buyer.to_account_info(),
+                    payer:self.buyer.to_account_info(),
+                    update_authority:self.buyer.to_account_info(),
+                    system_program:self.system_program.to_account_info(),
+                    rent:self.rent.to_account_info(),
                 },
             ),
             DataV2 {
-                name:                    format!("Carbon Credits Purchase - {}", amount),
-                symbol:                  "CRBN".to_string(),
-                uri:                     format!("https://carbonpay.com/purchases/{}", self.purchase_nft_mint.key()),
+                name: format!("Carbon Credits Purchase - {}", amount),
+                symbol:"CRBN".to_string(),
+                uri: format!("https://carbonpay.com/purchases/{}", self.purchase_nft_mint.key()),
                 seller_fee_basis_points: 0,
                 creators: Some(vec![Creator{
                     address:  self.buyer.key(),
@@ -171,9 +171,9 @@ impl<'info> PurchaseCarbonCredits<'info> {
             CpiContext::new_with_signer(
                 self.token_program.to_account_info(),
                 token::Transfer {
-                    from:      self.project_token_account.to_account_info(),
-                    to:        self.buyer_token_account.to_account_info(),
-                    authority: self.carbon_credits.to_account_info(),
+                    from:self.project_token_account.to_account_info(),
+                    to:self.buyer_token_account.to_account_info(),
+                    authority:self.carbon_credits.to_account_info(),
                 },
                 &[&[b"carbon_credits", &[self.carbon_credits.bump]]],
             ),
@@ -182,13 +182,13 @@ impl<'info> PurchaseCarbonCredits<'info> {
 
         // 6) gravar on-chain
         self.purchase.set_inner(Purchase {
-            buyer:            self.buyer.key(),
-            project:          self.project.key(),
+            buyer:self.buyer.key(),
+            project:self.project.key(),
             amount,
-            remaining_amount: amount,
-            purchase_date:    Clock::get()?.unix_timestamp,
-            purchase_bump:    bumps.purchase,
-            nft_mint:         self.purchase_nft_mint.key(),
+            remaining_amount:amount,
+            purchase_date:Clock::get()?.unix_timestamp,
+            purchase_bump:bumps.purchase,
+            nft_mint:self.purchase_nft_mint.key(),
         });
         self.project.remaining_amount = self.project.remaining_amount.checked_sub(amount).ok_or(ContractError::ArithmeticOverflow)?;
 

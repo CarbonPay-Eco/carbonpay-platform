@@ -5,7 +5,8 @@ use anchor_lang::prelude::*;
 #[account]
 pub struct Project {
     pub owner: Pubkey, // The user who lists their carbon credits license in the platform
-    pub mint: Pubkey,  // The token mint generated for this specific project
+    pub mint: Pubkey,  // The NFT mint for the project owner
+    pub token_mint: Pubkey, // The token mint for fungible tokens stored in the vault
     pub token_bump: u8, // The token bump
     pub is_active: bool, // Status of the project
     pub amount: u64,   // Total amount of tokens minted for this project
@@ -21,6 +22,7 @@ impl Project {
     pub const DISCRIMINATOR_SIZE: usize = 8;
     pub const INIT_SPACE: usize = 32 +  // project_owner: Pubkey
         32 +  // mint: Pubkey
+        32 +  // token_mint: Pubkey
         1 +   // token_bump: u8
         1 +   // is_active: bool
         8 +   // amount: u64
