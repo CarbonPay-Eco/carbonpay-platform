@@ -17,7 +17,8 @@ pub struct PurchaseCarbonCredits<'info> {
         bump = project.project_bump,
     )]
     pub project: Account<'info, Project>,
-    ///CHECK: project owner is the project owner
+    
+    /// CHECK: project owner is the project owner
     /// who receives the payment
     #[account(
         mut,
@@ -25,15 +26,16 @@ pub struct PurchaseCarbonCredits<'info> {
     )]
     pub project_owner: UncheckedAccount<'info>,
 
-    /// project's fungible mint
+    /// project's fungible token mint (separate from NFT mint)
     #[account(
         mut,
-        constraint = project_mint.key() == project.mint @ ContractError::InvalidProjectMint
+        constraint = project_mint.key() == project.token_mint @ ContractError::InvalidProjectMint
     )]
     pub project_mint: Account<'info, Mint>,
 
     /// CarbonCredits PDA
     #[account(
+        mut,
         seeds = [b"carbon_credits"], bump = carbon_credits.bump,
         constraint = carbon_credits.key() == project.carbon_pay_authority @ ContractError::InvalidCarbonPayAuthority
     )]
@@ -43,19 +45,24 @@ pub struct PurchaseCarbonCredits<'info> {
     #[account(
         mut,
         token::mint = project_mint,
-        token::authority = carbon_credits
+        token::authority = carbon_credits,
+        owner = token::ID
     )]
     pub project_token_account: Account<'info, TokenAccount>,
 
     /// purchase NFT mint (create off-chain)
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = purchase_nft_mint.mint_authority.unwrap() == buyer.key() @ ContractError::Unauthorized
+    )]
     pub purchase_nft_mint: Account<'info, Mint>,
 
     /// buyer's ATA for the purchase NFT (create off-chain)
     #[account(
         mut,
         token::mint = purchase_nft_mint,
-        token::authority = buyer
+        token::authority = buyer,
+        owner = token::ID
     )]
     pub buyer_nft_account: Account<'info, TokenAccount>,
 
@@ -63,7 +70,8 @@ pub struct PurchaseCarbonCredits<'info> {
     #[account(
         mut,
         token::mint = project_mint,
-        token::authority = buyer
+        token::authority = buyer,
+        owner = token::ID
     )]
     pub buyer_token_account: Account<'info, TokenAccount>,
 
@@ -99,7 +107,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
                         .checked_div(10_000).ok_or(ContractError::ArithmeticOverflow)?;
         let to_owner = total.checked_sub(fee).ok_or(ContractError::ArithmeticOverflow)?;
 
-        // 2) transfer SOLs
+        // 2) transfer SOL
         anchor_lang::system_program::transfer(
             CpiContext::new(
                 self.system_program.to_account_info(),
@@ -121,7 +129,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
             fee,
         )?;
 
-        // 3) mint da NFT de compra
+        // 3) mint the purchase NFT
         token::mint_to(
             CpiContext::new(
                 self.token_program.to_account_info(),
@@ -134,7 +142,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
             1,
         )?;
 
-        // 4) metadata da NFT
+        // 4) create NFT metadata
         create_metadata_accounts_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -166,7 +174,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
             None,
         )?;
 
-        // 5) transferir os créditos
+        // 5) transfer the fungible tokens from vault to buyer
         token::transfer(
             CpiContext::new_with_signer(
                 self.token_program.to_account_info(),
@@ -180,7 +188,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
             amount,
         )?;
 
-        // 6) gravar on-chain
+        // 6) update on-chain state
         self.purchase.set_inner(Purchase {
             buyer:self.buyer.key(),
             project:self.project.key(),

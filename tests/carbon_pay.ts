@@ -47,7 +47,7 @@ describe("🌳 CarbonPay Program Test Suite", () => {
   
   // Project parameters
   const PROJECT_AMOUNT = 100;
-  const PRICE_PER_TOKEN = 1_000_000_000; // 1 SOL
+  const PRICE_PER_TOKEN = 10_000_000; // 0.01 SOL
   const CARBON_PAY_FEE = 500; // 5%
   const PROJECT_URI = "https://uri.test/1";
   const PROJECT_NAME = "MyProject";
@@ -59,12 +59,6 @@ describe("🌳 CarbonPay Program Test Suite", () => {
         [Buffer.from("carbon_credits")],
         program.programId
       );
-    
-    // Derive vault PDA
-    [vaultPda] = await PublicKey.findProgramAddress(
-      [Buffer.from("vault"), carbonCreditsPda.toBuffer()],
-      program.programId
-    );
     
     // Setup project owner
     projectOwner = Keypair.generate();
@@ -133,10 +127,9 @@ describe("🌳 CarbonPay Program Test Suite", () => {
     // 3. Create ATA for vault (Tokens)
     vaultAta = await getAssociatedTokenAddress(
       tokenMint, 
-      vaultPda, 
+      carbonCreditsPda, 
       true // allowOwnerOffCurve: true - important for PDAs
     );
-    console.log("Vault PDA:", vaultPda.toBase58());
     console.log("Vault ATA:", vaultAta.toBase58());
     
     // 4. Create ATAs in a single transaction
@@ -153,7 +146,7 @@ describe("🌳 CarbonPay Program Test Suite", () => {
         createAssociatedTokenAccountInstruction(
           projectOwner.publicKey, // payer
           vaultAta,
-          vaultPda, // owner - the vault PDA
+          carbonCreditsPda, // owner - the carbon_credits PDA
           tokenMint
         )
       );
@@ -282,221 +275,292 @@ describe("🌳 CarbonPay Program Test Suite", () => {
     }
   });
 
-  // // ──────────────────────────────────────────────────────────────────────────────
-  // // 3) PurchaseCarbonCredits
-  // // ──────────────────────────────────────────────────────────────────────────────
-  // let buyer: Keypair;
-  // let purchaseNftMint: PublicKey;
-  // let buyerNftAta: PublicKey;
-  // let buyerTokenAta: PublicKey;
-  // let purchasePda: PublicKey;
-  // let purchaseBump: number;
-  // const purchaseAmount = 10;
+  // ──────────────────────────────────────────────────────────────────────────────
+  // 3) PurchaseCarbonCredits
+  // ──────────────────────────────────────────────────────────────────────────────
+  let buyer: Keypair;
+  let purchaseNftMint: PublicKey;
+  let buyerNftAta: PublicKey;
+  let buyerTokenAta: PublicKey;
+  let purchasePda: PublicKey;
+  let purchaseBump: number;
+  const purchaseAmount = 10;
 
-  // it("3. Purchase Carbon Credits (SOL → owner + fee, mint NFT and tokens)", async () => {
-  //   // a) Setup buyer and airdrop
-  //   buyer = Keypair.generate();
-  //   await connection
-  //     .requestAirdrop(buyer.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL)
-  //     .then(sig => connection.confirmTransaction(sig));
+  it("3. Purchase Carbon Credits (SOL → owner + fee, mint NFT and tokens)", async () => {
+    // a) Setup buyer and airdrop
+    buyer = Keypair.generate();
+    await connection
+      .requestAirdrop(buyer.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL)
+      .then(sig => connection.confirmTransaction(sig));
 
-  //   // b) Create mint for purchase NFT
-  //   purchaseNftMint = await createMint(
-  //     connection,
-  //     buyer,
-  //     buyer.publicKey,
-  //     buyer.publicKey,
-  //     0
-  //   );
+    // b) Create mint for purchase NFT
+    purchaseNftMint = await createMint(
+      connection,
+      buyer,
+      buyer.publicKey,
+      buyer.publicKey,
+      0
+    );
+    console.log("Purchase NFT mint created:", purchaseNftMint.toBase58());
+    console.log("Mint authority:", buyer.publicKey.toBase58());
 
-  //   // c) Derive buyer's ATAs
-  //   buyerNftAta = await getAssociatedTokenAddress(
-  //     purchaseNftMint,
-  //     buyer.publicKey
-  //   );
-  //   buyerTokenAta = await getAssociatedTokenAddress(
-  //     mint,
-  //     buyer.publicKey
-  //   );
+    // c) Derive buyer's ATAs
+    buyerNftAta = await getAssociatedTokenAddress(
+      purchaseNftMint,
+      buyer.publicKey
+    );
+    buyerTokenAta = await getAssociatedTokenAddress(
+      tokenMint,
+      buyer.publicKey
+    );
+    console.log("Buyer NFT ATA:", buyerNftAta.toBase58());
+    console.log("Buyer token ATA:", buyerTokenAta.toBase58());
 
-  //   // d) Create ATAs (wallet pays)
-  //   const ixBuyNftAta = createAssociatedTokenAccountInstruction(
-  //     provider.wallet.publicKey,
-  //     buyerNftAta,
-  //     buyer.publicKey,
-  //     purchaseNftMint
-  //   );
-  //   const ixBuyTokenAta = createAssociatedTokenAccountInstruction(
-  //     provider.wallet.publicKey,
-  //     buyerTokenAta,
-  //     buyer.publicKey,
-  //     mint
-  //   );
-  //   await provider.sendAndConfirm(
-  //     new Transaction().add(ixBuyNftAta, ixBuyTokenAta)
-  //   );
+    // d) Create ATAs (buyer pays for their own accounts)
+    const ixBuyNftAta = createAssociatedTokenAccountInstruction(
+      buyer.publicKey, // buyer pays for their own accounts
+      buyerNftAta,
+      buyer.publicKey,
+      purchaseNftMint
+    );
+    const ixBuyTokenAta = createAssociatedTokenAccountInstruction(
+      buyer.publicKey, // buyer pays for their own accounts
+      buyerTokenAta,
+      buyer.publicKey,
+      tokenMint
+    );
+    
+    // Have the buyer sign the transaction to create their own accounts
+    await provider.sendAndConfirm(
+      new Transaction().add(ixBuyNftAta, ixBuyTokenAta),
+      [buyer] // buyer signs
+    );
+    console.log("Buyer ATAs created successfully");
 
-  //   // e) Derive Purchase PDA
-  //   [purchasePda, purchaseBump] = await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("purchase"),
-  //       buyer.publicKey.toBuffer(),
-  //       projectPda.toBuffer(),
-  //       purchaseNftMint.toBuffer(),
-  //     ],
-  //     program.programId
-  //   );
+    // Verify account ownerships
+    try {
+      // Check ATA ownerships
+      const buyerNftAccount = await connection.getAccountInfo(buyerNftAta);
+      const buyerTokenAccount = await connection.getAccountInfo(buyerTokenAta);
+      const vaultAccount = await connection.getAccountInfo(vaultAta);
+      
+      console.log("Buyer NFT ATA owner program:", buyerNftAccount?.owner.toBase58());
+      console.log("Buyer Token ATA owner program:", buyerTokenAccount?.owner.toBase58());
+      console.log("Vault ATA owner program:", vaultAccount?.owner.toBase58());
+      
+      // Check mints
+      const nftMintInfo = await getMint(connection, purchaseNftMint);
+      const tokenMintInfo = await getMint(connection, tokenMint);
+      
+      console.log("NFT Mint Authority:", nftMintInfo.mintAuthority?.toBase58());
+      console.log("Token Mint Authority:", tokenMintInfo.mintAuthority?.toBase58());
+    } catch (e) {
+      console.error("Error checking account ownerships:", e);
+    }
 
-  //   // f) Derive purchase metadata PDA
-  //   const [purchaseMetadataPda] = await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("metadata"),
-  //       METADATA_PROGRAM_ID.toBuffer(),
-  //       purchaseNftMint.toBuffer(),
-  //     ],
-  //     METADATA_PROGRAM_ID
-  //   );
+    // e) Derive Purchase PDA
+    [purchasePda, purchaseBump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("purchase"),
+        buyer.publicKey.toBuffer(),
+        projectPda.toBuffer(),
+        purchaseNftMint.toBuffer(),
+      ],
+      program.programId
+    );
+    console.log("Purchase PDA:", purchasePda.toBase58());
 
-  //   // g) Call purchaseCarbonCredits
-  //   await program.methods
-  //     .purchaseCarbonCredits(new BN(purchaseAmount))
-  //     .accountsPartial({
-  //       project: projectPda,
-  //       projectOwner: projectOwner.publicKey,
-  //       projectMint: mint,
-  //       carbonCredits: carbonCreditsPda,
-  //       projectTokenAccount: vaultAta,
-  //       purchaseNftMint,
-  //       buyerNftAccount: buyerNftAta,
-  //       buyerTokenAccount: buyerTokenAta,
-  //       purchase: purchasePda,
-  //       purchaseMetadata: purchaseMetadataPda,
-  //       buyer: buyer.publicKey,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenMetadataProgram: METADATA_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //     })
-  //     .signers([buyer])
-  //     .rpc();
+    // f) Derive purchase metadata PDA
+    const [purchaseMetadataPda] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("metadata"),
+        METADATA_PROGRAM_ID.toBuffer(),
+        purchaseNftMint.toBuffer(),
+      ],
+      METADATA_PROGRAM_ID
+    );
+    console.log("Purchase Metadata PDA:", purchaseMetadataPda.toBase58());
 
-  //   // h) Post-purchase verifications
-  //   const projAfter = await program.account.project.fetch(projectPda);
-  //   assert.equal(
-  //     projAfter.remainingAmount.toNumber(),
-  //     100 - purchaseAmount
-  //   );
+    // g) Print all account info for debugging
+    console.log("--- Purchase Call Accounts ---");
+    console.log("Project:", projectPda.toBase58());
+    console.log("Project Owner:", projectOwner.publicKey.toBase58());
+    console.log("Project Mint (Token):", tokenMint.toBase58());
+    console.log("Carbon Credits:", carbonCreditsPda.toBase58());
+    console.log("Project Token Account (vault):", vaultAta.toBase58());
+    console.log("Purchase NFT Mint:", purchaseNftMint.toBase58());
+    console.log("Buyer:", buyer.publicKey.toBase58());
+    console.log("Buyer NFT Account:", buyerNftAta.toBase58());
+    console.log("Buyer Token Account:", buyerTokenAta.toBase58());
+    console.log("Purchase:", purchasePda.toBase58());
+    console.log("Purchase Metadata:", purchaseMetadataPda.toBase58());
+    console.log("---------------------------");
 
-  //   const buyNftBal = await connection.getTokenAccountBalance(buyerNftAta);
-  //   assert.equal(buyNftBal.value.uiAmount, 1);
+    // h) Call purchaseCarbonCredits
+    console.log("Calling purchaseCarbonCredits with amount:", purchaseAmount);
+    try {
+      const tx = await program.methods
+        .purchaseCarbonCredits(new BN(purchaseAmount))
+        .accountsPartial({
+          project: projectPda,
+          projectOwner: projectOwner.publicKey,
+          projectMint: tokenMint,
+          carbonCredits: carbonCreditsPda,
+          projectTokenAccount: vaultAta,
+          purchaseNftMint,
+          buyerNftAccount: buyerNftAta,
+          buyerTokenAccount: buyerTokenAta,
+          purchase: purchasePda,
+          purchaseMetadata: purchaseMetadataPda,
+          buyer: buyer.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([buyer])
+        .rpc();
+      console.log("Purchase successful! Tx:", tx);
+    } catch (error) {
+      console.error("Error during purchase:", error);
+      if (error instanceof Error) {
+        console.log("Error message:", error.message);
+        if ('logs' in error) {
+          console.log("Error logs:", (error as any).logs);
+        }
+      }
+      throw error;
+    }
 
-  //   const buyTokenBal = await connection.getTokenAccountBalance(buyerTokenAta);
-  //   assert.equal(buyTokenBal.value.uiAmount, purchaseAmount);
+    // i) Post-purchase verifications
+    const projAfter = await program.account.project.fetch(projectPda);
+    assert.equal(
+      projAfter.remainingAmount.toNumber(),
+      100 - purchaseAmount
+    );
 
-  //   const purchaseAcc = await program.account.purchase.fetch(purchasePda);
-  //   assert.equal(purchaseAcc.amount.toNumber(), purchaseAmount);
-  //   assert.equal(purchaseAcc.remainingAmount.toNumber(), purchaseAmount);
-  //   assert.equal(
-  //     purchaseAcc.buyer.toBase58(),
-  //     buyer.publicKey.toBase58()
-  //   );
-  // });
+    const buyNftBal = await connection.getTokenAccountBalance(buyerNftAta);
+    assert.equal(buyNftBal.value.uiAmount, 1);
 
-  // // ──────────────────────────────────────────────────────────────────────────────
-  // // 4) RequestOffset
-  // // ──────────────────────────────────────────────────────────────────────────────
-  // it("4. Request Offset (burn NFT, partial mint and register)", async () => {
-  //   const offsetAmount = 5;
-  //   const requestId = "REQ123";
+    const buyTokenBal = await connection.getTokenAccountBalance(buyerTokenAta);
+    assert.equal(buyTokenBal.value.uiAmount, purchaseAmount);
 
-  //   // a) Derive OffsetRequest PDA
-  //   const [offsetReqPda] = await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("offset_request"),
-  //       buyer.publicKey.toBuffer(),
-  //       purchasePda.toBuffer(),
-  //       Buffer.from(requestId),
-  //     ],
-  //     program.programId
-  //   );
+    const purchaseAcc = await program.account.purchase.fetch(purchasePda);
+    assert.equal(purchaseAcc.amount.toNumber(), purchaseAmount);
+    assert.equal(purchaseAcc.remainingAmount.toNumber(), purchaseAmount);
+    assert.equal(
+      purchaseAcc.buyer.toBase58(),
+      buyer.publicKey.toBase58()
+    );
+  });
 
-  //   // b) Create new mint for residual NFT
-  //   const newNftMint = await createMint(
-  //     connection,
-  //     buyer,
-  //     buyer.publicKey,
-  //     buyer.publicKey,
-  //     0
-  //   );
-  //   const newNftAta = await getAssociatedTokenAddress(
-  //     newNftMint,
-  //     buyer.publicKey
-  //   );
-  //   await provider.sendAndConfirm(
-  //     new Transaction().add(
-  //       createAssociatedTokenAccountInstruction(
-  //         provider.wallet.publicKey,
-  //         newNftAta,
-  //         buyer.publicKey,
-  //         newNftMint
-  //       )
-  //     )
-  //   );
+  // ──────────────────────────────────────────────────────────────────────────────
+  // 4) RequestOffset
+  // ──────────────────────────────────────────────────────────────────────────────
+  it("4. Request Offset (burn NFT, partial mint and register)", async () => {
+    const offsetAmount = 5;
+    const requestId = "REQ123";
 
-  //   // c) Derive new NFT metadata PDA
-  //   const [newNftMetadataPda] = await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("metadata"),
-  //       METADATA_PROGRAM_ID.toBuffer(),
-  //       newNftMint.toBuffer(),
-  //     ],
-  //     METADATA_PROGRAM_ID
-  //   );
+    // a) Derive OffsetRequest PDA
+    const [offsetReqPda] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("offset_request"),
+        buyer.publicKey.toBuffer(),
+        purchasePda.toBuffer(),
+        Buffer.from(requestId),
+      ],
+      program.programId
+    );
 
-  //   // d) Call requestOffset
-  //   await program.methods
-  //     .requestOffset(new BN(offsetAmount), requestId)
-  //     .accountsPartial({
-  //       offsetRequester: buyer.publicKey,
-  //       purchase: purchasePda,
-  //       project: projectPda,
-  //       originalNftMint: purchaseNftMint,
-  //       originalNftAccount: buyerNftAta,
-  //       newNftMint,
-  //       newNftAccount: newNftAta,
-  //       newNftMetadata: newNftMetadataPda,
-  //       carbonCredits: carbonCreditsPda,
-  //       offsetRequest: offsetReqPda,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenMetadataProgram: METADATA_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //     })
-  //     .signers([buyer])
-  //     .rpc();
+    // b) Create new mint for residual NFT
+    const newNftMint = await createMint(
+      connection,
+      buyer,
+      buyer.publicKey,
+      buyer.publicKey,
+      0
+    );
+    const newNftAta = await getAssociatedTokenAddress(
+      newNftMint,
+      buyer.publicKey
+    );
+    await provider.sendAndConfirm(
+      new Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          provider.wallet.publicKey,
+          newNftAta,
+          buyer.publicKey,
+          newNftMint
+        )
+      )
+    );
 
-  //   // e) Final verifications
-  //   const purchaseAfter = await program.account.purchase.fetch(purchasePda);
-  //   assert.equal(
-  //     purchaseAfter.remainingAmount.toNumber(),
-  //     purchaseAmount - offsetAmount
-  //   );
+    // c) Derive new NFT metadata PDA
+    const [newNftMetadataPda] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("metadata"),
+        METADATA_PROGRAM_ID.toBuffer(),
+        newNftMint.toBuffer(),
+      ],
+      METADATA_PROGRAM_ID
+    );
 
-  //   const ccAfter = await program.account.carbonCredits.fetch(
-  //     carbonCreditsPda
-  //   );
-  //   assert.equal(ccAfter.offsetCredits.toNumber(), offsetAmount);
+    // d) Call requestOffset
+    await program.methods
+      .requestOffset(new BN(offsetAmount), requestId)
+      .accountsPartial({
+        offsetRequester: buyer.publicKey,
+        purchase: purchasePda,
+        project: projectPda,
+        originalNftMint: purchaseNftMint,
+        originalNftAccount: buyerNftAta,
+        newNftMint,
+        newNftAccount: newNftAta,
+        newNftMetadata: newNftMetadataPda,
+        tokenMint: tokenMint,  
+        buyerTokenAccount: buyerTokenAta, 
+        carbonCredits: carbonCreditsPda,
+        offsetRequest: offsetReqPda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([buyer])
+      .rpc();
 
-  //   const offsetAcc = await program.account.offsetRequest.fetch(
-  //     offsetReqPda
-  //   );
-  //   assert.equal(offsetAcc.amount.toNumber(), offsetAmount);
-  //   assert.equal(offsetAcc.status, "pending"); // Pending
+    // e) Final verifications
+    const purchaseAfter = await program.account.purchase.fetch(purchasePda);
+    assert.equal(
+      purchaseAfter.remainingAmount.toNumber(),
+      purchaseAmount - offsetAmount
+    );
 
-  //   const origBal = await connection.getTokenAccountBalance(buyerNftAta);
-  //   assert.equal(origBal.value.uiAmount, 0);
+    const ccAfter = await program.account.carbonCredits.fetch(
+      carbonCreditsPda
+    );
+    assert.equal(ccAfter.offsetCredits.toNumber(), offsetAmount);
 
-  //   const newBal = await connection.getTokenAccountBalance(newNftAta);
-  //   assert.equal(newBal.value.uiAmount, 1);
-  // });
+    const offsetAcc = await program.account.offsetRequest.fetch(
+      offsetReqPda
+    );
+    assert.equal(offsetAcc.amount.toNumber(), offsetAmount);
+    assert.ok(offsetAcc.status.pending !== undefined);
+
+    const origBal = await connection.getTokenAccountBalance(buyerNftAta);
+    assert.equal(origBal.value.uiAmount, 0);
+
+    const newBal = await connection.getTokenAccountBalance(newNftAta);
+    assert.equal(newBal.value.uiAmount, 1);
+    
+    // Verify that fungible tokens were burned
+    const buyerTokenBal = await connection.getTokenAccountBalance(buyerTokenAta);
+    assert.equal(buyerTokenBal.value.uiAmount, purchaseAmount - offsetAmount, 
+                 "Buyer should have purchaseAmount - offsetAmount tokens remaining");
+    
+    // Verify project offset amount
+    const projectAfter = await program.account.project.fetch(projectPda);
+    assert.equal(projectAfter.offsetAmount.toNumber(), offsetAmount, 
+                 "Project offsetAmount should be updated");
+  });
 });

@@ -1,4 +1,5 @@
 use crate::state::{CarbonCredits, OffsetRequest, Project, Purchase, RequestStatus};
+use crate::errors::ContractError;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, MintTo, Burn},
@@ -8,7 +9,6 @@ use anchor_spl::{
         CreateMetadataAccountsV3, Metadata,
     },
 };
-use crate::errors::*;
 
 #[derive(Accounts)]
 #[instruction(amount: u64, request_id: String)]
@@ -35,7 +35,7 @@ pub struct RequestOffset<'info> {
     )]
     pub project: Box<Account<'info, Project>>,
 
-    /// the original NFT mint & token account
+    /// the original NFT mint & token account - will be burned
     #[account(mut, constraint = original_nft_mint.key() == purchase.nft_mint @ ContractError::InvalidNFTMint)]
     pub original_nft_mint: Box<Account<'info, Mint>>,
     #[account(
@@ -46,7 +46,7 @@ pub struct RequestOffset<'info> {
     )]
     pub original_nft_account: Box<Account<'info, TokenAccount>>,
 
-    /// NEW NFT mint & ATA must be created client-side beforehand!
+    /// NEW NFT mint & ATA must be created client-side beforehand (for partial offsets)
     #[account(mut)]
     pub new_nft_mint: Box<Account<'info, Mint>>,
     #[account(
@@ -60,6 +60,22 @@ pub struct RequestOffset<'info> {
     /// CHECK: will be initialized by CPI
     #[account(mut)]
     pub new_nft_metadata: UncheckedAccount<'info>,
+
+    /// The project's fungible token mint
+    #[account(
+        mut,
+        constraint = token_mint.key() == project.token_mint @ ContractError::InvalidProjectMint,
+    )]
+    pub token_mint: Box<Account<'info, Mint>>,
+
+    /// Buyer's token account for the project's fungible tokens - tokens will be burned
+    #[account(
+        mut, 
+        token::mint = token_mint,
+        token::authority = offset_requester,
+        constraint = buyer_token_account.amount >= amount @ ContractError::InsufficientFungibleTokens,
+    )]
+    pub buyer_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CarbonCredits PDA
     #[account(
@@ -98,6 +114,10 @@ impl<'info> RequestOffset<'info> {
             amount <= self.purchase.remaining_amount,
             ContractError::InsufficientRemainingTokens
         );
+        require!(
+            self.buyer_token_account.amount >= amount,
+            ContractError::InsufficientFungibleTokens
+        );
 
         // 2) compute new remaining
         let remaining = self
@@ -119,7 +139,20 @@ impl<'info> RequestOffset<'info> {
             1,
         )?;
 
-        // 4) if partial, mint new NFT into the existing ATA
+        // 4) burn fungible tokens that are being offset
+        token::burn(
+            CpiContext::new(
+                self.token_program.to_account_info(),
+                Burn {
+                    mint: self.token_mint.to_account_info(),
+                    from: self.buyer_token_account.to_account_info(),
+                    authority: self.offset_requester.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+
+        // 5) if partial, mint new NFT representing remaining balance
         if remaining > 0 {
             // mint exactly 1 new token
             token::mint_to(
@@ -136,9 +169,9 @@ impl<'info> RequestOffset<'info> {
 
             // prepare metadata
             let data = DataV2 {
-                name: format!("CRBN-{}", remaining),
+                name: format!("Carbon Credits - Remaining: {}", remaining),
                 symbol: "CRBN".to_string(),
-                uri: format!("https://carbonpay.com/id/{}", self.new_nft_mint.key()),
+                uri: format!("https://carbonpay.com/purchases/{}/remaining", self.new_nft_mint.key()),
                 seller_fee_basis_points: 0,
                 creators: Some(vec![Creator {
                     address: self.offset_requester.key(),
@@ -170,15 +203,22 @@ impl<'info> RequestOffset<'info> {
             )?;
         }
 
-        // 5) update on-chain state
+        // 6) update on-chain state
         self.purchase.remaining_amount = remaining;
         self.carbon_credits.offset_credits = self
             .carbon_credits
             .offset_credits
             .checked_add(amount)
             .ok_or(ContractError::ArithmeticOverflow)?;
+        
+        // Update project's offset_amount
+        self.project.offset_amount = self
+            .project
+            .offset_amount
+            .checked_add(amount)
+            .ok_or(ContractError::ArithmeticOverflow)?;
 
-        // 6) record the Request
+        // 7) record the Request
         self.offset_request.set_inner(OffsetRequest {
             offset_requester: self.offset_requester.key(),
             purchase: self.purchase.key(),
