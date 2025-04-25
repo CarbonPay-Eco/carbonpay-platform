@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copiar arquivos de configuração
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 COPY tsconfig.json ./
 
 # Instalar dependências
