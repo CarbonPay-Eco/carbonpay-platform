@@ -33,6 +33,9 @@ export class TokenizedProject {
   @Column({ name: 'vintage_year' })
   vintageYear: number;
 
+  @Column({ name: 'standard' })
+  standard: string;
+
   @Column({ name: 'total_issued' })
   totalIssued: number;
 

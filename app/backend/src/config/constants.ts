@@ -8,8 +8,7 @@ export const JWT_SECRET = EnvManager.getEnvOrThrow('JWT_SECRET') || 'your-secret
 export const POSTGRES_USER = EnvManager.getEnvOrThrow('POSTGRES_USER');
 export const POSTGRES_PASSWORD = EnvManager.getEnvOrThrow('POSTGRES_PASSWORD');
 export const POSTGRES_DB = EnvManager.getEnvOrThrow('POSTGRES_DB');
-export const POSTGRES_PORT = EnvManager.getEnvOrThrow('POSTGRES_PORT');
-export const DB_PORT = Number(EnvManager.getEnvOrThrow('DB_PORT'));
+export const POSTGRES_PORT = Number(EnvManager.getEnvOrThrow('POSTGRES_PORT'));
 export const DB_HOST = EnvManager.getEnvOrThrow('DB_HOST');
 
 // Solana

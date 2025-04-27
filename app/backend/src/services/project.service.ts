@@ -1,48 +1,57 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Project } from '../types';
+import { TokenizedProject } from '../database/entities/TokenizedProject';
 import { SolanaService } from './solana.service';
+import { Repository } from 'typeorm';
+import { AppDataSource } from '../database/data-source';
 
 // Placeholder for database in memory
 const projects: Project[] = [];
 
 export class ProjectService {
   private solanaService: SolanaService;
+  private projectRepository: Repository<TokenizedProject>;
 
   constructor() {
     this.solanaService = new SolanaService();
+    this.projectRepository = AppDataSource.getRepository(TokenizedProject); // Initialize the repository
   }
 
-  async createProject(data: Partial<Project>, walletAddress: string): Promise<Project> {
+  async createProject(data: Partial<TokenizedProject>, walletAddress: string): Promise<TokenizedProject> {
     // Interact with Solana to mint new token
     const mintResult = await this.solanaService.mintCredit(walletAddress, {
-      project: data.name || '',
-      vintage: data.vintage || '',
+      project: data.projectName || '',
+      vintage: data.vintageYear?.toString() || '',
       standard: data.standard || '',
-      amount: data.totalSupply || 0,
-      metadata: data.metadata || {},
+      amount: data.totalIssued || 0,
+      metadata: { tags: data.tags || [] },
     });
 
-    const newProject: Project = {
-      id: uuidv4(),
-      name: data.name || '',
-      description: data.description || '',
+    // Create a new project entity
+    const newProject = this.projectRepository.create({
+      tokenId: mintResult,
+      projectName: data.projectName || '',
       location: data.location || '',
-      vintage: data.vintage || '',
-      standard: data.standard || '',
-      tokenId: data.tokenId || mintResult, // In real implementation, this would come from the mint result
-      totalSupply: data.totalSupply || 0,
-      remainingSupply: data.totalSupply || 0,
-      certificationUrl: data.certificationUrl,
-      imageUrl: data.imageUrl,
-      metadata: data.metadata || {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      description: data.description || '',
+      certificationBody: data.certificationBody || '',
+      projectRefId: data.projectRefId || '',
+      methodology: data.methodology || '',
+      verifierName: data.verifierName || '',
+      vintageYear: data.vintageYear || new Date().getFullYear(),
+      totalIssued: data.totalIssued || 0,
+      available: data.totalIssued || 0, 
+      pricePerTon: data.pricePerTon || 0,
+      ipfsHash: data.ipfsHash || '',
+      documentationUrl: data.documentationUrl || '',
+      onChainMintTx: mintResult,
+      status: 'available',
+      projectImageUrl: data.projectImageUrl || '',
+      tags: data.tags || [],
+    });
 
-    // In a real application, this would save to a database
-    projects.push(newProject);
-    
-    return newProject;
+    // Save the project to the database
+    const savedProject = await this.projectRepository.save(newProject);
+
+    return savedProject;
   }
 
   async getAllProjects(): Promise<Project[]> {

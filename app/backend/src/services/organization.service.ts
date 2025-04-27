@@ -69,6 +69,7 @@ export class OrganizationService {
    */
   async getOrganizationByWallet(walletAddress: string): Promise<Organization | null> {
     const wallet = await this.walletService.findByAddress(walletAddress);
+    console.log('Wallet:', wallet);
     
     if (!wallet) {
       return null;

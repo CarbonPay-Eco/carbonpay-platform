@@ -114,7 +114,7 @@ export const authValidations = {
  */
 export const organizationValidations = {
   createOrganization: validate({
-    name: {
+    companyName: {
       required: true,
       type: 'string',
       minLength: 2,
@@ -125,16 +125,11 @@ export const organizationValidations = {
       type: 'string',
       maxLength: 1000,
       message: 'Description must not exceed 1000 characters'
-    },
-    logo: {
-      type: 'string',
-      maxLength: 500,
-      message: 'Logo URL must not exceed 500 characters'
     }
   }),
   
   updateOrganization: validate({
-    name: {
+    companyName: {
       type: 'string',
       minLength: 2,
       maxLength: 100,
@@ -144,11 +139,6 @@ export const organizationValidations = {
       type: 'string',
       maxLength: 1000,
       message: 'Description must not exceed 1000 characters'
-    },
-    logo: {
-      type: 'string',
-      maxLength: 500,
-      message: 'Logo URL must not exceed 500 characters'
     }
   })
 };
@@ -158,7 +148,7 @@ export const organizationValidations = {
  */
 export const projectValidations = {
   createProject: validate({
-    name: {
+    projectName: {
       required: true,
       type: 'string',
       minLength: 3,
@@ -179,9 +169,9 @@ export const projectValidations = {
       maxLength: 100,
       message: 'Project location is required and must be between 2 and 100 characters'
     },
-    vintage: {
+    vintageYear: {
       required: true,
-      type: 'string',
+      type: 'number',
       message: 'Project vintage (year) is required'
     },
     standard: {
@@ -189,18 +179,18 @@ export const projectValidations = {
       type: 'string',
       message: 'Carbon standard is required (e.g., VCS, Gold Standard)'
     },
-    totalSupply: {
+    totalIssued: {
       required: true,
       type: 'number',
       custom: (value) => value > 0,
       message: 'Total supply must be a positive number'
     },
-    certificationUrl: {
+    certificationBody: {
       type: 'string',
       maxLength: 500,
       message: 'Certification URL must not exceed 500 characters'
     },
-    imageUrl: {
+    projectImageUrl: {
       type: 'string',
       maxLength: 500,
       message: 'Image URL must not exceed 500 characters'

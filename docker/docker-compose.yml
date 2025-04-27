@@ -29,19 +29,25 @@ services:
 
   postgres:
     image: postgres:13
+    container_name: carbonpay-postgres
     ports:
-      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
     env_file:
       - ../.env
+    environment:
+      POSTGRES_USER: carbonpay
+      POSTGRES_PASSWORD: carbonpay
+      POSTGRES_DB: carbonpay
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - carbonpay-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U carbonpay -d carbonpay'"]
+      interval: 30s
+      timeout: 60s
       retries: 5
+      start_period: 80s
   # frontend:
   #   build:
   #     context: ../frontend
