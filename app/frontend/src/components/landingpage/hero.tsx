@@ -11,7 +11,7 @@ export default function Hero() {
   const { publicKey } = useWallet();
   const router = useRouter();
 
-  const mockCheckWalletInDB = async (walletAddress: string): Promise<boolean> => {
+  const mockCheckWalletInDB = async (walletAddress: string): Promise<boolean> => { // TODOOOOOOOOOOOOO
     return new Promise((resolve) => {
       setTimeout(() => {
         const existingWallet = "mock-wallet-address";
