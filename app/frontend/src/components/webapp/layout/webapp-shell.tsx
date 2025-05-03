@@ -47,7 +47,8 @@ export default function WebappShell({ children }: WebappShellProps) {
       {/* Mobile sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-black transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 transform bg-black transition-transform duration-300 ease-in-out",
+          "lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -113,7 +114,7 @@ export default function WebappShell({ children }: WebappShellProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden lg:ml-64">
         {/* Header */}
         <header className="border-b border-white/10 bg-black/95">
           <div className="flex h-16 items-center justify-between px-8">

@@ -7,6 +7,8 @@ export interface OnboardingFormData {
   companySize: string;
   industry: string;
   companyDescription: string;
+  contactEmail: string;
+  websiteUrl: string;
 
   // Emissions Related
   hasEmissionsHistory: boolean;
@@ -15,6 +17,7 @@ export interface OnboardingFormData {
   emissionsReductionGoal?: number;
   sustainabilityPrograms: string[];
   offsettingExperience: string;
+  acceptedTerms: boolean;
 }
 
 export type OnboardingStep = {

@@ -194,6 +194,32 @@ export default function OnboardingPage() {
                             placeholder="Enter your full name"
                           />
                         </div>
+                        <div>
+                          <Label htmlFor="contactEmail">Contact Email</Label>
+                          <Input
+                            id="contactEmail"
+                            type="email"
+                            value={formData.contactEmail || ""}
+                            onChange={(e) =>
+                              handleInputChange("contactEmail", e.target.value)
+                            }
+                            className="mt-2 bg-black/50 border-white/20"
+                            placeholder="Enter your contact email"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="websiteUrl">Website URL</Label>
+                          <Input
+                            id="websiteUrl"
+                            type="url"
+                            value={formData.websiteUrl || ""}
+                            onChange={(e) =>
+                              handleInputChange("websiteUrl", e.target.value)
+                            }
+                            className="mt-2 bg-black/50 border-white/20"
+                            placeholder="Enter your website URL"
+                          />
+                        </div>
                       </div>
                     )}
 
@@ -444,6 +470,20 @@ export default function OnboardingPage() {
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="acceptedTerms" className="flex items-center space-x-2">
+                            <Checkbox
+                              id="acceptedTerms"
+                              checked={!!formData.acceptedTerms}
+                              onCheckedChange={(checked) =>
+                                handleInputChange("acceptedTerms", !!checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span>I accept the terms and conditions</span>
+                          </Label>
                         </div>
                       </div>
                     )}
