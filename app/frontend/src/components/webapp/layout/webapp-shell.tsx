@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,12 +30,25 @@ export default function WebappShell({ children }: WebappShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { publicKey } = useWallet();
+  const { publicKey, disconnect } = useWallet();
 
-  const handleLogout = () => {
-    localStorage.removeItem("walletConnected");
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await disconnect();
+      document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      router.push("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
+
+  // Redirect to landing page if wallet is disconnected
+  useEffect(() => {
+    if (!publicKey) {
+      document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      router.push("/");
+    }
+  }, [publicKey, router]);
 
   return (
     <div className="flex h-full">

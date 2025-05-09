@@ -28,6 +28,6 @@ impl<'info> InitializeCarbonCreditsAccountConstraints<'info> {
 
         carbon_credits.initialize(self.admin.key(), bumps.carbon_credits)?;
 
-     Ok(())
+        Ok(())
     }
 }

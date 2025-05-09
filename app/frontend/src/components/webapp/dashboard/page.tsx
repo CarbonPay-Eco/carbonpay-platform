@@ -218,12 +218,12 @@ export default function DashboardPage() {
               <Card className="bg-black/40 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold">Your emissions</h3>
+                    <h3 className="text-xl font-bold">Your emissionsaaa</h3>
                     <p className="text-3xl font-bold">
                       {metrics.totalEmissions} tons
                     </p>
                     <p className="text-sm text-gray-400">
-                      {metrics.totalEmissions * (metrics.emissionsOffset / 100)}{" "}
+                      {(metrics.totalEmissions * (metrics.emissionsOffset / 100)).toFixed(2)}{" "}
                       tons offset
                     </p>
                   </div>

@@ -2,16 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletButton } from "@/components/solana/solana-provider";
+import { useEffect } from "react";
 
 export default function Hero() {
-  const { setVisible } = useWalletModal();
   const { publicKey } = useWallet();
   const router = useRouter();
 
-  const mockCheckWalletInDB = async (walletAddress: string): Promise<boolean> => { // TODOOOOOOOOOOOOO
+  // Set cookie when wallet is connected
+  useEffect(() => {
+    if (publicKey) {
+      document.cookie = "walletConnected=true; path=/";
+    }
+  }, [publicKey]);
+
+  const mockCheckWalletInDB = async (walletAddress: string): Promise<boolean> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const existingWallet = "mock-wallet-address";
@@ -20,9 +27,8 @@ export default function Hero() {
     });
   };
 
-  const handleConnectWallet = async () => {
+  const handleAccessPlatform = async () => {
     if (!publicKey) {
-      setVisible(true);
       return;
     }
 
@@ -50,10 +56,13 @@ export default function Hero() {
         </p>
       </div>
       <div className="flex gap-4">
-        <Button size="lg" variant="outline" onClick={handleConnectWallet}>
-          Access Platform
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+        <WalletButton className="bg-green-600 hover:bg-green-500" />
+        {publicKey && (
+          <Button size="lg" variant="outline" onClick={handleAccessPlatform}>
+            Access Platform
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
       </div>
     </section>
   );

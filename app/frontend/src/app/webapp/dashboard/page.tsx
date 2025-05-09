@@ -179,15 +179,18 @@ export default function DashboardPage() {
           <section>
             <h2 className="text-xl font-semibold">Key Metrics</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <KeyMetricCard
-                title="of CO₂ offset"
+            <KeyMetricCard
+                title="Total already offsetted"
                 value={`${metrics.totalOffset} T`}
                 icon={<Leaf className="h-full w-full" />}
+                className="flex flex-col items-center justify-center text-center"
               />
+
               <KeyMetricCard
+                icon={<Wallet className="h-full w-full" />}
                 title="Credits Available"
                 value={`${metrics.creditsAvailable} T`}
-                icon={<Wallet className="h-full w-full" />}
+                className="flex flex-col items-center justify-center text-center"
                 action={
                   <Button
                     variant="outline"
@@ -206,7 +209,7 @@ export default function DashboardPage() {
                       {metrics.totalEmissions} tons
                     </p>
                     <p className="text-sm text-gray-400">
-                      {metrics.totalEmissions * (metrics.emissionsOffset / 100)}{" "}
+                    {(metrics.totalEmissions * (metrics.emissionsOffset / 100)).toFixed(2)}{" "}
                       tons offset
                     </p>
                   </div>
