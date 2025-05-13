@@ -9,6 +9,9 @@ export class Organization {
   @Column({ name: 'wallet_id' })
   walletId: string;
 
+  @Column({ name: 'full_name' })
+  fullName: string;
+
   @Column({ name: 'company_name' })
   companyName: string;
 

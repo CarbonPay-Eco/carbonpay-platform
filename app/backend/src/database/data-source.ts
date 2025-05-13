@@ -23,7 +23,6 @@ export const AppDataSource = new DataSource({
   subscribers: [],
 });
 
-// Para uso em testes com SQLite
 export const getTestDataSource = () => {
   return new DataSource({
     type: 'sqlite',
