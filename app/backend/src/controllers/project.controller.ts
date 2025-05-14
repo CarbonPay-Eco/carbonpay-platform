@@ -20,6 +20,7 @@ export class ProjectController {
     }
     
     // Create project
+    console.log("Project Data:", projectData);
     const project = await projectService.createProject(projectData, walletAddress);
     
     // Log action

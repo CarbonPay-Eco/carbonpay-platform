@@ -16,6 +16,8 @@ import {
   type ProjectDetailsProps,
 } from "@/components/webapp/modals/project-details-modal";
 import { getProjects } from "@/app/api/project-service";
+import { getRetirements } from "@/app/api/retirements-service";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 // Mock data
 const metrics = {
@@ -151,7 +153,9 @@ const recentOffsets = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { publicKey } = useWallet();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [totalOffset, setTotalOffset] = useState<number>(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] =
@@ -172,9 +176,25 @@ export default function DashboardPage() {
       }
     };
 
-    fetchProjects();
-  }, []);
+    const fetchRetirements = async () => {
+      if (!publicKey) {
+        console.error("Wallet is not connected.");
+        return;
+      }
 
+      const walletAddress = publicKey.toBase58();
+      const result = await getRetirements(walletAddress);
+
+      if (result.success) {
+        setTotalOffset(result.totalOffset || 0);
+      } else {
+        setError(result.message || "Failed to fetch retirements.");
+      }
+    };
+
+    fetchProjects();
+    fetchRetirements();
+  }, [publicKey]); 
 
   const handleViewDetails = (project: Project) => {
     const details = projectDetails[project.id];
@@ -194,9 +214,9 @@ export default function DashboardPage() {
           <section>
             <h2 className="text-xl font-semibold">Key Metrics</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <KeyMetricCard
+              <KeyMetricCard
                 title="Total already offsetted"
-                value={`${metrics.totalOffset} T`}
+                value={`${totalOffset} T`}
                 icon={<Leaf className="h-full w-full" />}
                 className="flex flex-col items-center justify-center text-center"
               />

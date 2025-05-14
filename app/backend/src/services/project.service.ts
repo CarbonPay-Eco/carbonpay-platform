@@ -37,6 +37,7 @@ export class ProjectService {
       methodology: data.methodology || '',
       verifierName: data.verifierName || '',
       vintageYear: data.vintageYear || new Date().getFullYear(),
+      standard: data.standard || '',
       totalIssued: data.totalIssued || 0,
       available: data.totalIssued || 0, 
       pricePerTon: data.pricePerTon || 0,
