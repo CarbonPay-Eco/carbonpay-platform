@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/globalAssets/logo";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { getOrganization } from "../../../app/api/organization-service";
 
 const navigation = [
   { name: "Dashboard", href: "/webapp/dashboard", icon: Home },
@@ -30,7 +31,9 @@ export default function WebappShell({ children }: WebappShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [organization, setOrganization] = useState<any | null>(null);
   const { publicKey, disconnect } = useWallet();
+  const [walletInitialized, setWalletInitialized] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -42,13 +45,35 @@ export default function WebappShell({ children }: WebappShellProps) {
     }
   };
 
-  // Redirect to landing page if wallet is disconnected
   useEffect(() => {
-    if (!publicKey) {
+    const fetchOrganization = async () => {
+      if (publicKey) {
+        const walletId = publicKey.toBase58();
+        const result = await getOrganization(walletId);
+
+        if (result.success) {
+          setOrganization(result.data || null);
+          console.log("Organization data:", result.data);
+        } else {
+          console.error("Error fetching organization:", result.message);
+        }
+      }
+    };
+
+    if (walletInitialized && !publicKey) {
       document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       router.push("/");
     }
-  }, [publicKey, router]);
+
+    if (publicKey) {
+      fetchOrganization();
+    }
+
+    if (publicKey != undefined) {
+      console.log("opa")
+      setWalletInitialized(true);
+    }
+  }, [publicKey, walletInitialized, router]);
 
   return (
     <div className="flex h-full">
@@ -136,7 +161,9 @@ export default function WebappShell({ children }: WebappShellProps) {
                 <Menu className="h-6 w-6" />
               </button>
               <div>
-                <h1 className="text-xl font-semibold">Hello, Matheus!</h1>
+                <h1 className="text-xl font-semibold">
+                  {organization ? `Hello, ${organization.data.fullName}!` : "Hello!"}
+                </h1>
                 <p className="text-sm text-gray-400">Track, manage, and offset your emissions seamlessly.</p>
               </div>
             </div>

@@ -36,10 +36,12 @@ import {
   onboardingSteps,
 } from "@/lib/onboarding-config";
 import type { OnboardingFormData } from "../../../../types/onboarding";
-import { saveOnboardingData } from "../../../lib/actions";
+import { createOrganization } from "../../api/organization-service";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { publicKey } = useWallet();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<OnboardingFormData>>({});
   const [isAnimating, setIsAnimating] = useState(false);
@@ -66,16 +68,26 @@ export default function OnboardingPage() {
     if (isAnimating || !isStepValid) return;
 
     if (isLastStep) {
-      // Submit the form data using the server action
-      const result = await saveOnboardingData(formData as OnboardingFormData);
-
-      if (result.success) {
-        // Redirect to dashboard on success
-        router.push("/webapp/dashboard");
-      } else {
-        // Handle error (you could add state for this)
-        console.error("Error saving data:", result.message);
+      if (!publicKey) {
+        console.error("Wallet is not connected.");
+        return;
       }
+
+      try {
+        // Submit the form data using the service
+        const walletId = publicKey.toBase58();
+        const result = await createOrganization(formData as OnboardingFormData, walletId);
+
+        if (result.success) {
+          // Redirect to dashboard on success
+          router.push("/webapp/dashboard");
+        } else {
+          // Handle error (you could add state for this)
+          console.error("Error saving data:", result.message);
+        }
+      } catch (error) {
+      console.error("Error during onboarding:", error);
+    }
       return;
     }
 

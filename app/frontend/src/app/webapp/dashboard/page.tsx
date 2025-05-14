@@ -15,6 +15,7 @@ import {
   ProjectDetailsModal,
   type ProjectDetailsProps,
 } from "@/components/webapp/modals/project-details-modal";
+import { getProjects } from "@/app/api/project-service";
 
 // Mock data
 const metrics = {
@@ -24,44 +25,44 @@ const metrics = {
   totalEmissions: 767,
 };
 
-const projects: Project[] = [
-  {
-    id: "1",
-    name: "São Carlos Solar Energy Project",
-    type: "Solar Energy",
-    location: "São Carlos, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-    pricePerTon: 20,
-    totalCapacity: 1000,
-    availableCapacity: 800,
-    code: "SCSE",
-  },
-  {
-    id: "2",
-    name: "Amazon Rainforest Preservation",
-    type: "Preservation",
-    location: "Amazonas, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
-    pricePerTon: 10,
-    totalCapacity: 5000,
-    availableCapacity: 3000,
-    code: "AMZREF",
-  },
-  {
-    id: "3",
-    name: "Atlantic Rainforest Preservation",
-    type: "Preservation",
-    location: "São Paulo, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
-    pricePerTon: 15,
-    totalCapacity: 6000,
-    availableCapacity: 4500,
-    code: "ATLREF",
-  },
-];
+// const projects: Project[] = [
+//   {
+//     id: "1",
+//     name: "São Carlos Solar Energy Project",
+//     type: "Solar Energy",
+//     location: "São Carlos, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+//     pricePerTon: 20,
+//     totalCapacity: 1000,
+//     availableCapacity: 800,
+//     code: "SCSE",
+//   },
+//   {
+//     id: "2",
+//     name: "Amazon Rainforest Preservation",
+//     type: "Preservation",
+//     location: "Amazonas, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
+//     pricePerTon: 10,
+//     totalCapacity: 5000,
+//     availableCapacity: 3000,
+//     code: "AMZREF",
+//   },
+//   {
+//     id: "3",
+//     name: "Atlantic Rainforest Preservation",
+//     type: "Preservation",
+//     location: "São Paulo, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
+//     pricePerTon: 15,
+//     totalCapacity: 6000,
+//     availableCapacity: 4500,
+//     code: "ATLREF",
+//   },
+// ];
 
 // Extended project details for the modal
 const projectDetails: Record<string, ProjectDetailsProps> = {
@@ -150,16 +151,30 @@ const recentOffsets = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailsProps | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Simulate wallet connection check
   useEffect(() => {
-    // For demo purposes, set wallet as connected when dashboard loads
     localStorage.setItem("walletConnected", "true");
+
+    const fetchProjects = async () => {
+      const result = await getProjects();
+
+      if (result.success) {
+        setProjects(result.data || []);
+      } else {
+        setError(result.message || "Failed to fetch projects.");
+      }
+    };
+
+    fetchProjects();
   }, []);
+
 
   const handleViewDetails = (project: Project) => {
     const details = projectDetails[project.id];
@@ -250,14 +265,19 @@ export default function DashboardPage() {
               </Button>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
+            {Array.isArray(projects) && projects.length > 0 ? (
+              projects.map((project) => (
                 <ProjectCard
                   key={project.id}
                   project={project}
                   onViewDetails={handleViewDetails}
                   onPurchase={handlePurchase}
                 />
-              ))}
+              ))) : (
+              <div className="col-span-full text-center text-gray-400">
+                <p>No projects have been created yet.</p>
+              </div>
+            )}
             </div>
           </section>
 
