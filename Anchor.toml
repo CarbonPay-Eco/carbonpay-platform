@@ -7,13 +7,16 @@ skip-lint = false
 seeds = false
 
 [programs.localnet]
-carbon_pay = "9YH9M52ZzPGQXyeq7dsUbKWrRHt2Ucv4p7RQnvLvdLtd"
+carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
+
+[programs.devnet]
+carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

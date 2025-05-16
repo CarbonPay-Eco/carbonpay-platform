@@ -34,7 +34,7 @@ CarbonPay is built with a strong focus on security, transparency, and alignment 
 - Tokenization of certified carbon credits into traceable SPL tokens
 - Access to global liquidity with immediate payments in SOL or USDC
 - Project management dashboard with real-time sales data and performance metrics
-- No banks or middlemen involved — funds go straight to the project’s wallet
+- No banks or middlemen involved — funds go straight to the project's wallet
 - 95% payout per transaction — only 5% platform fee with full transparency
 
 ### For Buyers
@@ -116,6 +116,12 @@ CarbonPay is built with a strong focus on security, transparency, and alignment 
 - SPL Token and Metadata programs
 - Custom PDAs for project, transaction, and retirement tracking
 - Offset NFTs issued per retirement, including metadata and proof
+
+#### Deployed Program Information
+**Devnet**
+- **Program ID**: `7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ`
+- **Deployment Signature**: `3Kr5cLYn61ZFPq7LxLAH5EU8oZ4WH6Hp4SJKEnNRiVCjQpPab2FRHht6GAjPKpi5orDJmZE3hTAt9nDj832ed1R1`
+
 
 ### Infrastructure
 
