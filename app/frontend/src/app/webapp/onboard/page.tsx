@@ -76,7 +76,10 @@ export default function OnboardingPage() {
       try {
         // Submit the form data using the service
         const walletId = publicKey.toBase58();
-        const result = await createOrganization(formData as OnboardingFormData, walletId);
+        const result = await createOrganization(
+          formData as OnboardingFormData,
+          walletId
+        );
 
         if (result.success) {
           // Redirect to dashboard on success
@@ -86,8 +89,8 @@ export default function OnboardingPage() {
           console.error("Error saving data:", result.message);
         }
       } catch (error) {
-      console.error("Error during onboarding:", error);
-    }
+        console.error("Error during onboarding:", error);
+      }
       return;
     }
 
@@ -485,7 +488,10 @@ export default function OnboardingPage() {
                         </div>
 
                         <div>
-                          <Label htmlFor="acceptedTerms" className="flex items-center space-x-2">
+                          <Label
+                            htmlFor="acceptedTerms"
+                            className="flex items-center space-x-2"
+                          >
                             <Checkbox
                               id="acceptedTerms"
                               checked={!!formData.acceptedTerms}

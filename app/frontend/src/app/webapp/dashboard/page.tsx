@@ -18,6 +18,7 @@ import {
 import { getProjects } from "@/app/api/project-service";
 import { getRetirements } from "@/app/api/retirements-service";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { CreateProjectModal } from "@/components/webapp/modals/create-project-modal";
 
 // Mock data
 const metrics = {
@@ -158,6 +159,8 @@ export default function DashboardPage() {
   const [totalOffset, setTotalOffset] = useState<number>(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
+    useState(false);
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailsProps | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +197,7 @@ export default function DashboardPage() {
 
     fetchProjects();
     fetchRetirements();
-  }, [publicKey]); 
+  }, [publicKey]);
 
   const handleViewDetails = (project: Project) => {
     const details = projectDetails[project.id];
@@ -244,7 +247,10 @@ export default function DashboardPage() {
                       {metrics.totalEmissions} tons
                     </p>
                     <p className="text-sm text-gray-400">
-                    {(metrics.totalEmissions * (metrics.emissionsOffset / 100)).toFixed(2)}{" "}
+                      {(
+                        metrics.totalEmissions *
+                        (metrics.emissionsOffset / 100)
+                      ).toFixed(2)}{" "}
                       tons offset
                     </p>
                   </div>
@@ -279,25 +285,36 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold">
                 Active Carbon Offset Projects
               </h2>
-              <Button variant="outline" className="border-white/10">
-                View all projects
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="border-white/10"
+                  onClick={() => setIsCreateProjectModalOpen(true)}
+                >
+                  Create Project
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button variant="outline" className="border-white/10">
+                  View all projects
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.isArray(projects) && projects.length > 0 ? (
-              projects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onViewDetails={handleViewDetails}
-                  onPurchase={handlePurchase}
-                />
-              ))) : (
-              <div className="col-span-full text-center text-gray-400">
-                <p>No projects have been created yet.</p>
-              </div>
-            )}
+              {Array.isArray(projects) && projects.length > 0 ? (
+                projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onViewDetails={handleViewDetails}
+                    onPurchase={handlePurchase}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-400">
+                  <p>No projects have been created yet.</p>
+                </div>
+              )}
             </div>
           </section>
 
@@ -364,6 +381,12 @@ export default function DashboardPage() {
         onClose={() => setIsDetailsModalOpen(false)}
         project={selectedProject}
         onPurchase={handlePurchase}
+      />
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
       />
     </WebappShell>
   );
