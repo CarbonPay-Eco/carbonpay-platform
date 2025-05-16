@@ -351,7 +351,7 @@ docker-compose up -d frontend
 
 ## 👥 Our Team
 
-![CarbonPay Team](assets/ourteam.png "CarbonPay Team")
+![CarbonPay Team](assets/ourteam2.png "CarbonPay Team")
 
 Our team combines expertise in blockchain, full-stack development, sales, finance, compliance, and law to build the future of carbon markets.
 
