@@ -1,135 +1,129 @@
-![CarbonPay Logo](assets/carbon.png"CarbonPay Platform Logo")
+![CarbonPay Logo](assets/carbon.png "CarbonPay Platform Logo")
 
 # CarbonPay Platform
 
-CarbonPay is a decentralized platform for carbon credit tokenization, offsetting, and traceability built on the Solana blockchain. It enables organizations to offset their carbon footprint through verifiable, auditable, and transparent smart contracts — with metadata and certification securely stored via IPFS.
+CarbonPay is a platform that merges Web3 infrastructure with real-world environmental assets, creating a new way to tokenize, trade, and retire carbon credits. Built on the Solana blockchain, CarbonPay ensures full transparency, traceability, and global liquidity — with auditable smart contracts and documentation anchored via IPFS.
 
-![CarbonPay Logo](assets/plataform.png "CarbonPay Platform Mockup")
+![CarbonPay Mockup](assets/plataform.png "CarbonPay Platform Mockup")
 
 ## 🌍 Project Overview
 
-CarbonPay bridges Web3 infrastructure with real-world environmental assets. Our platform allows companies to:
+CarbonPay is the bridge between the digital economy and the voluntary carbon market. Our platform enables companies to:
 
-- Onboard their organization using wallet-based authentication
-- Browse tokenized carbon credit projects with full metadata
-- Purchase and retire carbon credits on-chain using SOL
-- Generate compliance-ready audit reports
-- Provide public traceability of offsets through explorer-linked pages
-- Track carbon credit projects lifecycle from creation to retirement
+- Register their organization through Solana wallet authentication
+- Explore tokenized environmental projects with full metadata and certification
+- Purchase and retire carbon credits directly on-chain
+- Generate compliance-ready audit reports automatically
+- Provide public traceability for each offset using explorer-linked data
+- Monitor the entire lifecycle of carbon credit projects, from creation to retirement
 
 ## 🔐 Security & Compliance
 
-- Smart contracts audited internally before deployment
-- All transactions are public and traceable via Solana Explorer
-- No sensitive user data collected (wallet-based access)
-- Metadata and documentation stored on decentralized IPFS
-- Compatible with reporting requirements under voluntary markets
+CarbonPay is built with a strong focus on security, transparency, and alignment with voluntary market standards.
 
-## 💼 Business Model & Value Proposition
+- Internal audits of all smart contracts before deployment
+- On-chain transparency via Solana Explorer: all credit purchases, retirements, and transfers are public
+- No sensitive user data is collected thanks to wallet-based access
+- Metadata and certification documents are stored on IPFS for immutability
+- Designed to meet global certification requirements (Verra, Gold Standard)
+
+## 💼 Business Model and Value Proposition
 
 ### For Project Owners
 
-- **Tokenization**: Convert verified carbon credits into tradeable tokens
-- **Liquidity**: Access a global market of potential buyers
-- **Transparency**: Build trust through blockchain-verified project data
-- **Automated Payments**: Receive instant payments in SOL
-- **Fee Structure**: 5% platform fee on transactions
-- **Project Management**: Track project performance and offset status
+- Tokenization of certified carbon credits into traceable SPL tokens
+- Access to global liquidity with immediate payments in SOL or USDC
+- Project management dashboard with real-time sales data and performance metrics
+- No banks or middlemen involved — funds go straight to the project’s wallet
+- 95% payout per transaction — only 5% platform fee with full transparency
 
 ### For Buyers
 
-- **Verified Credits**: Access to certified carbon credits
-- **Transparent Pricing**: Clear fee structure and pricing
-- **Instant Settlement**: Blockchain-based immediate transactions
-- **Traceability**: Full history of credit ownership and retirement
-- **Compliance Ready**: Generate reports for regulatory requirements
-- **Portfolio Management**: Track purchased and retired credits
+- Direct access to verified carbon projects with certification and coordinates
+- One-click on-chain purchases with real-time settlement
+- Retirement of credits creates unique NFTs as proof of offset
+- Auto-generated compliance reports with direct links to on-chain proof
+- Track credit portfolio with purchases, offsets, categories, and dates
 
 ### For Organizations
 
-- **Carbon Neutrality**: Achieve sustainability goals
-- **ESG Compliance**: Meet environmental reporting requirements
-- **Public Verification**: Demonstrate commitment to sustainability
-- **Automated Offsetting**: Set up recurring offset programs
-- **Analytics**: Track carbon footprint and offset progress
+- Integrate offsetting into ESG strategies with recurring purchase options
+- Public profile page showcasing your climate impact and offsets
+- Simplified ESG compliance with downloadable reports
+- User-friendly interface for sustainability and finance teams
+- Proof-of-impact NFTs for internal reports or public campaigns
 
-### Revenue Streams
+## 💸 Revenue Streams
 
-1. **Transaction Fees**: 5% fee on all credit purchases
-2. **Premium Features**: Advanced analytics and reporting tools
-3. **Enterprise Solutions**: Custom integration and support
-4. **API Access**: Developer access to platform data
+1. 5% fee per carbon credit transaction collected via smart contract
+2. Pro / Enterprise plans with custom features and private APIs
+3. Licensed API access for carbon marketplaces and ESG fintechs
+4. Technical integration and support for corporate clients
 
-### Market Opportunity
+## 📈 Market Opportunity
 
-- Growing demand for carbon credits
-- Increasing corporate sustainability requirements
-- Rising need for transparent offset verification
-- Expanding ESG compliance requirements
-- Growing Web3 adoption in traditional markets
+- Rising demand for ESG solutions from stakeholders and regulators
+- Voluntary carbon markets projected to grow from USD 1B to 50B by 2030
+- Lack of transparency in legacy systems creates a gap CarbonPay fills
+- Increasing appetite for tokenized environmental assets among Web3 investors
 
-### Competitive Advantages
+## 🧠 Competitive Advantages
 
-1. **Blockchain Integration**: Full transparency and traceability
-2. **Automated Processes**: Reduced administrative overhead
-3. **Global Accessibility**: Borderless carbon credit trading
-4. **Instant Settlement**: No traditional banking delays
-5. **Smart Contract Security**: Automated compliance and verification
+1. Immutable transparency with hashes and public links to metadata and offset status
+2. Native integration with Solana for speed, scalability, and low fees
+3. High-end visual design and intuitive user experience
+4. Borderless access for both projects and buyers
+5. Legal and technical security through decentralized storage and full traceability
 
-### Target Markets
+## 🎯 Target Markets
 
-1. **Corporations**: Large enterprises with sustainability goals
-2. **Project Developers**: Carbon credit project owners
-3. **ESG Investors**: Sustainable investment funds
-4. **Governments**: Public sector sustainability initiatives
-5. **Small Businesses**: Companies starting sustainability programs
+1. Corporations with ESG mandates and public sustainability reporting
+2. Certified project developers seeking better market access
+3. ESG funds and sustainable finance investors
+4. Startups and small businesses beginning their climate journey
+5. Public sector entities managing or monitoring climate programs
 
-### Growth Strategy
+## 🚀 Growth Strategy
 
-1. **Market Expansion**: Target key geographic regions
-2. **Partnership Development**: Strategic alliances with sustainability organizations
-3. **Product Development**: Continuous platform enhancement
-4. **Community Building**: Engage with sustainability stakeholxders
-5. **Regulatory Compliance**: Adapt to evolving carbon market regulations
+1. Sector-focused entry: logistics, energy, agribusiness
+2. Institutional partnerships with certifiers and regulators
+3. International expansion starting with Latin America and Europe
+4. Market education via training, webinars, and thought leadership
+5. Continuous legal monitoring for evolving ESG regulations
 
 ## 🛠️ Technology Stack
 
 ### Frontend
 
 - Next.js 14
-- TypeScript
-- Tailwind CSS
-- Solana Web3.js
-- Phantom Wallet Integration
-- React Query
-- Zustand (State Management)
+- TypeScript with strict types and modular structure
+- Tailwind CSS for consistent and responsive design
+- Solana Wallet Adapter with Phantom and Backpack support
+- React Query + Zustand for state and data management
+- Segment + Plausible Analytics for privacy-safe usage insights
 
 ### Backend
 
-- Node.js
-- TypeScript
-- Express
-- Prisma (ORM)
-- PostgreSQL
-- IPFS (via Infura)
-- Anchor Framework Integration
-- Jest + Supertest (Testing)
+- Node.js + Express with layered architecture and JWT auth
+- Prisma ORM with PostgreSQL database for traceability and audit logs
+- IPFS via Infura for decentralized document storage
+- Jest + Supertest for unit and integration testing
+- RESTful APIs with versioning and webhook support
 
 ### Smart Contracts (Solana)
 
-- Rust
-- Anchor Framework 0.29.0
-- SPL Token Program
-- Token Metadata Program
-- Custom PDAs for project and purchase tracking
+- Anchor Framework v0.29.0
+- SPL Token and Metadata programs
+- Custom PDAs for project, transaction, and retirement tracking
+- Offset NFTs issued per retirement, including metadata and proof
 
 ### Infrastructure
 
-- Docker
-- Docker Compose
-- PostgreSQL 13
-- IPFS (Infura/Pinata)
-- Solana Devnet/Mainnet
+- Docker + Docker Compose for reproducible environments
+- PostgreSQL 13 with automated backups and logging
+- IPFS (Infura + Pinata) for file redundancy
+- GitHub Actions for CI/CD and secure deployment
+- Logtail and Healthchecks for monitoring and uptime control
 
 ## 📊 Database Schema
 
