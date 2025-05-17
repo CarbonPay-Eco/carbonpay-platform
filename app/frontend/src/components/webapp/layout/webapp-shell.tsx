@@ -70,7 +70,6 @@ export default function WebappShell({ children }: WebappShellProps) {
     }
 
     if (publicKey != undefined) {
-      console.log("opa")
       setWalletInitialized(true);
     }
   }, [publicKey, walletInitialized, router]);

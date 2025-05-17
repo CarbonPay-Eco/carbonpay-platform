@@ -21,19 +21,19 @@ export function ProjectCard({
     <Card className="overflow-hidden bg-black/40">
       <div className="relative h-48">
         <Image
-          src={project.image || "/placeholder.svg"}
-          alt={project.name}
+          src={project.projectImageUrl || "/placeholder.svg"}
+          alt={project.projectName}
           fill
           className="object-cover"
         />
         <div className="absolute top-4 left-4">
           <span className="inline-flex items-center rounded-full bg-green-600/90 px-3 py-1 text-sm font-medium text-white backdrop-blur-sm">
-            {project.type}
+            {project.methodology}
           </span>
         </div>
       </div>
       <CardContent className="p-6">
-        <h3 className="text-lg font-semibold">{project.name}</h3>
+        <h3 className="text-lg font-semibold">{project.projectName}</h3>
         <p className="mt-1 flex items-center text-sm text-gray-400">
           <MapPin className="mr-1 h-4 w-4" />
           {project.location}
@@ -50,7 +50,7 @@ export function ProjectCard({
             </div>
             <div className="space-y-1 text-right">
               <p className="text-sm text-gray-400">Available</p>
-              <p className="font-semibold">{project.availableCapacity}T</p>
+              <p className="font-semibold">{project.available}T</p>
             </div>
           </div>
           <div className="flex gap-2">

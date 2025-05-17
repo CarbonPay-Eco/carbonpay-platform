@@ -4,20 +4,27 @@ const API_BASE_URL = "http://localhost:3000/api";
 
 /**
  * Fetches all projects from the backend.
+ * @param walletAddress - The wallet address to associate with the organization.
  * @returns The list of projects or an error response.
  */
-export const getProjects = async (): Promise<{
+export const getProjects = async (
+  walletAddress: string
+): Promise<{
   success: boolean;
   data?: any;
   message?: string;
 }> => {
   try {
     // Send the GET request to the backend
-    const response = await axios.get(`${API_BASE_URL}/admin/projects`);
+    const response = await axios.get(`${API_BASE_URL}/admin/projects`, {
+      headers: {
+        "x-wallet-address": walletAddress,
+      },
+    });
 
     return {
       success: true,
-      data: response.data,
+      data: response.data.data,
     };
   } catch (error: any) {
     // Return a structured error response

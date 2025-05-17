@@ -17,6 +17,7 @@ import {
 } from "@/components/webapp/modals/project-details-modal";
 import { OnboardingStatus } from "@/components/webapp/dashboard/onboarding-status";
 import { getProjects } from "../../../app/api/project-service";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 // Mock data
 const metrics = {
@@ -158,13 +159,19 @@ export default function DashboardPage() {
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailsProps | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const { publicKey } = useWallet();
 
   useEffect(() => {
     localStorage.setItem("walletConnected", "true");
 
     const fetchProjects = async () => {
-      const result = await getProjects();
+      if (!publicKey) {
+        console.error("Wallet is not connected.");
+        return;
+      }
+
+      const walletId = publicKey.toBase58();  
+      const result = await getProjects(walletId);
 
       if (result.success) {
         setProjects(result.data || []);
@@ -174,7 +181,7 @@ export default function DashboardPage() {
     };
 
     fetchProjects();
-  }, []);
+  }, [publicKey]);
 
   // Simplified approach - directly open the modal with the project details
   // const openDetailsModal = (projectId: string) => {

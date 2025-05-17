@@ -20,7 +20,7 @@ import { formatNumber } from "@/lib/utils";
 
 export interface ProjectDetailsProps {
   id: string;
-  name: string;
+  projectName: string;
   projectId: string;
   location: string;
   type: string;
@@ -28,13 +28,14 @@ export interface ProjectDetailsProps {
   creditsAvailable: number;
   vintageYear: string;
   certification: string;
-  verifier: string;
+  verifierName: string;
   methodology: string;
+  standard: string;
   tokenId: string;
   lastTransaction?: string;
   co2Reduction: number;
   documentation?: string;
-  image: string;
+  projectImageUrl: string;
   description: string;
   pricePerTon: number;
 }
@@ -72,21 +73,21 @@ export function ProjectDetailsModal({
       <DialogContent className="sm:max-w-[700px] bg-black border border-white/10 p-0 overflow-hidden">
         <div className="relative h-48">
           <Image
-            src={project.image || "/placeholder.svg"}
-            alt={project.name}
+            src={project.projectImageUrl || "/placeholder.svg"}
+            alt={project.projectName}
             fill
             className="object-cover"
           />
           <div className="absolute top-4 left-4">
             <span className="inline-flex items-center rounded-full bg-green-600/90 px-3 py-1 text-sm font-medium text-white backdrop-blur-sm">
-              {project.type}
+              {project.standard}
             </span>
           </div>
         </div>
 
         <DialogHeader className="px-6 pt-4">
           <DialogTitle className="text-xl font-bold">
-            {project.name}
+            {project.projectName}
           </DialogTitle>
           <DialogDescription className="flex items-center text-gray-400">
             <MapPin className="mr-1 h-4 w-4" />
@@ -107,7 +108,7 @@ export function ProjectDetailsModal({
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Project ID</p>
-                  <p className="font-medium">{project.projectId}</p>
+                  <p className="font-medium">{project.id}</p>
                 </div>
               </div>
 
@@ -129,7 +130,7 @@ export function ProjectDetailsModal({
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Certification</p>
-                  <p className="font-medium">{project.certification}</p>
+                  <p className="font-medium">{project.standard}</p>
                 </div>
               </div>
             </div>
@@ -161,7 +162,7 @@ export function ProjectDetailsModal({
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Verifier</p>
-                  <p className="font-medium">{project.verifier}</p>
+                  <p className="font-medium">{project.verifierName}</p>
                 </div>
               </div>
             </div>

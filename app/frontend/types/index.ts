@@ -1,12 +1,12 @@
 export interface Project {
   id: string
-  name: string
-  type: "Solar Energy" | "Preservation" | string
+  projectName: string
+  methodology: "Solar Energy" | "Preservation" | string
   location: string
-  image: string
+  projectImageUrl: string
   pricePerTon: number
   totalCapacity?: number
-  availableCapacity: number
+  available: number
   code: string
   description?: string
 }

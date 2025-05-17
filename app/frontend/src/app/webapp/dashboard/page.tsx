@@ -170,9 +170,17 @@ export default function DashboardPage() {
     localStorage.setItem("walletConnected", "true");
 
     const fetchProjects = async () => {
-      const result = await getProjects();
+      if (!publicKey) {
+        console.error("Wallet is not connected.");
+        return;
+      }
+
+      const walletId = publicKey.toBase58();
+
+      const result = await getProjects(walletId);
 
       if (result.success) {
+        console.log("Projects fetched successfully:", result.data);
         setProjects(result.data || []);
       } else {
         setError(result.message || "Failed to fetch projects.");

@@ -6,10 +6,10 @@ const API_BASE_URL = "http://localhost:3000/api";
 /**
  * Creates a new organization with the provided form data and wallet address.
  * @param formData - The onboarding form data for the organization.
- * @param walletId - The wallet address to associate with the organization.
+ * @param walletAddress - The wallet address to associate with the organization.
  * @returns A success or error response with the created organization data.
  */
-export const createOrganization = async (formData: OnboardingFormData, walletId: string) => {
+export const createOrganization = async (formData: OnboardingFormData, walletAddress: string) => {
     try {
       // Validate required fields
       if (!formData.name || !formData.companyName || !formData.country || !formData.registrationNumber) {
@@ -37,7 +37,7 @@ export const createOrganization = async (formData: OnboardingFormData, walletId:
       // Send the POST request to the backend with the wallet address in the headers
       const response = await axios.post(`${API_BASE_URL}/organization`, payload, {
         headers: {
-          "x-wallet-address": walletId, 
+          "x-wallet-address": walletAddress, 
         },
       });
   
@@ -58,15 +58,15 @@ export const createOrganization = async (formData: OnboardingFormData, walletId:
 
 /**
  * Fetches the organization associated with the given wallet address.
- * @param walletId - The wallet address to fetch the organization for.
+ * @param walletAddress - The wallet address to fetch the organization for.
  * @returns The organization data or an error response.
  */
-export const getOrganization = async (walletId: string): Promise<{ success: boolean; data?: any; message?: string }> => {
+export const getOrganization = async (walletAddress: string): Promise<{ success: boolean; data?: any; message?: string }> => {
     try {
       // Send the GET request to the backend with the wallet address in the headers
       const response = await axios.get(`${API_BASE_URL}/organization/me`, {
         headers: {
-          "x-wallet-address": walletId,
+          "x-wallet-address": walletAddress,
         },
       });
     
