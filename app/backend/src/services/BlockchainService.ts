@@ -6,7 +6,10 @@ export class BlockchainService {
   private static connection = new Connection(
     process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
   );
-  private static USDC_MINT = new PublicKey(process.env.USDC_MINT_ADDRESS || "");
+  private static USDC_MINT = new PublicKey(
+    process.env.USDC_MINT_ADDRESS ||
+      "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+  );
 
   public static async getUSDCBalance(
     walletId: string,

@@ -64,6 +64,7 @@ export class RetirementController {
     
     const retirements = await retirementService.getRetirementsByWallet(walletAddress);
     
+    
     res.status(200).json({
       success: true,
       message: 'Retirements retrieved successfully',
