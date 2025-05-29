@@ -11,8 +11,6 @@ services:
       - "${SERVER_PORT:-3000}:${SERVER_PORT:-3000}"
     env_file:
       - ../.env
-    volumes:
-      - ../app/backend/src:/app/src
     networks:
       - carbonpay-network
     environment:

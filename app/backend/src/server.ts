@@ -1,35 +1,41 @@
-import 'reflect-metadata';
-import app from './config/app';
-import { SERVER_PORT, NODE_ENV } from './config/constants';
-import routes from './routes/index';
-import { initializeDatabase } from './database';
-import { swaggerUi, swaggerSpec } from './config/swagger';
+import "reflect-metadata";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { AppDataSource } from "./database/data-source";
+import authRoutes from "./routes/auth";
+import transakRoutes from "./routes/transak";
+import walletRoutes from "./routes/wallet";
+import { swaggerUi, swaggerSpec } from "./config/swagger";
 
+const app = express();
 
-console.log(`Environment: ${NODE_ENV}`);
-console.log('Connecting to database...');
+// Middleware
+app.use(cors());
+app.use(helmet());
+app.use(morgan("dev"));
+app.use(express.json());
 
-// Register API routes
-app.use('/api', routes);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Routes
+app.use("/auth", authRoutes);
+app.use("/transak", transakRoutes);
+app.use("/wallet", walletRoutes);
+app.use("/api", routes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Start the server
-const startServer = async () => {
-  try {
-    // Initialize the database
-    await initializeDatabase();
-    
-    // Start the server
-    app.listen(SERVER_PORT, () => {
-      console.log(`Server is running on port ${SERVER_PORT}`);
-      console.log(`Environment: ${NODE_ENV}`);
-      console.log(`API URL: http://localhost:${SERVER_PORT}/api`);
+// Initialize database connection
+AppDataSource.initialize()
+  .then(() => {
+    console.log("Database connection established");
+
+    // Start server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
-  } catch (error) {
-    console.error('Error during server startup:', error);
+  })
+  .catch((error) => {
+    console.error("Error connecting to database:", error);
     process.exit(1);
-  }
-};
-
-// Start the application
-startServer();
+  });
