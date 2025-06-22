@@ -1,0 +1,1024 @@
+{
+  "address": "bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg",
+  "metadata": {
+    "name": "carbon_pay",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "initialize_carbon_credits",
+      "discriminator": [
+        189,
+        255,
+        201,
+        41,
+        58,
+        137,
+        40,
+        111
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "carbon_credits",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  98,
+                  111,
+                  110,
+                  95,
+                  99,
+                  114,
+                  101,
+                  100,
+                  105,
+                  116,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_project",
+      "discriminator": [
+        69,
+        126,
+        215,
+        37,
+        20,
+        60,
+        73,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "project_owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "project",
+          "docs": [
+            "On-chain state of the project"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project_owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nft_mint",
+          "docs": [
+            "The NFT mint - will be used to create a Master Edition NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The token mint - will be used for fungible tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "project_owner_nft_account",
+          "docs": [
+            "Owner's ATA for the NFT (must exist before; create with `spl-token create-account`)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "ATA of the `carbon_credits` PDA for fungible tokens (create off-chain)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "carbon_credits",
+          "docs": [
+            "PDA that controls totals and becomes mint authority of fungibles"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  98,
+                  111,
+                  110,
+                  95,
+                  99,
+                  114,
+                  101,
+                  100,
+                  105,
+                  116,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "Metadata account managed by the Token Metadata Program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "master_edition",
+          "docs": [
+            "Master Edition account managed by the Token Metadata Program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "price_per_token",
+          "type": "u64"
+        },
+        {
+          "name": "carbon_pay_fee",
+          "type": "u64"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "purchase_carbon_credits",
+      "discriminator": [
+        204,
+        153,
+        187,
+        204,
+        193,
+        24,
+        56,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "project",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project.owner",
+                "account": "Project"
+              },
+              {
+                "kind": "account",
+                "path": "project.mint",
+                "account": "Project"
+              }
+            ]
+          }
+        },
+        {
+          "name": "project_owner",
+          "docs": [
+            "who receives the payment"
+          ],
+          "writable": true
+        },
+        {
+          "name": "project_mint",
+          "docs": [
+            "project's fungible token mint (separate from NFT mint)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "carbon_credits",
+          "docs": [
+            "CarbonCredits PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  98,
+                  111,
+                  110,
+                  95,
+                  99,
+                  114,
+                  101,
+                  100,
+                  105,
+                  116,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "project_token_account",
+          "docs": [
+            "project's vault ATA (already created off-chain)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "purchase_nft_mint",
+          "docs": [
+            "purchase NFT mint (create off-chain)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer_nft_account",
+          "docs": [
+            "buyer's ATA for the purchase NFT (create off-chain)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer_token_account",
+          "docs": [
+            "buyer's ATA for the fungible tokens (create off-chain)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "purchase",
+          "docs": [
+            "on-chain purchase record"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "buyer"
+              },
+              {
+                "kind": "account",
+                "path": "project"
+              },
+              {
+                "kind": "account",
+                "path": "purchase_nft_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "purchase_metadata",
+          "docs": [
+            "purchase NFT metadata account (CPI will create)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "request_offset",
+      "discriminator": [
+        211,
+        116,
+        115,
+        174,
+        252,
+        37,
+        119,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "offset_requester",
+          "docs": [
+            "who is asking for the offset"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "purchase",
+          "docs": [
+            "the original Purchase, must belong to requester"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  117,
+                  114,
+                  99,
+                  104,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offset_requester"
+              },
+              {
+                "kind": "account",
+                "path": "purchase.project",
+                "account": "Purchase"
+              },
+              {
+                "kind": "account",
+                "path": "purchase.nft_mint",
+                "account": "Purchase"
+              }
+            ]
+          }
+        },
+        {
+          "name": "project",
+          "docs": [
+            "the Project"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project.owner",
+                "account": "Project"
+              },
+              {
+                "kind": "account",
+                "path": "project.mint",
+                "account": "Project"
+              }
+            ]
+          }
+        },
+        {
+          "name": "original_nft_mint",
+          "docs": [
+            "the original NFT mint & token account - will be burned"
+          ],
+          "writable": true
+        },
+        {
+          "name": "original_nft_account",
+          "writable": true
+        },
+        {
+          "name": "new_nft_mint",
+          "docs": [
+            "NEW NFT mint & ATA must be created client-side beforehand (for partial offsets)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "new_nft_account",
+          "writable": true
+        },
+        {
+          "name": "new_nft_metadata",
+          "docs": [
+            "Metadata account for the new NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The project's fungible token mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer_token_account",
+          "docs": [
+            "Buyer's token account for the project's fungible tokens - tokens will be burned"
+          ],
+          "writable": true
+        },
+        {
+          "name": "carbon_credits",
+          "docs": [
+            "CarbonCredits PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  98,
+                  111,
+                  110,
+                  95,
+                  99,
+                  114,
+                  101,
+                  100,
+                  105,
+                  116,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "offset_request",
+          "docs": [
+            "OffsetRequest record"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  115,
+                  101,
+                  116,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offset_requester"
+              },
+              {
+                "kind": "account",
+                "path": "purchase"
+              },
+              {
+                "kind": "arg",
+                "path": "request_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "request_id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CarbonCredits",
+      "discriminator": [
+        147,
+        81,
+        153,
+        96,
+        238,
+        215,
+        53,
+        99
+      ]
+    },
+    {
+      "name": "OffsetRequest",
+      "discriminator": [
+        137,
+        115,
+        233,
+        119,
+        230,
+        190,
+        240,
+        178
+      ]
+    },
+    {
+      "name": "Project",
+      "discriminator": [
+        205,
+        168,
+        189,
+        202,
+        181,
+        247,
+        142,
+        19
+      ]
+    },
+    {
+      "name": "Purchase",
+      "discriminator": [
+        33,
+        203,
+        1,
+        252,
+        231,
+        228,
+        8,
+        67
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedAdmin",
+      "msg": "Only the admin can mint credits"
+    },
+    {
+      "code": 6002,
+      "name": "ProjectInactive",
+      "msg": "Project is inactive"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidProjectOwner",
+      "msg": "Invalid project owner"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidCarbonPayAuthority",
+      "msg": "Invalid Carbon Pay authority"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidProjectMint",
+      "msg": "Invalid project mint"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidNFTMint",
+      "msg": "Invalid NFT mint"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidNFTAccount",
+      "msg": "Invalid NFT account"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientTokens",
+      "msg": "Insufficient tokens available"
+    },
+    {
+      "code": 6009,
+      "name": "InsufficientRemainingTokens",
+      "msg": "Insufficient remaining tokens for offset"
+    },
+    {
+      "code": 6010,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidAmount",
+      "msg": "The amount must be greater than 0"
+    },
+    {
+      "code": 6012,
+      "name": "NotPurchaseOwner",
+      "msg": "Only the purchase owner can request an offset"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidRequestStatus",
+      "msg": "Invalid request status"
+    },
+    {
+      "code": 6014,
+      "name": "RequestAlreadyProcessed",
+      "msg": "Offset request already processed"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidOffsetRequest",
+      "msg": "Invalid offset request"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidProject",
+      "msg": "Invalid project for this purchase"
+    },
+    {
+      "code": 6017,
+      "name": "OffsetRequestExists",
+      "msg": "Offset request already exists"
+    },
+    {
+      "code": 6018,
+      "name": "MathOverflow",
+      "msg": "Math operation overflow"
+    },
+    {
+      "code": 6019,
+      "name": "InsufficientFungibleTokens",
+      "msg": "Insufficient fungible tokens in account"
+    }
+  ],
+  "types": [
+    {
+      "name": "CarbonCredits",
+      "docs": [
+        "CarbonCredits tracks the global metrics of all carbon credits across all projects in the platform.",
+        "This serves as a central dashboard for platform-wide statistics and does not replace",
+        "the individual tracking of credits within each Project."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_credits",
+            "type": "u64"
+          },
+          {
+            "name": "active_credits",
+            "type": "u64"
+          },
+          {
+            "name": "offset_credits",
+            "type": "u64"
+          },
+          {
+            "name": "projects_count",
+            "type": "u64"
+          },
+          {
+            "name": "total_fees_earned",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OffsetRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "offset_requester",
+            "type": "pubkey"
+          },
+          {
+            "name": "purchase",
+            "type": "pubkey"
+          },
+          {
+            "name": "project",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "request_id",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RequestStatus"
+              }
+            }
+          },
+          {
+            "name": "request_date",
+            "type": "i64"
+          },
+          {
+            "name": "processed_date",
+            "type": "i64"
+          },
+          {
+            "name": "request_bump",
+            "type": "u8"
+          },
+          {
+            "name": "processor",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Project",
+      "docs": [
+        "Project represents a specific carbon credit offering with its own tokens and tracking.",
+        "Each project has its own independent accounting of credits, separate from other projects."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_bump",
+            "type": "u8"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_amount",
+            "type": "u64"
+          },
+          {
+            "name": "offset_amount",
+            "type": "u64"
+          },
+          {
+            "name": "price_per_token",
+            "type": "u64"
+          },
+          {
+            "name": "carbon_pay_fee",
+            "type": "u64"
+          },
+          {
+            "name": "carbon_pay_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "project_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Purchase",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "project",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_amount",
+            "type": "u64"
+          },
+          {
+            "name": "purchase_date",
+            "type": "i64"
+          },
+          {
+            "name": "purchase_bump",
+            "type": "u8"
+          },
+          {
+            "name": "nft_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RequestStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Approved"
+          },
+          {
+            "name": "Rejected"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -24,6 +24,9 @@ const projectController = new ProjectController();
 const retirementController = new RetirementController();
 const adminController = new AdminController();
 
+import authRoutes from "./auth";
+import carbonCreditsSimpleRouter from "./carbon-credits-simple";
+
 const router = Router();
 
 /**
@@ -38,6 +41,9 @@ const router = Router();
  *         description: API is running
  */
 router.get("/health", healthCheck);
+
+// Carbon Credits Simple routes (Web2.5)
+router.use("/carbon-credits-simple", carbonCreditsSimpleRouter);
 
 /**
  * @openapi
@@ -294,5 +300,7 @@ router.get(
   verifyAdmin,
   adminController.getProjects
 );
+
+router.use("/auth", authRoutes);
 
 export default router;

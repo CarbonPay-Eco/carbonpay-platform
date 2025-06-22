@@ -1,8 +1,10 @@
 [workspace]
-members = [
-    "programs/*"
-]
+members = ["programs/*"]
 resolver = "2"
+
+# Workspace-wide dependency overrides
+[workspace.dependencies]
+proc-macro2 = "1.0.86"
 
 [profile.release]
 overflow-checks = true

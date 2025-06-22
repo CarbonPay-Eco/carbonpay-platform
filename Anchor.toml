@@ -7,21 +7,27 @@ skip-lint = false
 seeds = false
 
 [programs.localnet]
-carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
+carbon_pay = "bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg"
 
 [programs.devnet]
-carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
+carbon_pay = "bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "./tests/metadata.so"
+
+[test.validator]
+bind_address = "0.0.0.0"
+url = "https://api.mainnet-beta.solana.com"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899
