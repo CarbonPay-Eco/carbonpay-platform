@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 
+mod errors;
 mod instructions;
 mod state;
-mod errors;
 
 use instructions::*;
 
-declare_id!("7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ");
+declare_id!("bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg");
 
 #[program]
 pub mod carbon_pay {
@@ -46,10 +46,7 @@ pub mod carbon_pay {
         ctx.accounts.handler(amount, request_id, &ctx.bumps)
     }
 
-    pub fn purchase_carbon_credits(
-        ctx: Context<PurchaseCarbonCredits>,
-        amount: u64,
-    ) -> Result<()> {
+    pub fn purchase_carbon_credits(ctx: Context<PurchaseCarbonCredits>, amount: u64) -> Result<()> {
         ctx.accounts.purchase_carbon_credits(amount, &ctx.bumps)
     }
 }

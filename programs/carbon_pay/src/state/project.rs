@@ -12,7 +12,7 @@ pub struct Project {
     pub amount: u64,   // Total amount of tokens minted for this project
     pub remaining_amount: u64, // Amount of tokens not yet sold in this project
     pub offset_amount: u64, // Amount of tokens that have been offset in this project
-    pub price_per_token: u64, // Price per token in lamports
+    pub price_per_token: u64, // Price per token in micro-USDC (6 decimals)
     pub carbon_pay_fee: u64, // Fee percentage taken by CarbonPay (e.g. 500 = 5.00%)
     pub carbon_pay_authority: Pubkey, // Authority that can receive fees
     pub project_bump: u8, // Project bump

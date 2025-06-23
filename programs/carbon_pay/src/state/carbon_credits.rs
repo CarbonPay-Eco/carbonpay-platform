@@ -7,17 +7,23 @@ use anchor_lang::prelude::*;
 #[account]
 pub struct CarbonCredits {
     pub authority: Pubkey,      // The admin/authority of the CarbonPay platform
+    pub usdc_mint: Pubkey,      // USDC mint used for payments
+    pub usdc_decimals: u8,      // USDC decimals (always 6)
+    pub usdc_vault: Pubkey,     // Vault that holds USDC fees
     pub total_credits: u64,     // Sum of all credits ever issued across all projects
     pub active_credits: u64, // Sum of all credits that are currently active (not offset) across all projects
     pub offset_credits: u64, // Sum of all credits that have been offset/retired across all projects
     pub projects_count: u64, // Total number of projects created on the platform
-    pub total_fees_earned: u64, // Total fees earned by the platform from all projects
-    pub bump: u8,            // The PDA bump
+    pub total_fees_earned: u64, // Total fees earned by the platform from all projects (in micro-USDC)
+    pub bump: u8,               // The PDA bump
 }
 
 impl CarbonCredits {
     pub const DISCRIMINATOR_SIZE: usize = 8;
     pub const INIT_SPACE: usize = 32 + // authority: Pubkey
+        32 + // usdc_mint: Pubkey
+        1 +  // usdc_decimals: u8
+        32 + // usdc_vault: Pubkey
         8 +  // total_credits: u64
         8 +  // active_credits: u64
         8 +  // offset_credits: u64
@@ -25,9 +31,18 @@ impl CarbonCredits {
         8 +  // total_fees_earned: u64
         1; // bump: u8
 
-    /// Initialize the global platform dashboard
-    pub fn initialize(&mut self, authority: Pubkey, bump: u8) -> Result<()> {
+    /// Initialize the global platform dashboard with USDC support
+    pub fn initialize(
+        &mut self,
+        authority: Pubkey,
+        usdc_mint: Pubkey,
+        usdc_vault: Pubkey,
+        bump: u8,
+    ) -> Result<()> {
         self.authority = authority;
+        self.usdc_mint = usdc_mint;
+        self.usdc_decimals = 6; // USDC always has 6 decimals
+        self.usdc_vault = usdc_vault;
         self.total_credits = 0;
         self.active_credits = 0;
         self.offset_credits = 0;
