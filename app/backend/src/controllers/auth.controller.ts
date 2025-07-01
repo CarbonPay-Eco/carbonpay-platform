@@ -1,46 +1,40 @@
-import { Request, Response } from 'express';
-import { SolanaService } from '../services/solana.service';
-import { AdminService } from '../services/admin.service';
-import { WalletSignature } from '../types/solana';
-import { asyncHandler } from '../utils/asyncHandler';
-import { createError } from '../utils/errorHandler';
-
-const solanaService = new SolanaService();
-const adminService = new AdminService();
+import { Request, Response } from "express";
+import { AuthService } from "../services/AuthService";
+import { asyncHandler } from "../utils/asyncHandler";
+import { createError } from "../utils/errorHandler";
 
 export class AuthController {
-  verifySignature = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { address, message, signature }: WalletSignature = req.body;
+  // Email/password login
+  login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { email, password } = req.body;
     
-    if (!address || !message || !signature) {
-      throw createError('Missing required fields: address, message, and signature are required', 400);
+    if (!email || !password) {
+      throw createError("Email and password are required", 400);
     }
     
-    // Verify the signature
-    const isValid = await solanaService.verifySignature({
-      address,
-      message,
-      signature
-    });
-    
-    if (!isValid) {
-      throw createError('Invalid signature', 401);
-    }
-    
-    // Log the authentication
-    await adminService.createAuditLog(
-      address, 
-      'AUTH_VERIFY', 
-      { message }
-    );
+    const result = await AuthService.login(email, password);
     
     res.status(200).json({
       success: true,
-      message: 'Signature verified successfully',
+      message: "Login successful",
       data: {
-        address,
-        verified: true
-      }
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+        },
+        token: result.token,
+      },
     });
   });
-} 
+
+  // Legacy signature verification (kept for compatibility if needed)
+  verifySignature = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      // This method is deprecated in Web 2.5 approach but kept for backward compatibility
+      throw createError(
+        "Signature verification is deprecated. Please use email/password authentication.",
+        400
+      );
+    }
+  );
+}

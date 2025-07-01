@@ -2,27 +2,29 @@ import { Router } from "express";
 import { healthCheck } from "../middlewares/healthCheck";
 import {
   authValidations,
+  userValidations,
   organizationValidations,
   projectValidations,
   retirementValidations,
 } from "../middlewares/validator";
-import { verifyWallet, verifyAdmin } from "../middlewares/auth.middleware";
+import {
+  authMiddleware,
+  adminMiddleware,
+} from "../middlewares/auth.middleware";
 
 // Controllers
 import { AuthController } from "../controllers/auth.controller";
-import { WalletController } from "../controllers/wallet.controller";
+import { UserController } from "../controllers/user.controller";
 import { OrganizationController } from "../controllers/organization.controller";
 import { ProjectController } from "../controllers/project.controller";
 import { RetirementController } from "../controllers/retirement.controller";
-import { AdminController } from "../controllers/admin.controller";
 
 // Instantiating controllers
 const authController = new AuthController();
-const walletController = new WalletController();
+const userController = new UserController();
 const organizationController = new OrganizationController();
 const projectController = new ProjectController();
 const retirementController = new RetirementController();
-const adminController = new AdminController();
 
 const router = Router();
 
@@ -39,13 +41,381 @@ const router = Router();
  */
 router.get("/health", healthCheck);
 
+// ================================
+// USER ROUTES
+// ================================
+
 /**
  * @openapi
- * /auth/verify:
+ * /user/login:
  *   post:
  *     tags:
- *       - Auth
- *     summary: Verify wallet signature
+ *       - User
+ *     summary: User login
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+router.post("/user/login", authValidations.login, authController.login);
+
+/**
+ * @openapi
+ * /user/register:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Register user with onboarding data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - fullName
+ *               - companyName
+ *               - country
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               fullName:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               registrationNumber:
+ *                 type: string
+ *               industryType:
+ *                 type: string
+ *               companySize:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               tracksEmissions:
+ *                 type: boolean
+ *               emissionSources:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               sustainabilityCertifications:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               priorOffsetting:
+ *                 type: boolean
+ *               contactEmail:
+ *                 type: string
+ *               websiteUrl:
+ *                 type: string
+ *               acceptedTerms:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ */
+router.post(
+  "/user/register",
+  userValidations.register,
+  userController.register
+);
+
+/**
+ * @openapi
+ * /user/add-balance:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Add balance to user account (placeholder)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               paymentMethod:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Balance added successfully
+ */
+router.post(
+  "/user/add-balance",
+  authMiddleware,
+  userValidations.addBalance,
+  userController.addBalance
+);
+
+/**
+ * @openapi
+ * /user/purchase-credits:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Purchase carbon credits with account balance
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - projectId
+ *               - quantity
+ *             properties:
+ *               projectId:
+ *                 type: string
+ *               quantity:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Credits purchased successfully
+ */
+router.post(
+  "/user/purchase-credits",
+  authMiddleware,
+  userValidations.purchaseCredits,
+  userController.purchaseCredits
+);
+
+/**
+ * @openapi
+ * /user/retire-emissions:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Retire carbon credits to offset emissions
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - projectId
+ *               - quantity
+ *             properties:
+ *               projectId:
+ *                 type: string
+ *               quantity:
+ *                 type: number
+ *               beneficiary:
+ *                 type: string
+ *               retirementMessage:
+ *                 type: string
+ *               reportingPeriodStart:
+ *                 type: string
+ *                 format: date
+ *               reportingPeriodEnd:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Emissions retired successfully
+ */
+router.post(
+  "/user/retire-emissions",
+  authMiddleware,
+  retirementValidations.retireCredits,
+  retirementController.retireCredits
+);
+
+/**
+ * @openapi
+ * /user/retirements:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user's retirements
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user retirements
+ */
+router.get(
+  "/user/retirements",
+  authMiddleware,
+  retirementController.getUserRetirements
+);
+
+/**
+ * @openapi
+ * /user/retirements/{id}:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get retirement by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Retirement ID
+ *     responses:
+ *       200:
+ *         description: Retirement details
+ */
+router.get(
+  "/user/retirements/:id",
+  authMiddleware,
+  retirementController.getRetirementById
+);
+
+/**
+ * @openapi
+ * /user/profile:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user name and company
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile data
+ */
+router.get("/user/profile", authMiddleware, userController.getProfile);
+
+// ================================
+// ADMIN ROUTES
+// ================================
+
+/**
+ * @openapi
+ * /admin/organizations:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     summary: Create organization (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - fullName
+ *               - companyName
+ *               - country
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               fullName:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               registrationNumber:
+ *                 type: string
+ *               industryType:
+ *                 type: string
+ *               companySize:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               tracksEmissions:
+ *                 type: boolean
+ *               emissionSources:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               sustainabilityCertifications:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               priorOffsetting:
+ *                 type: boolean
+ *               contactEmail:
+ *                 type: string
+ *               websiteUrl:
+ *                 type: string
+ *               acceptedTerms:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Organization created
+ */
+router.post(
+  "/admin/organizations",
+  authMiddleware,
+  adminMiddleware,
+  organizationValidations.createOrganization,
+  organizationController.createOrganization
+);
+
+/**
+ * @openapi
+ * /admin/organizations:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     summary: Get all organizations (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of organizations
+ */
+router.get(
+  "/admin/organizations",
+  authMiddleware,
+  adminMiddleware,
+  organizationController.getAllOrganizations
+);
+
+/**
+ * @openapi
+ * /admin/organizations/{id}:
+ *   put:
+ *     tags:
+ *       - Admin
+ *     summary: Update organization (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Organization ID
  *     requestBody:
  *       required: true
  *       content:
@@ -53,226 +423,102 @@ router.get("/health", healthCheck);
  *           schema:
  *             type: object
  *             properties:
- *               message:
+ *               fullName:
  *                 type: string
- *               signature:
+ *               companyName:
  *                 type: string
- *     responses:
- *       200:
- *         description: Signature verified successfully
- */
-router.post(
-  "/auth/verify",
-  authValidations.verifySignature,
-  authController.verifySignature
-);
-
-/**
- * @openapi
- * /wallet/{address}:
- *   get:
- *     tags:
- *       - Wallet
- *     summary: Get wallet info
- *     parameters:
- *       - in: path
- *         name: address
- *         schema:
- *           type: string
- *         required: true
- *         description: Wallet address
- *     responses:
- *       200:
- *         description: Wallet data returned
- */
-router.get("/wallet/:address", walletController.getWalletInfo);
-
-/**
- * @openapi
- * /organization:
- *   post:
- *     tags:
- *       - Organization
- *     summary: Register a new organization
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: Organization created
- */
-router.post(
-  "/organization",
-  verifyWallet,
-  organizationValidations.createOrganization,
-  organizationController.createOrganization
-);
-
-/**
- * @openapi
- * /organization/me:
- *   get:
- *     tags:
- *       - Organization
- *     summary: Get current user's organization
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Organization data retrieved
- */
-router.get(
-  "/organization/me",
-  verifyWallet,
-  organizationController.getMyOrganization
-);
-
-/**
- * @openapi
- * /organization:
- *   put:
- *     tags:
- *       - Organization
- *     summary: Update organization information
- *     security:
- *       - bearerAuth: []
+ *               country:
+ *                 type: string
+ *               registrationNumber:
+ *                 type: string
+ *               industryType:
+ *                 type: string
+ *               companySize:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               tracksEmissions:
+ *                 type: boolean
+ *               emissionSources:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               sustainabilityCertifications:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               priorOffsetting:
+ *                 type: boolean
+ *               contactEmail:
+ *                 type: string
+ *               websiteUrl:
+ *                 type: string
+ *               acceptedTerms:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Organization updated
  */
 router.put(
-  "/organization",
-  verifyWallet,
+  "/admin/organizations/:id",
+  authMiddleware,
+  adminMiddleware,
   organizationValidations.updateOrganization,
   organizationController.updateOrganization
 );
 
 /**
  * @openapi
- * /projects:
+ * /admin/projects:
  *   post:
  *     tags:
- *       - Projects
- *     summary: Create a tokenized carbon project
+ *       - Admin
+ *     summary: Create carbon project (admin only)
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - projectName
+ *               - location
+ *               - methodology
+ *               - certificationBody
+ *               - vintageYear
+ *               - totalIssued
+ *               - pricePerCredit
+ *             properties:
+ *               projectName:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               methodology:
+ *                 type: string
+ *               certificationBody:
+ *                 type: string
+ *               vintageYear:
+ *                 type: number
+ *               totalIssued:
+ *                 type: number
+ *               pricePerCredit:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *               tokenId:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Project created
  */
 router.post(
-  "/projects",
-  verifyWallet,
-  verifyAdmin,
+  "/admin/projects",
+  authMiddleware,
+  adminMiddleware,
   projectValidations.createProject,
   projectController.createProject
-);
-
-/**
- * @openapi
- * /projects:
- *   get:
- *     tags:
- *       - Projects
- *     summary: Get all tokenized carbon projects
- *     responses:
- *       200:
- *         description: List of projects
- */
-router.get("/projects", projectController.getAllProjects);
-
-/**
- * @openapi
- * /projects/{token_id}:
- *   get:
- *     tags:
- *       - Projects
- *     summary: Get project by token ID
- *     parameters:
- *       - in: path
- *         name: token_id
- *         schema:
- *           type: string
- *         required: true
- *         description: Token ID of the project
- *     responses:
- *       200:
- *         description: Project details
- */
-router.get("/projects/:token_id", projectController.getProjectById);
-
-/**
- * @openapi
- * /retire:
- *   post:
- *     tags:
- *       - Retirement
- *     summary: Retire tokenized credits (offset)
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Credits retired
- */
-router.post(
-  "/retire",
-  verifyWallet,
-  retirementValidations.retireCredits,
-  retirementController.retireCredits
-);
-
-/**
- * @openapi
- * /retirements:
- *   get:
- *     tags:
- *       - Retirement
- *     summary: Get retirements of the authenticated wallet
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of retirements
- */
-router.get("/retirements", verifyWallet, retirementController.getMyRetirements);
-
-/**
- * @openapi
- * /public/{walletAddress}:
- *   get:
- *     tags:
- *       - Retirement
- *     summary: Get public retirements for a given wallet address
- *     parameters:
- *       - in: path
- *         name: walletAddress
- *         required: true
- *         schema:
- *           type: string
- *         description: Wallet address to query
- *     responses:
- *       200:
- *         description: Public retirements data
- */
-router.get("/public/:walletAddress", retirementController.getPublicRetirements);
-
-/**
- * @openapi
- * /admin/audit-logs:
- *   get:
- *     tags:
- *       - Admin
- *     summary: Get system audit logs
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logs retrieved
- */
-router.get(
-  "/admin/audit-logs",
-  verifyWallet,
-  verifyAdmin,
-  adminController.getAuditLogs
 );
 
 /**
@@ -281,18 +527,31 @@ router.get(
  *   get:
  *     tags:
  *       - Admin
- *     summary: Get all projects for administration
- *     security:
- *       - bearerAuth: []
+ *     summary: Get all carbon projects
  *     responses:
  *       200:
- *         description: List of admin projects
+ *         description: List of projects
  */
-router.get(
-  "/admin/projects",
-  verifyWallet,
-  verifyAdmin,
-  adminController.getProjects
-);
+router.get("/admin/projects", projectController.getAllProjects);
+
+/**
+ * @openapi
+ * /admin/projects/{id}:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     summary: Get project by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Project ID
+ *     responses:
+ *       200:
+ *         description: Project details
+ */
+router.get("/admin/projects/:id", projectController.getProjectById);
 
 export default router;

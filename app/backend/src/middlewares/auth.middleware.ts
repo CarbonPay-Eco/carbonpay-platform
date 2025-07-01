@@ -1,71 +1,122 @@
-import { Request, Response, NextFunction } from 'express';
-import { SolanaService } from '../services/solana.service';
-import { AdminService } from '../services/admin.service';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { AppDataSource } from "../database/data-source";
+import { User } from "../entities/User";
 
-// Instantiate services
-const solanaService = new SolanaService();
-const adminService = new AdminService();
+// Extend Request type to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+      userId?: string;
+    }
+  }
+}
 
-// Middleware to verify wallet connection
-export const verifyWallet = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// JWT Authentication middleware
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    // Extract wallet address from request
-    const walletAddress = req.headers['x-wallet-address'] as string;
-    
-    if (!walletAddress) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.status(401).json({
         success: false,
-        message: 'Wallet address is required for authentication',
-        error: 'UNAUTHORIZED'
+        message: "Authorization token is required",
+        error: "UNAUTHORIZED",
       });
       return;
     }
-    
-    // Attach wallet address to request for use in controllers
-    req.walletAddress = walletAddress;
-    
-    next();
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+
+      // Get user from database
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOneBy({ id: decoded.userId });
+
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          message: "User not found",
+          error: "UNAUTHORIZED",
+        });
+        return;
+      }
+
+      // Attach user to request
+      req.user = user;
+      req.userId = user.id;
+
+      next();
+    } catch (jwtError) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+        error: "UNAUTHORIZED",
+      });
+      return;
+    }
   } catch (error) {
-    res.status(401).json({
+    console.error("Auth middleware error:", error);
+    res.status(500).json({
       success: false,
-      message: 'Authentication failed',
-      error
+      message: "Internal server error",
+      error,
     });
   }
 };
 
-// Middleware to verify admin rights
-export const verifyAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Admin middleware (requires user to be admin)
+export const adminMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const walletAddress = req.walletAddress as string;
-    
-    if (!walletAddress) {
+    // This assumes user was set by authMiddleware
+    if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
-        error: 'UNAUTHORIZED'
+        message: "Authentication required",
+        error: "UNAUTHORIZED",
       });
       return;
     }
-    
-    // Check if wallet has admin rights
-    const isAdmin = await adminService.isAdmin(walletAddress);
-    
-    if (!isAdmin) {
+
+    // TODO: Add admin role check when user role system is implemented
+    // For now, we'll use a simple env variable or email check
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((email) => email.trim());
+
+    if (!adminEmails.includes(req.user.email)) {
       res.status(403).json({
         success: false,
-        message: 'You do not have permission to access this resource',
-        error: 'FORBIDDEN'
+        message: "Admin access required",
+        error: "FORBIDDEN",
       });
       return;
     }
-    
+
     next();
   } catch (error) {
+    console.error("Admin middleware error:", error);
     res.status(500).json({
       success: false,
-      message: 'Error checking admin permissions',
-      error
+      message: "Internal server error",
+      error,
     });
   }
-}; 
+};
+
+// Legacy middleware for compatibility (can be removed later)
+export const verifyWallet = authMiddleware;
+export const verifyAdmin = adminMiddleware;

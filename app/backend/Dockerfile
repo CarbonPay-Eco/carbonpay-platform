@@ -2,33 +2,40 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar arquivos de configuração
-COPY package.json package-lock.json ./
+# Install system dependencies for libsodium and other native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    libsodium-dev \
+    wget
+
+# Install dependencies first for better caching
+COPY package.json ./
+RUN npm install
+
+# Copy TypeScript configuration
 COPY tsconfig.json ./
 
-# Instalar dependências
-RUN yarn install
-
-# Copiar código fonte
+# Copy source code
 COPY src/ ./src/
 
-# Garantir que o diretório dist existe
-RUN mkdir -p dist
+# Build TypeScript
+RUN npm run build
 
-# Compilar TypeScript para JavaScript
-RUN yarn build
+# Remove dev dependencies for production (keep as separate layer)
+RUN npm prune --production
 
-# Remover dependências de desenvolvimento para produção
-RUN yarn install --production
-
-# Definir variáveis de ambiente padrão (serão substituídas pelo env_file)
-# NOTA: Esses valores são apenas padrões e serão substituídos pelas variáveis de ambiente
-# fornecidas durante a execução do container
+# Set default environment variables
 ENV NODE_ENV=${NODE_ENV:-development}
 ENV SERVER_PORT=${SERVER_PORT:-3000}
 
-# Expor porta da aplicação (usa a variável PORT ou o valor padrão 3000)
+# Expose port
 EXPOSE ${SERVER_PORT:-3000}
 
-# Iniciar a aplicação
+# Health check (remove curl dependency for alpine)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT:-3000}/api/health || exit 1
+
+# Start the application
 CMD ["node", "dist/server.js"] 

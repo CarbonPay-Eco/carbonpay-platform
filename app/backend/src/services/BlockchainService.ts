@@ -1,5 +1,10 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { WalletService } from "./WalletService";
 
 export class BlockchainService {
@@ -17,8 +22,7 @@ export class BlockchainService {
   ): Promise<number> {
     const keypair = await WalletService.getKeypair(walletId, password);
 
-    const tokenAccount = await Token.getAssociatedTokenAddress(
-      TOKEN_PROGRAM_ID,
+    const tokenAccount = await getAssociatedTokenAddress(
       this.USDC_MINT,
       keypair.publicKey
     );
@@ -46,14 +50,12 @@ export class BlockchainService {
     const toPublicKeyObj = new PublicKey(toPublicKey);
 
     // Get token accounts
-    const fromTokenAccount = await Token.getAssociatedTokenAddress(
-      TOKEN_PROGRAM_ID,
+    const fromTokenAccount = await getAssociatedTokenAddress(
       this.USDC_MINT,
       fromKeypair.publicKey
     );
 
-    const toTokenAccount = await Token.getAssociatedTokenAddress(
-      TOKEN_PROGRAM_ID,
+    const toTokenAccount = await getAssociatedTokenAddress(
       this.USDC_MINT,
       toPublicKeyObj
     );
@@ -61,28 +63,24 @@ export class BlockchainService {
     // Create transaction
     const transaction = new Transaction().add(
       // Create destination token account if it doesn't exist
-      Token.createAssociatedTokenAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        this.USDC_MINT,
-        toTokenAccount,
-        toPublicKeyObj,
-        fromKeypair.publicKey
+      createAssociatedTokenAccountInstruction(
+        fromKeypair.publicKey, // payer
+        toTokenAccount, // associated token account
+        toPublicKeyObj, // owner
+        this.USDC_MINT // mint
       ),
       // Transfer tokens
-      Token.createTransferInstruction(
-        TOKEN_PROGRAM_ID,
-        fromTokenAccount,
-        toTokenAccount,
-        fromKeypair.publicKey,
-        [],
-        amount * Math.pow(10, 6) // Convert to USDC decimals
+      createTransferInstruction(
+        fromTokenAccount, // source
+        toTokenAccount, // destination
+        fromKeypair.publicKey, // owner
+        amount * Math.pow(10, 6) // amount in USDC decimals
       )
     );
 
     // Sign and send transaction
-    transaction.recentBlockhash = (
-      await this.connection.getRecentBlockhash()
-    ).blockhash;
+    const { blockhash } = await this.connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
     transaction.feePayer = fromKeypair.publicKey;
     transaction.sign(fromKeypair);
 

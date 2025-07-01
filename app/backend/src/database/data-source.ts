@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { Wallet } from "./entities/Wallet";
+import { Wallet as OrganizationWallet } from "./entities/Wallet";
+import { Wallet as UserWallet } from "../entities/Wallet";
 import { Organization } from "./entities/Organization";
 import { TokenizedProject } from "./entities/TokenizedProject";
 import { Retirement } from "./entities/Retirement";
@@ -28,7 +29,8 @@ export const AppDataSource = new DataSource({
   logging: process.env.NODE_ENV === "development",
   entities: [
     User,
-    Wallet,
+    UserWallet,
+    OrganizationWallet,
     Organization,
     TokenizedProject,
     Retirement,
@@ -44,7 +46,14 @@ export const getTestDataSource = () => {
     database: ":memory:",
     synchronize: true,
     dropSchema: true,
-    entities: [Wallet, Organization, TokenizedProject, Retirement, AuditLog],
+    entities: [
+      UserWallet,
+      OrganizationWallet,
+      Organization,
+      TokenizedProject,
+      Retirement,
+      AuditLog,
+    ],
     logging: false,
   });
 };

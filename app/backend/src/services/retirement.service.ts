@@ -1,10 +1,11 @@
-import { Repository } from 'typeorm';
-import { AppDataSource } from '../database/data-source';
-import { Retirement } from '../database/entities/Retirement';
-import { SolanaService } from './solana.service';
-import { WalletService } from './wallet.service';
-import { TokenizedProjectService } from './tokenized-project.service';
-import { AuditLogService } from './audit-log.service';
+import { Repository } from "typeorm";
+import { AppDataSource } from "../database/data-source";
+import { Retirement } from "../database/entities/Retirement";
+import { TokenizedProject } from "../database/entities/TokenizedProject";
+import { SolanaService } from "./solana.service";
+import { WalletService } from "./wallet.service";
+import { TokenizedProjectService } from "./tokenized-project.service";
+import { AuditLogService } from "./audit-log.service";
 
 export class RetirementService {
   private retirementRepository: Repository<Retirement>;
@@ -22,12 +23,12 @@ export class RetirementService {
   }
 
   /**
-   * Retire carbon credits
-   * @param walletAddress The wallet address retiring the credits
-   * @param projectId The project ID or token ID
-   * @param quantity The amount to retire
-   * @param options Optional retirement options
-   * @returns The created retirement record
+   * Retire carbon credits for emissions offsetting
+   * @param walletAddress The wallet address of the retirer
+   * @param projectId The project ID to retire credits from
+   * @param quantity The quantity of credits to retire
+   * @param options Additional retirement options
+   * @returns The retirement record
    */
   async retireCredits(
     walletAddress: string,
@@ -42,31 +43,42 @@ export class RetirementService {
       retirementMessage?: string;
     }
   ): Promise<Retirement> {
-    // Get wallet entity
-    const wallet = await this.walletService.getOrCreateWallet(walletAddress);
-    
-    // Get project data to verify it exists and has enough supply
-    const project = await this.tokenizedProjectService.getProjectById(projectId);
-    
+    // Get the wallet
+    const wallet = await this.walletService.findByAddress(walletAddress);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+
+    // Get the project
+    const project = await this.tokenizedProjectService.getProjectById(
+      projectId
+    );
     if (!project) {
-      throw new Error('Project not found');
+      throw new Error("Project not found");
     }
-    
+
+    // Check if project has enough available credits
     if (project.available < quantity) {
-      throw new Error('Insufficient supply for retirement');
+      throw new Error(
+        `Insufficient available credits. Project has ${project.available} but tried to retire ${quantity}`
+      );
     }
-    
-    // Interact with Solana to burn tokens
-    const txHash = await this.solanaService.burnCredit(walletAddress, {
+
+    // Execute the retirement on-chain (burn tokens)
+    const txHash = await this.solanaService.burnCredit(wallet.walletAddress, {
       tokenId: project.tokenId,
       amount: quantity,
       beneficiary: options?.beneficiary,
-      retirementMessage: options?.retirementMessage
+      retirementMessage: options?.retirementMessage,
     });
-    
-    // Update project supply
-    await this.tokenizedProjectService.updateProjectSupply(projectId, quantity, true);
-    
+
+    // Update project available supply
+    await this.tokenizedProjectService.updateProjectSupply(
+      projectId,
+      quantity,
+      false // subtract from available
+    );
+
     // Create retirement record
     const retirement = this.retirementRepository.create({
       walletId: wallet.id,
@@ -76,25 +88,25 @@ export class RetirementService {
       proofUrl: options?.proofUrl,
       autoOffset: options?.autoOffset || false,
       reportingPeriodStart: options?.reportingPeriodStart,
-      reportingPeriodEnd: options?.reportingPeriodEnd
+      reportingPeriodEnd: options?.reportingPeriodEnd,
     });
-    
+
     const savedRetirement = await this.retirementRepository.save(retirement);
-    
+
     // Log the action
     await this.auditLogService.createAuditLog(
       wallet.id,
-      'CREDIT_RETIRE',
-      'retirements',
+      "CREDIT_RETIRE",
+      "retirements",
       savedRetirement.id,
       {
         projectId: project.id,
         quantity,
         txHash,
-        beneficiary: options?.beneficiary
+        beneficiary: options?.beneficiary,
       }
     );
-    
+
     return savedRetirement;
   }
 
@@ -105,15 +117,15 @@ export class RetirementService {
    */
   async getRetirementsByWallet(walletAddress: string): Promise<Retirement[]> {
     const wallet = await this.walletService.findByAddress(walletAddress);
-    
+
     if (!wallet) {
       return [];
     }
-    
+
     return this.retirementRepository.find({
       where: { walletId: wallet.id },
-      relations: ['wallet', 'tokenizedProject'],
-      order: { retirementDate: 'DESC' }
+      relations: ["wallet", "tokenizedProject"],
+      order: { retirementDate: "DESC" },
     });
   }
 
@@ -122,17 +134,19 @@ export class RetirementService {
    * @param walletAddress The organization wallet address
    * @returns List of retirements for the organization
    */
-  async getRetirementsByOrganizationWallet(walletAddress: string): Promise<Retirement[]> {
+  async getRetirementsByOrganizationWallet(
+    walletAddress: string
+  ): Promise<Retirement[]> {
     const wallet = await this.walletService.findByAddress(walletAddress);
-    
+
     if (!wallet) {
       return [];
     }
-    
+
     return this.retirementRepository.find({
       where: { walletId: wallet.id },
-      relations: ['wallet', 'tokenizedProject'],
-      order: { retirementDate: 'DESC' }
+      relations: ["wallet", "tokenizedProject"],
+      order: { retirementDate: "DESC" },
     });
   }
 
@@ -142,8 +156,69 @@ export class RetirementService {
    */
   async getAllRetirements(): Promise<Retirement[]> {
     return this.retirementRepository.find({
-      relations: ['wallet', 'tokenizedProject'],
-      order: { retirementDate: 'DESC' }
+      relations: ["wallet", "tokenizedProject"],
+      order: { retirementDate: "DESC" },
     });
   }
-} 
+
+  /**
+   * Get user's wallet address for retirement operations
+   */
+  async getUserWalletAddress(userId: string): Promise<string> {
+    const wallet = await this.walletService.getOrCreateWallet(userId);
+    return wallet.walletAddress;
+  }
+
+  /**
+   * Get user's retirements by user ID
+   */
+  async getUserRetirements(userId: string): Promise<Retirement[]> {
+    // Get user's wallet
+    const wallet = await this.walletService.getOrCreateWallet(userId);
+
+    // Get retirements for this wallet
+    return this.retirementRepository.find({
+      where: { walletId: wallet.id },
+      relations: ["tokenizedProject"],
+      order: { retirementDate: "DESC" },
+    });
+  }
+
+  /**
+   * Get retirement by ID (with user validation)
+   */
+  async getRetirementById(
+    retirementId: string,
+    userId: string
+  ): Promise<Retirement | null> {
+    // Get user's wallet
+    const wallet = await this.walletService.getOrCreateWallet(userId);
+
+    // Get retirement for this user only
+    return this.retirementRepository.findOne({
+      where: {
+        id: retirementId,
+        walletId: wallet.id,
+      },
+      relations: ["tokenizedProject"],
+    });
+  }
+
+  /**
+   * Get public retirements for a wallet address (legacy method)
+   */
+  async getPublicRetirements(walletAddress: string): Promise<Retirement[]> {
+    // Find wallet by address
+    const wallet = await this.walletService.getWalletByAddress(walletAddress);
+
+    if (!wallet) {
+      return [];
+    }
+
+    return this.retirementRepository.find({
+      where: { walletId: wallet.id },
+      relations: ["tokenizedProject"],
+      order: { retirementDate: "DESC" },
+    });
+  }
+}

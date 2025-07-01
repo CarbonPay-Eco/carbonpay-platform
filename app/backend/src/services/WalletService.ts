@@ -1,66 +1,63 @@
 import { Keypair } from "@solana/web3.js";
-import * as bs58 from "bs58";
-import * as sodium from "libsodium-wrappers";
+import bs58 from "bs58";
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  pbkdf2Sync,
+} from "crypto";
 import { AppDataSource } from "../database/data-source";
 import { Wallet } from "../entities/Wallet";
 
 export class WalletService {
-  private static async initializeSodium() {
-    await sodium.ready;
-  }
-
-  private static async encryptPrivateKey(
+  private static encryptPrivateKey(
     privateKey: Uint8Array,
     password: string
-  ): Promise<string> {
-    await this.initializeSodium();
+  ): string {
+    const salt = randomBytes(32);
+    const iv = randomBytes(16);
 
-    const salt = sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
-    const key = sodium.crypto_pwhash(
-      sodium.crypto_secretbox_KEYBYTES,
-      password,
-      salt,
-      sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_ALG_DEFAULT
-    );
+    // Derive key from password using PBKDF2
+    const key = pbkdf2Sync(password, salt, 100000, 32, "sha256");
 
-    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
-    const encrypted = sodium.crypto_secretbox_easy(privateKey, nonce, key);
+    // Encrypt using AES-256-GCM
+    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(privateKey),
+      cipher.final(),
+    ]);
+    const authTag = cipher.getAuthTag();
 
-    const result = Buffer.concat([salt, nonce, encrypted]);
+    // Combine salt + iv + authTag + encrypted data
+    const result = Buffer.concat([salt, iv, authTag, encrypted]);
 
     return bs58.encode(result);
   }
 
-  private static async decryptPrivateKey(
+  private static decryptPrivateKey(
     encryptedData: string,
     password: string
-  ): Promise<Uint8Array> {
-    await this.initializeSodium();
-
+  ): Uint8Array {
     const data = bs58.decode(encryptedData);
 
-    const salt = data.slice(0, sodium.crypto_pwhash_SALTBYTES);
-    const nonce = data.slice(
-      sodium.crypto_pwhash_SALTBYTES,
-      sodium.crypto_pwhash_SALTBYTES + sodium.crypto_secretbox_NONCEBYTES
-    );
-    const encrypted = data.slice(
-      sodium.crypto_pwhash_SALTBYTES + sodium.crypto_secretbox_NONCEBYTES
-    );
+    // Extract components
+    const salt = data.slice(0, 32);
+    const iv = data.slice(32, 48);
+    const authTag = data.slice(48, 64);
+    const encrypted = data.slice(64);
 
-    const key = sodium.crypto_pwhash(
-      sodium.crypto_secretbox_KEYBYTES,
-      password,
-      salt,
-      sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_ALG_DEFAULT
-    );
+    // Derive key from password
+    const key = pbkdf2Sync(password, salt, 100000, 32, "sha256");
 
-    const decrypted = sodium.crypto_secretbox_open_easy(encrypted, nonce, key);
-    return decrypted;
+    // Decrypt using AES-256-GCM
+    const decipher = createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
+    return new Uint8Array(decrypted);
   }
 
   public static async createWallet(
@@ -68,7 +65,7 @@ export class WalletService {
     password: string
   ): Promise<Wallet> {
     const keypair = Keypair.generate();
-    const encryptedPrivateKey = await this.encryptPrivateKey(
+    const encryptedPrivateKey = this.encryptPrivateKey(
       keypair.secretKey,
       password
     );
@@ -93,7 +90,7 @@ export class WalletService {
       throw new Error("Wallet not found");
     }
 
-    const privateKey = await this.decryptPrivateKey(
+    const privateKey = this.decryptPrivateKey(
       wallet.encryptedPrivateKey,
       password
     );

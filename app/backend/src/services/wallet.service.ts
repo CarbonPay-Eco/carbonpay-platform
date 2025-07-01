@@ -1,7 +1,7 @@
-import { Repository } from 'typeorm';
-import { AppDataSource } from '../database/data-source';
-import { Wallet } from '../database/entities/Wallet';
-import { v4 as uuidv4 } from 'uuid';
+import { Repository } from "typeorm";
+import { AppDataSource } from "../database/data-source";
+import { Wallet } from "../database/entities/Wallet";
+import { v4 as uuidv4 } from "uuid";
 
 export class WalletService {
   private walletRepository: Repository<Wallet>;
@@ -20,12 +20,24 @@ export class WalletService {
   }
 
   /**
+   * Get wallet by address - alias for findByAddress for compatibility
+   * @param walletAddress The wallet address to look for
+   * @returns The found wallet or null
+   */
+  async getWalletByAddress(walletAddress: string): Promise<Wallet | null> {
+    return this.findByAddress(walletAddress);
+  }
+
+  /**
    * Get or create a wallet entry
    * @param walletAddress The wallet address
    * @param provider Optional wallet provider name
    * @returns The wallet entity
    */
-  async getOrCreateWallet(walletAddress: string, provider?: string): Promise<Wallet> {
+  async getOrCreateWallet(
+    walletAddress: string,
+    provider?: string
+  ): Promise<Wallet> {
     // First check if the wallet already exists
     let wallet = await this.findByAddress(walletAddress);
 
@@ -34,9 +46,9 @@ export class WalletService {
       const newWallet = this.walletRepository.create({
         walletAddress,
         provider,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      
+
       wallet = await this.walletRepository.save(newWallet);
     }
 
@@ -51,11 +63,11 @@ export class WalletService {
    */
   async setWalletRole(walletId: string, role: string): Promise<Wallet> {
     const wallet = await this.walletRepository.findOneBy({ id: walletId });
-    
+
     if (!wallet) {
-      throw new Error('Wallet not found');
+      throw new Error("Wallet not found");
     }
-    
+
     wallet.role = role;
     return this.walletRepository.save(wallet);
   }
@@ -70,4 +82,4 @@ export class WalletService {
     const wallet = await this.findByAddress(walletAddress);
     return wallet?.role === role;
   }
-} 
+}
