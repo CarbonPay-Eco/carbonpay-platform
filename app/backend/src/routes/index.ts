@@ -310,6 +310,37 @@ router.get(
 router.get("/user/profile", authMiddleware, userController.getProfile);
 
 // ================================
+// PUBLIC PROJECT ROUTES
+// ================================
+
+/**
+ * @openapi
+ * /projects:
+ *   get:
+ *     tags:
+ *       - Projects
+ *     summary: Get available carbon projects for purchase
+ *     description: Returns only projects with available supply > 0 and status 'available'
+ *     responses:
+ *       200:
+ *         description: List of available projects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ */
+router.get("/projects", projectController.getAvailableProjects);
+
+// ================================
 // ADMIN ROUTES
 // ================================
 
