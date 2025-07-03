@@ -17,6 +17,9 @@ export class User {
   @Column({ type: "varchar" })
   passwordHash: string;
 
+  @Column({ type: "varchar", default: "user" })
+  role: string;
+
   @CreateDateColumn({ type: "timestamp with time zone" })
   createdAt: Date;
 

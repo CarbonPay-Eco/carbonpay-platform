@@ -91,13 +91,7 @@ export const adminMiddleware = async (
       return;
     }
 
-    // TODO: Add admin role check when user role system is implemented
-    // For now, we'll use a simple env variable or email check
-    const adminEmails = (process.env.ADMIN_EMAILS || "")
-      .split(",")
-      .map((email) => email.trim());
-
-    if (!adminEmails.includes(req.user.email)) {
+    if (req.user.role !== "admin") {
       res.status(403).json({
         success: false,
         message: "Admin access required",

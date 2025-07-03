@@ -10,11 +10,11 @@ const adminService = new AdminService();
 export class ProjectController {
   createProject = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
-      const walletAddress = req.walletAddress as string;
+      const userId = req.userId as string;
       const projectData = req.body;
 
       // Check if user is admin
-      const isAdmin = await adminService.isAdmin(walletAddress);
+      const isAdmin = await adminService.isAdmin(userId);
 
       if (!isAdmin) {
         throw createError("Only admins can create projects", 403);
@@ -22,13 +22,10 @@ export class ProjectController {
 
       // Create project
       console.log("Project Data:", projectData);
-      const project = await projectService.createProject(
-        projectData,
-        walletAddress
-      );
+      const project = await projectService.createProject(projectData, userId);
 
       // Log action
-      await adminService.createAuditLog(walletAddress, "PROJECT_CREATE", {
+      await adminService.createAuditLog(userId, "PROJECT_CREATE", {
         projectId: project.id,
         tokenId: project.tokenId,
       });

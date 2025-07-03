@@ -27,10 +27,11 @@ export class UserController {
         contactEmail,
         websiteUrl,
         acceptedTerms,
+        role = "user",
       } = req.body;
 
       // Register user and create wallet automatically (Web 2.5 style)
-      const result = await AuthService.register(email, password);
+      const result = await AuthService.register(email, password, role);
 
       // Create organization/onboarding data
       const organizationData = {
@@ -62,6 +63,7 @@ export class UserController {
           user: {
             id: result.user.id,
             email: result.user.email,
+            role: result.user.role,
           },
           organization,
           token: result.token,

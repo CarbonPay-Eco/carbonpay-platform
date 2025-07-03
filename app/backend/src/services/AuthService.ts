@@ -11,7 +11,8 @@ export class AuthService {
 
   public static async register(
     email: string,
-    password: string
+    password: string,
+    role: string = "user"
   ): Promise<{ user: User; token: string }> {
     const userRepository = AppDataSource.getRepository(User);
 
@@ -25,6 +26,7 @@ export class AuthService {
     const user = new User();
     user.email = email;
     user.passwordHash = await bcrypt.hash(password, 10);
+    user.role = role;
     await userRepository.save(user);
 
     // Create wallet for user

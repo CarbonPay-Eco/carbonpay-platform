@@ -6,7 +6,7 @@ import {
   OneToOne,
   JoinColumn,
 } from "typeorm";
-import { Wallet } from "./Wallet";
+import { UserWallet } from "../../entities/UserWallet";
 
 @Entity("organizations")
 export class Organization {
@@ -66,7 +66,7 @@ export class Organization {
   createdAt: Date;
 
   // Relationships
-  @OneToOne(() => Wallet, (wallet) => wallet.organization)
-  @JoinColumn({ name: "wallet_id" })
-  wallet: Wallet;
+  @OneToOne(() => UserWallet, { eager: false })
+  @JoinColumn({ name: "wallet_id", referencedColumnName: "id" })
+  wallet: UserWallet;
 }
