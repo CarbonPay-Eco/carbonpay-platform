@@ -1,31 +1,38 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Wallet } from './Wallet';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { UserWallet } from "../../entities/UserWallet";
 
-@Entity('audit_logs')
+@Entity("audit_logs")
 export class AuditLog {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ name: 'wallet_id' })
+  @Column({ name: "wallet_id" })
   walletId: string;
 
   @Column()
   action: string;
 
-  @Column({ name: 'entity_type' })
+  @Column({ name: "entity_type" })
   entityType: string;
 
-  @Column({ name: 'entity_id', nullable: true })
+  @Column({ name: "entity_id", nullable: true })
   entityId: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   metadata: Record<string, any>;
 
-  @CreateDateColumn({ name: 'timestamp' })
+  @CreateDateColumn({ name: "timestamp" })
   timestamp: Date;
 
   // Relationships
-  @ManyToOne(() => Wallet, wallet => wallet.auditLogs)
-  @JoinColumn({ name: 'wallet_id' })
-  wallet: Wallet;
-} 
+  @ManyToOne(() => UserWallet, { eager: false })
+  @JoinColumn({ name: "wallet_id", referencedColumnName: "id" })
+  wallet: UserWallet;
+}

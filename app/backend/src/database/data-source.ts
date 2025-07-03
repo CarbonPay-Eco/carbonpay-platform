@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { Wallet as OrganizationWallet } from "./entities/Wallet";
-import { Wallet as UserWallet } from "../entities/Wallet";
+import { UserWallet } from "../entities/UserWallet";
 import { Organization } from "./entities/Organization";
 import { TokenizedProject } from "./entities/TokenizedProject";
 import { Retirement } from "./entities/Retirement";
@@ -26,6 +26,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || "postgres",
   database: process.env.DB_DATABASE || "carbonpay",
   synchronize: process.env.NODE_ENV === "development",
+  dropSchema: process.env.NODE_ENV === "development", // Force schema recreation
   logging: process.env.NODE_ENV === "development",
   entities: [
     User,

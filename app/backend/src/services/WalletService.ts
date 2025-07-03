@@ -7,7 +7,7 @@ import {
   pbkdf2Sync,
 } from "crypto";
 import { AppDataSource } from "../database/data-source";
-import { Wallet } from "../entities/Wallet";
+import { UserWallet } from "../entities/UserWallet";
 
 export class WalletService {
   private static encryptPrivateKey(
@@ -63,19 +63,19 @@ export class WalletService {
   public static async createWallet(
     userId: string,
     password: string
-  ): Promise<Wallet> {
+  ): Promise<UserWallet> {
     const keypair = Keypair.generate();
     const encryptedPrivateKey = this.encryptPrivateKey(
       keypair.secretKey,
       password
     );
 
-    const wallet = new Wallet();
+    const wallet = new UserWallet();
     wallet.userId = userId;
     wallet.publicKey = keypair.publicKey.toBase58();
     wallet.encryptedPrivateKey = encryptedPrivateKey;
 
-    const walletRepository = AppDataSource.getRepository(Wallet);
+    const walletRepository = AppDataSource.getRepository(UserWallet);
     return await walletRepository.save(wallet);
   }
 
@@ -83,7 +83,7 @@ export class WalletService {
     walletId: string,
     password: string
   ): Promise<Keypair> {
-    const walletRepository = AppDataSource.getRepository(Wallet);
+    const walletRepository = AppDataSource.getRepository(UserWallet);
     const wallet = await walletRepository.findOneBy({ id: walletId });
 
     if (!wallet) {

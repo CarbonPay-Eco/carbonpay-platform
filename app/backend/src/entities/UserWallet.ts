@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 
 @Entity("user_wallets")
-export class Wallet {
+export class UserWallet {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 

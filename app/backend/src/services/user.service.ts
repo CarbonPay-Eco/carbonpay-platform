@@ -3,17 +3,16 @@ import { AppDataSource } from "../database/data-source";
 import { User } from "../entities/User";
 import { Organization } from "../database/entities/Organization";
 import { TokenizedProject } from "../database/entities/TokenizedProject";
-import { Wallet } from "../database/entities/Wallet";
+import { UserWallet } from "../entities/UserWallet";
 import { Purchase } from "../database/entities/Purchase";
 import { SolanaService } from "./solana.service";
 import { AuditLogService } from "./audit-log.service";
-import { WalletService } from "../services/WalletService";
 
 export class UserService {
   private userRepository: Repository<User>;
   private organizationRepository: Repository<Organization>;
   private projectRepository: Repository<TokenizedProject>;
-  private walletRepository: Repository<Wallet>;
+  private userWalletRepository: Repository<UserWallet>;
   private purchaseRepository: Repository<Purchase>;
   private solanaService: SolanaService;
   private auditLogService: AuditLogService;
@@ -22,7 +21,7 @@ export class UserService {
     this.userRepository = AppDataSource.getRepository(User);
     this.organizationRepository = AppDataSource.getRepository(Organization);
     this.projectRepository = AppDataSource.getRepository(TokenizedProject);
-    this.walletRepository = AppDataSource.getRepository(Wallet);
+    this.userWalletRepository = AppDataSource.getRepository(UserWallet);
     this.purchaseRepository = AppDataSource.getRepository(Purchase);
     this.solanaService = new SolanaService();
     this.auditLogService = new AuditLogService();
@@ -30,13 +29,13 @@ export class UserService {
 
   // Create organization data for user during registration
   async createUserOrganization(organizationData: any): Promise<Organization> {
-    // Get or create wallet for the user
-    const wallet = await this.getOrCreateUserWallet(organizationData.userId);
+    // Get the existing UserWallet created by AuthService
+    const userWallet = await this.getUserWallet(organizationData.userId);
 
-    // Create organization linked to the wallet
+    // Create organization linked to the user wallet
     const organization = this.organizationRepository.create({
       ...organizationData,
-      walletId: wallet.id,
+      walletId: userWallet.id,
     });
 
     const savedOrganization = (await this.organizationRepository.save(
@@ -45,7 +44,7 @@ export class UserService {
 
     // Log the action
     await this.auditLogService.createAuditLog(
-      wallet.id,
+      userWallet.id,
       "ORGANIZATION_CREATE",
       "organizations",
       savedOrganization.id,
@@ -55,28 +54,19 @@ export class UserService {
     return savedOrganization;
   }
 
-  // Get or create wallet for user (Web 2.5 - backend manages wallets)
-  private async getOrCreateUserWallet(userId: string): Promise<Wallet> {
-    let wallet = await this.walletRepository.findOneBy({
-      walletAddress: userId, // Using userId as wallet identifier for Web 2.5
+  // Get existing UserWallet created by AuthService
+  private async getUserWallet(userId: string): Promise<UserWallet> {
+    const userWallet = await this.userWalletRepository.findOneBy({
+      userId: userId,
     });
 
-    if (!wallet) {
-      // Create wallet automatically with system password
-      const systemPassword =
-        process.env.WALLET_ENCRYPTION_KEY || "default-system-password";
-
-      // Create a wallet entry in our database
-      wallet = this.walletRepository.create({
-        walletAddress: `user_${userId}_${Date.now()}`, // Generate a unique address
-        provider: "system",
-        role: "user",
-      });
-
-      wallet = await this.walletRepository.save(wallet);
+    if (!userWallet) {
+      throw new Error(
+        "User wallet not found. This should have been created during registration."
+      );
     }
 
-    return wallet;
+    return userWallet;
   }
 
   // Add balance to user account (placeholder for payment integration)
@@ -88,7 +78,7 @@ export class UserService {
     transactionId: string;
     newBalance: number;
   }> {
-    const wallet = await this.getOrCreateUserWallet(userId);
+    const userWallet = await this.getUserWallet(userId);
 
     // TODO: Implement actual payment processing
     // For now, simulate by just updating balance in database
@@ -105,10 +95,10 @@ export class UserService {
 
     // Log the action
     await this.auditLogService.createAuditLog(
-      wallet.id,
+      userWallet.id,
       "BALANCE_ADD",
-      "wallets",
-      wallet.id,
+      "user_wallets",
+      userWallet.id,
       { amount, paymentMethod, transactionId }
     );
 
@@ -129,7 +119,7 @@ export class UserService {
     txHash: string;
     remainingBalance: number;
   }> {
-    const wallet = await this.getOrCreateUserWallet(userId);
+    const userWallet = await this.getUserWallet(userId);
 
     // Get project details
     const project = await this.projectRepository.findOneBy({ id: projectId });
@@ -149,7 +139,7 @@ export class UserService {
     // For now, simulate the purchase
 
     // Execute onchain transaction (mint credits to user's wallet)
-    const txHash = await this.solanaService.mintCredit(wallet.walletAddress, {
+    const txHash = await this.solanaService.mintCredit(userWallet.publicKey, {
       project: project.projectName,
       vintage: project.vintageYear.toString(),
       standard: project.certificationBody,
@@ -180,7 +170,7 @@ export class UserService {
 
     // Log the action
     await this.auditLogService.createAuditLog(
-      wallet.id,
+      userWallet.id,
       "CREDITS_PURCHASE",
       "purchases",
       savedPurchase.id,
@@ -208,9 +198,9 @@ export class UserService {
     }
 
     // Get organization data
-    const wallet = await this.getOrCreateUserWallet(userId);
+    const userWallet = await this.getUserWallet(userId);
     const organization = await this.organizationRepository.findOneBy({
-      walletId: wallet.id,
+      walletId: userWallet.id,
     });
 
     return {
