@@ -15,11 +15,16 @@ export class AdminService {
     'AdminWallet987654321'
   ];
   
-  constructor() {
-    this.walletService = new WalletService();
-    this.auditLogService = new AuditLogService();
-    this.tokenizedProjectService = new TokenizedProjectService();
-    this.retirementService = new RetirementService();
+  constructor(
+    walletService?: WalletService,
+    auditLogService?: AuditLogService,
+    tokenizedProjectService?: TokenizedProjectService,
+    retirementService?: RetirementService
+  ) {
+    this.walletService = walletService || new WalletService();
+    this.auditLogService = auditLogService || new AuditLogService();
+    this.tokenizedProjectService = tokenizedProjectService || new TokenizedProjectService();
+    this.retirementService = retirementService || new RetirementService();
   }
 
   /**
@@ -28,15 +33,20 @@ export class AdminService {
    * @returns True if the wallet has admin rights
    */
   async isAdmin(walletAddress: string): Promise<boolean> {
-    // First check if the wallet has "admin" role in the database
-    const hasAdminRole = await this.walletService.hasRole(walletAddress, 'admin');
-    
-    if (hasAdminRole) {
-      return true;
+    try {
+      // First check if the wallet has "admin" role in the database
+      const hasAdminRole = await this.walletService.hasRole(walletAddress, 'admin');
+      
+      if (hasAdminRole) {
+        return true;
+      }
+      
+      // Fall back to the hardcoded list of admin wallets
+      return this.adminWallets.includes(walletAddress);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
     }
-    
-    // Fall back to the hardcoded list of admin wallets
-    return this.adminWallets.includes(walletAddress);
   }
 
   /**
@@ -73,7 +83,12 @@ export class AdminService {
    * @returns All audit logs
    */
   async getAuditLogs() {
-    return this.auditLogService.getAllAuditLogs();
+    try {
+      return await this.auditLogService.getAllAuditLogs();
+    } catch (error) {
+      console.error('Error getting audit logs:', error);
+      return [];
+    }
   }
 
   /**
@@ -81,7 +96,12 @@ export class AdminService {
    * @returns All projects
    */
   async getAdminProjects() {
-    return this.tokenizedProjectService.getAllProjects();
+    try {
+      return await this.tokenizedProjectService.getAllProjects();
+    } catch (error) {
+      console.error('Error getting admin projects:', error);
+      return [];
+    }
   }
 
   /**
@@ -89,7 +109,12 @@ export class AdminService {
    * @returns All retirements
    */
   async getAllRetirements() {
-    return this.retirementService.getAllRetirements();
+    try {
+      return await this.retirementService.getAllRetirements();
+    } catch (error) {
+      console.error('Error getting retirements:', error);
+      return [];
+    }
   }
 
   /**
