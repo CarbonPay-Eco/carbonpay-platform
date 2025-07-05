@@ -20,9 +20,9 @@ export class Wallet {
   @Column({ type: "text" })
   encryptedPrivateKey: string;
 
-  @CreateDateColumn({ type: "timestamp with time zone" })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ type: "timestamp with time zone" })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

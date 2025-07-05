@@ -7,7 +7,9 @@ module.exports = {
     "**/?(*.)+(spec|test).+(ts|tsx|js)"
   ],
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest"
+    "^.+\\.(ts|tsx)$": ['ts-jest', {
+      tsconfig: 'tsconfig.json'
+    }]
   },
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
@@ -16,11 +18,9 @@ module.exports = {
     '!src/**/*.test.{js,ts}',
     '!src/database/migrations/**',
     '!src/server.ts',
+    '!src/test-utils/**',
+    '!src/__tests__/**'
   ],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
-  },
+  setupFilesAfterEnv: ['<rootDir>/src/test-utils/setup.ts']
 }; 

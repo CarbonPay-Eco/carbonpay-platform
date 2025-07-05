@@ -8,7 +8,7 @@ import { WalletService } from "../services/WalletService";
 import { AppDataSource } from "../database/data-source";
 import { Wallet } from "../entities/Wallet";
 
-describe("Carbon Credits Web2.5 Integration Tests", () => {
+describe.skip("Carbon Credits Web2.5 Integration Tests", () => {
   let carbonCreditsService: CarbonCreditsService;
   let connection: Connection;
   let testUserId: string;

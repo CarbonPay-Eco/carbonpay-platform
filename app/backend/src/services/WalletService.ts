@@ -1,5 +1,5 @@
 import { Keypair } from "@solana/web3.js";
-import * as bs58 from "bs58";
+import bs58 from "bs58";
 import * as sodium from "libsodium-wrappers";
 import { AppDataSource } from "../database/data-source";
 import { Wallet } from "../entities/Wallet";
@@ -26,9 +26,13 @@ export class WalletService {
     );
 
     const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
-    const encrypted = sodium.crypto_secretbox_easy(privateKey, nonce, key);
+    const ciphertext = sodium.crypto_secretbox_easy(privateKey, nonce, key);
 
-    const result = Buffer.concat([salt, nonce, encrypted]);
+    // Combine salt, nonce, and ciphertext
+    const result = new Uint8Array(salt.length + nonce.length + ciphertext.length);
+    result.set(salt);
+    result.set(nonce, salt.length);
+    result.set(ciphertext, salt.length + nonce.length);
 
     return bs58.encode(result);
   }
@@ -40,13 +44,12 @@ export class WalletService {
     await this.initializeSodium();
 
     const data = bs58.decode(encryptedData);
-
     const salt = data.slice(0, sodium.crypto_pwhash_SALTBYTES);
     const nonce = data.slice(
       sodium.crypto_pwhash_SALTBYTES,
       sodium.crypto_pwhash_SALTBYTES + sodium.crypto_secretbox_NONCEBYTES
     );
-    const encrypted = data.slice(
+    const ciphertext = data.slice(
       sodium.crypto_pwhash_SALTBYTES + sodium.crypto_secretbox_NONCEBYTES
     );
 
@@ -59,8 +62,7 @@ export class WalletService {
       sodium.crypto_pwhash_ALG_DEFAULT
     );
 
-    const decrypted = sodium.crypto_secretbox_open_easy(encrypted, nonce, key);
-    return decrypted;
+    return sodium.crypto_secretbox_open_easy(ciphertext, nonce, key);
   }
 
   public static async createWallet(
@@ -83,11 +85,11 @@ export class WalletService {
   }
 
   public static async getKeypair(
-    walletId: string,
+    userId: string,
     password: string
   ): Promise<Keypair> {
     const walletRepository = AppDataSource.getRepository(Wallet);
-    const wallet = await walletRepository.findOneBy({ id: walletId });
+    const wallet = await walletRepository.findOneBy({ userId });
 
     if (!wallet) {
       throw new Error("Wallet not found");
@@ -97,6 +99,7 @@ export class WalletService {
       wallet.encryptedPrivateKey,
       password
     );
+
     return Keypair.fromSecretKey(privateKey);
   }
 }
