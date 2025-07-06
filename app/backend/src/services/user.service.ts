@@ -7,6 +7,7 @@ import { UserWallet } from "../entities/UserWallet";
 import { Purchase } from "../database/entities/Purchase";
 import { SolanaService } from "./solana.service";
 import { AuditLogService } from "./audit-log.service";
+import { WalletService } from './wallet.service';
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -16,6 +17,7 @@ export class UserService {
   private purchaseRepository: Repository<Purchase>;
   private solanaService: SolanaService;
   private auditLogService: AuditLogService;
+  private walletService: WalletService;
 
   constructor() {
     this.userRepository = AppDataSource.getRepository(User);
@@ -25,6 +27,7 @@ export class UserService {
     this.purchaseRepository = AppDataSource.getRepository(Purchase);
     this.solanaService = new SolanaService();
     this.auditLogService = new AuditLogService();
+    this.walletService = new WalletService();
   }
 
   // Create organization data for user during registration
@@ -186,28 +189,21 @@ export class UserService {
   }
 
   // Get user profile information
-  async getUserProfile(userId: string): Promise<{
-    email: string;
-    fullName?: string;
-    companyName?: string;
-    organization?: Organization | null;
-  }> {
+  async getUserProfile(userId: string): Promise<any> {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
-      throw new Error("User not found");
+      return null;
     }
 
     // Get organization data
     const userWallet = await this.getUserWallet(userId);
-    const organization = await this.organizationRepository.findOneBy({
-      walletId: userWallet.id,
+    const organization = await this.organizationRepository.findOne({
+      where: { walletId: userWallet.id }
     });
 
     return {
-      email: user.email,
-      fullName: organization?.fullName,
-      companyName: organization?.companyName,
-      organization: organization || null,
+      ...user,
+      organization
     };
   }
 }

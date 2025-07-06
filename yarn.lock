@@ -229,37 +229,14 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.27.1"
 
+"@balena/dockerignore@^1.0.2":
+  version "1.0.2"
+
 "@bcoe/v8-coverage@^0.2.3":
   version "0.2.3"
 
-"@coral-xyz/anchor-errors@^0.31.1":
-  version "0.31.1"
-
-"@coral-xyz/anchor@^0.31.0":
-  version "0.31.1"
-  dependencies:
-    "@coral-xyz/anchor-errors" "^0.31.1"
-    "@coral-xyz/borsh" "^0.31.1"
-    "@noble/hashes" "^1.3.1"
-    "@solana/web3.js" "^1.69.0"
-    bn.js "^5.1.2"
-    bs58 "^4.0.1"
-    buffer-layout "^1.2.2"
-    camelcase "^6.3.0"
-    cross-fetch "^3.1.5"
-    eventemitter3 "^4.0.7"
-    pako "^2.0.3"
-    superstruct "^0.15.4"
-    toml "^3.0.0"
-
 "@coral-xyz/borsh@^0.26.0":
   version "0.26.0"
-  dependencies:
-    bn.js "^5.1.2"
-    buffer-layout "^1.2.0"
-
-"@coral-xyz/borsh@^0.31.1":
-  version "0.31.1"
   dependencies:
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
@@ -274,20 +251,29 @@
   resolved "https://registry.npmjs.org/@digitak/grubber/-/grubber-3.1.4.tgz"
   integrity sha512-pqsnp2BUYlDoTXWG34HWgEJse/Eo1okRgNex8IG84wHrJp8h3SakeR5WhB4VxSA2+/D+frNYJ0ch3yXzsfNDoA==
 
-"@esbuild/darwin-arm64@0.24.2":
-  version "0.24.2"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.24.2.tgz"
-  integrity sha512-kj3AnYWc+CekmZnS5IPu9D+HWtUI49hbnyqk0FLEJDbzCIQt7hg7ucF1SQAilhtYpIujfaHr6O0UHlzzSPdOeA==
-
-"@esbuild/darwin-arm64@0.25.5":
+"@esbuild/linux-x64@0.24.2":
   version "0.25.5"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.5.tgz"
-  integrity sha512-GtaBgammVvdF7aPIgH2jxMDdivezgFu6iKpmT+48+F8Hhg5J/sfnDieg0aeG/jfSvkYQU2/pceFPDKlqZzwnfQ==
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.5.tgz"
+  integrity sha512-uhj8N2obKTE6pSZ+aMUbqq+1nXxNjZIIjCjGLfsWvVpy7gKCOL6rsY1MhRh9zLtUtAI7vpgLMK6DxjO8Qm9lJw==
 
 "@gar/promisify@^1.0.1":
   version "1.1.3"
   resolved "https://registry.npmjs.org/@gar/promisify/-/promisify-1.1.3.tgz"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
+
+"@grpc/grpc-js@^1.11.1":
+  version "1.13.4"
+  dependencies:
+    "@grpc/proto-loader" "^0.7.13"
+    "@js-sdsl/ordered-map" "^4.4.2"
+
+"@grpc/proto-loader@^0.7.13":
+  version "0.7.15"
+  dependencies:
+    lodash.camelcase "^4.3.0"
+    long "^5.0.0"
+    protobufjs "^7.2.5"
+    yargs "^17.7.2"
 
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
@@ -382,13 +368,19 @@
     jest-mock "^29.7.0"
     jest-util "^29.7.0"
 
-"@jest/globals@^29.7.0":
+"@jest/globals@^28.0.0 || ^29.0.0 || ^30.0.0", "@jest/globals@^29.7.0":
   version "29.7.0"
   dependencies:
     "@jest/environment" "^29.7.0"
     "@jest/expect" "^29.7.0"
     "@jest/types" "^29.6.3"
     jest-mock "^29.7.0"
+
+"@jest/pattern@30.0.1":
+  version "30.0.1"
+  dependencies:
+    "@types/node" "*"
+    jest-regex-util "30.0.1"
 
 "@jest/reporters@^29.7.0":
   version "29.7.0"
@@ -422,6 +414,11 @@
   version "29.6.3"
   dependencies:
     "@sinclair/typebox" "^0.27.8"
+
+"@jest/schemas@30.0.1":
+  version "30.0.1"
+  dependencies:
+    "@sinclair/typebox" "^0.34.0"
 
 "@jest/source-map@^29.6.3":
   version "29.6.3"
@@ -475,6 +472,17 @@
     "@types/yargs" "^17.0.8"
     chalk "^4.0.0"
 
+"@jest/types@30.0.1":
+  version "30.0.1"
+  dependencies:
+    "@jest/pattern" "30.0.1"
+    "@jest/schemas" "30.0.1"
+    "@types/istanbul-lib-coverage" "^2.0.6"
+    "@types/istanbul-reports" "^3.0.4"
+    "@types/node" "*"
+    "@types/yargs" "^17.0.33"
+    chalk "^4.1.2"
+
 "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.8"
   dependencies:
@@ -503,60 +511,28 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@js-sdsl/ordered-map@^4.4.2":
+  version "4.4.2"
+
 "@jsdevtools/ono@^7.1.3":
   version "7.1.3"
 
-"@metaplex-foundation/mpl-token-metadata@^3.4.0":
-  version "3.4.0"
+"@mswjs/interceptors@^0.38.7":
+  version "0.38.7"
   dependencies:
-    "@metaplex-foundation/mpl-toolbox" "^0.10.0"
-
-"@metaplex-foundation/mpl-toolbox@^0.10.0":
-  version "0.10.0"
-
-"@metaplex-foundation/umi-options@^1.2.0":
-  version "1.2.0"
-
-"@metaplex-foundation/umi-public-keys@^1.2.0":
-  version "1.2.0"
-  dependencies:
-    "@metaplex-foundation/umi-serializers-encodings" "^1.2.0"
-
-"@metaplex-foundation/umi-serializers-core@^1.2.0":
-  version "1.2.0"
-
-"@metaplex-foundation/umi-serializers-encodings@^1.2.0":
-  version "1.2.0"
-  dependencies:
-    "@metaplex-foundation/umi-serializers-core" "^1.2.0"
-
-"@metaplex-foundation/umi-serializers-numbers@^1.2.0":
-  version "1.2.0"
-  dependencies:
-    "@metaplex-foundation/umi-serializers-core" "^1.2.0"
-
-"@metaplex-foundation/umi-serializers@^1.2.0":
-  version "1.2.0"
-  dependencies:
-    "@metaplex-foundation/umi-options" "^1.2.0"
-    "@metaplex-foundation/umi-public-keys" "^1.2.0"
-    "@metaplex-foundation/umi-serializers-core" "^1.2.0"
-    "@metaplex-foundation/umi-serializers-encodings" "^1.2.0"
-    "@metaplex-foundation/umi-serializers-numbers" "^1.2.0"
-
-"@metaplex-foundation/umi@^1.2.0", "@metaplex-foundation/umi@>= 0.8.2 <= 1":
-  version "1.2.0"
-  dependencies:
-    "@metaplex-foundation/umi-options" "^1.2.0"
-    "@metaplex-foundation/umi-public-keys" "^1.2.0"
-    "@metaplex-foundation/umi-serializers" "^1.2.0"
+    "@open-draft/deferred-promise" "^2.2.0"
+    "@open-draft/logger" "^0.3.0"
+    "@open-draft/until" "^2.0.0"
+    is-node-process "^1.2.0"
+    outvariant "^1.4.3"
+    strict-event-emitter "^0.5.1"
 
 "@noble/curves@^1.4.2":
   version "1.8.2"
   dependencies:
     "@noble/hashes" "1.7.2"
 
-"@noble/hashes@^1.1.5", "@noble/hashes@^1.3.1", "@noble/hashes@^1.4.0", "@noble/hashes@1.7.2":
+"@noble/hashes@^1.1.5", "@noble/hashes@^1.4.0", "@noble/hashes@1.7.2":
   version "1.7.2"
 
 "@npmcli/fs@^1.0.0":
@@ -575,6 +551,18 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@open-draft/deferred-promise@^2.2.0":
+  version "2.2.0"
+
+"@open-draft/logger@^0.3.0":
+  version "0.3.0"
+  dependencies:
+    is-node-process "^1.2.0"
+    outvariant "^1.4.0"
+
+"@open-draft/until@^2.0.0":
+  version "2.1.0"
+
 "@paralleldrive/cuid2@^2.2.2":
   version "2.2.2"
   dependencies:
@@ -582,6 +570,9 @@
 
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
+
+"@pkgr/core@^0.2.4":
+  version "0.2.7"
 
 "@project-serum/anchor@^0.26.0":
   version "0.26.0"
@@ -602,13 +593,49 @@
     superstruct "^0.15.4"
     toml "^3.0.0"
 
+"@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
+  version "1.1.2"
+
+"@protobufjs/base64@^1.1.2":
+  version "1.1.2"
+
+"@protobufjs/codegen@^2.0.4":
+  version "2.0.4"
+
+"@protobufjs/eventemitter@^1.1.0":
+  version "1.1.0"
+
+"@protobufjs/fetch@^1.1.0":
+  version "1.1.0"
+  dependencies:
+    "@protobufjs/aspromise" "^1.1.1"
+    "@protobufjs/inquire" "^1.1.0"
+
+"@protobufjs/float@^1.0.2":
+  version "1.0.2"
+
+"@protobufjs/inquire@^1.1.0":
+  version "1.1.0"
+
+"@protobufjs/path@^1.1.2":
+  version "1.1.2"
+
+"@protobufjs/pool@^1.1.0":
+  version "1.1.0"
+
+"@protobufjs/utf8@^1.1.0":
+  version "1.1.0"
+
 "@scarf/scarf@=1.4.0":
   version "1.4.0"
 
 "@sinclair/typebox@^0.27.8":
   version "0.27.8"
 
-"@sinonjs/commons@^3.0.0":
+"@sinclair/typebox@^0.34.0":
+  version "0.34.37"
+
+"@sinonjs/commons@^3.0.0", "@sinonjs/commons@^3.0.1":
   version "3.0.1"
   dependencies:
     type-detect "4.0.8"
@@ -617,6 +644,18 @@
   version "10.3.0"
   dependencies:
     "@sinonjs/commons" "^3.0.0"
+
+"@sinonjs/fake-timers@^13.0.5":
+  version "13.0.5"
+  dependencies:
+    "@sinonjs/commons" "^3.0.1"
+
+"@sinonjs/samsam@^8.0.1":
+  version "8.0.2"
+  dependencies:
+    "@sinonjs/commons" "^3.0.1"
+    lodash.get "^4.4.2"
+    type-detect "^4.1.0"
 
 "@solana/buffer-layout-utils@^0.2.0":
   version "0.2.0"
@@ -716,7 +755,7 @@
     "@solana/spl-token-metadata" "^0.1.6"
     buffer "^6.0.3"
 
-"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.69.0", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.95.5", "@solana/web3.js@^1.98.2":
+"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.95.5", "@solana/web3.js@^1.98.2":
   version "1.98.2"
   dependencies:
     "@babel/runtime" "^7.25.0"
@@ -790,19 +829,11 @@
   resolved "https://registry.npmjs.org/@types/bcryptjs/-/bcryptjs-2.4.6.tgz"
   integrity sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==
 
-"@types/bn.js@^5.1.0":
-  version "5.1.6"
-  dependencies:
-    "@types/node" "*"
-
 "@types/body-parser@*":
   version "1.19.5"
   dependencies:
     "@types/connect" "*"
     "@types/node" "*"
-
-"@types/chai@^4.3.0":
-  version "4.3.20"
 
 "@types/connect@*", "@types/connect@^3.4.33":
   version "3.4.38"
@@ -816,6 +847,19 @@
   version "2.8.18"
   dependencies:
     "@types/node" "*"
+
+"@types/docker-modem@*":
+  version "3.0.6"
+  dependencies:
+    "@types/node" "*"
+    "@types/ssh2" "*"
+
+"@types/dockerode@^3.3.39":
+  version "3.3.42"
+  dependencies:
+    "@types/docker-modem" "*"
+    "@types/node" "*"
+    "@types/ssh2" "*"
 
 "@types/express-serve-static-core@^5.0.0":
   version "5.0.6"
@@ -840,7 +884,7 @@
 "@types/http-errors@*":
   version "2.0.4"
 
-"@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
+"@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1", "@types/istanbul-lib-coverage@^2.0.6":
   version "2.0.6"
 
 "@types/istanbul-lib-report@*":
@@ -848,12 +892,12 @@
   dependencies:
     "@types/istanbul-lib-coverage" "*"
 
-"@types/istanbul-reports@^3.0.0":
+"@types/istanbul-reports@^3.0.0", "@types/istanbul-reports@^3.0.4":
   version "3.0.4"
   dependencies:
     "@types/istanbul-lib-report" "*"
 
-"@types/jest@^29.5.0":
+"@types/jest@^29.5.12":
   version "29.5.14"
   dependencies:
     expect "^29.0.0"
@@ -861,9 +905,6 @@
 
 "@types/json-schema@^7.0.6":
   version "7.0.15"
-
-"@types/json5@^0.0.29":
-  version "0.0.29"
 
 "@types/jsonwebtoken@^9.0.1":
   version "9.0.9"
@@ -879,11 +920,6 @@
 "@types/mime@^1":
   version "1.3.5"
 
-"@types/mocha@^9.0.0":
-  version "9.1.1"
-  resolved "https://registry.npmjs.org/@types/mocha/-/mocha-9.1.1.tgz"
-  integrity sha512-Z61JK7DKDtdKTWwLeElSEBcWGRLY8g95ic5FoQqI9CMx0ns/Ghep3B4DfcEimiKMvtamNVULVNKEsiwV3aQmXw==
-
 "@types/morgan@^1.9.4":
   version "1.9.9"
   dependencies:
@@ -894,7 +930,7 @@
   resolved "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz"
   integrity sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==
 
-"@types/node@*", "@types/node@^22.15.24":
+"@types/node@*", "@types/node@^22.15.24", "@types/node@>=13.7.0":
   version "22.15.24"
   resolved "https://registry.npmjs.org/@types/node/-/node-22.15.24.tgz"
   integrity sha512-w9CZGm9RDjzTh/D+hFwlBJ3ziUaVw7oufKA3vOFSOZlzmW9AkZnfjPb+DLnrV6qtgL/LNmP0/2zBNCFHL3F0ng==
@@ -903,6 +939,11 @@
 
 "@types/node@^12.12.54":
   version "12.20.55"
+
+"@types/node@^18.11.18":
+  version "18.19.115"
+  dependencies:
+    undici-types "~5.26.4"
 
 "@types/node@^18.14.0":
   version "18.19.105"
@@ -936,6 +977,25 @@
     "@types/http-errors" "*"
     "@types/node" "*"
     "@types/send" "*"
+
+"@types/sinonjs__fake-timers@*":
+  version "8.1.5"
+
+"@types/ssh2-streams@*":
+  version "0.1.12"
+  dependencies:
+    "@types/node" "*"
+
+"@types/ssh2@*":
+  version "1.15.5"
+  dependencies:
+    "@types/node" "^18.11.18"
+
+"@types/ssh2@^0.5.48":
+  version "0.5.52"
+  dependencies:
+    "@types/node" "*"
+    "@types/ssh2-streams" "*"
 
 "@types/stack-utils@^2.0.0":
   version "2.0.3"
@@ -973,13 +1033,10 @@
 "@types/yargs-parser@*":
   version "21.0.3"
 
-"@types/yargs@^17.0.8":
+"@types/yargs@^17.0.33", "@types/yargs@^17.0.8":
   version "17.0.33"
   dependencies:
     "@types/yargs-parser" "*"
-
-"@ungap/promise-all-settled@1.1.2":
-  version "1.1.2"
 
 abbrev@1:
   version "1.1.1"
@@ -1020,9 +1077,6 @@ aggregate-error@^3.0.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
-ansi-colors@4.1.1:
-  version "4.1.1"
-
 ansi-escapes@^4.2.1:
   version "4.3.2"
   dependencies:
@@ -1062,6 +1116,28 @@ app-root-path@^3.1.0:
   resolved "https://registry.npmjs.org/aproba/-/aproba-2.0.0.tgz"
   integrity sha512-lYe4Gx7QT+MKGbDsA+Z+he/Wtef0BiwDOlK/XkBrdfsh9J/jPPXbX0tE9x9cl27Tmu5gg3QUbUrQYa/y+KOHPQ==
 
+archiver-utils@^5.0.0, archiver-utils@^5.0.2:
+  version "5.0.2"
+  dependencies:
+    glob "^10.0.0"
+    graceful-fs "^4.2.0"
+    is-stream "^2.0.1"
+    lazystream "^1.0.0"
+    lodash "^4.17.15"
+    normalize-path "^3.0.0"
+    readable-stream "^4.0.0"
+
+archiver@^7.0.1:
+  version "7.0.1"
+  dependencies:
+    archiver-utils "^5.0.2"
+    async "^3.2.4"
+    buffer-crc32 "^1.0.0"
+    readable-stream "^4.0.0"
+    readdir-glob "^1.1.2"
+    tar-stream "^3.0.0"
+    zip-stream "^6.0.1"
+
 are-we-there-yet@^3.0.0:
   version "3.0.1"
   resolved "https://registry.npmjs.org/are-we-there-yet/-/are-we-there-yet-3.0.1.tgz"
@@ -1084,16 +1160,18 @@ argparse@^2.0.1:
 array-flatten@1.1.1:
   version "1.1.1"
 
-arrify@^1.0.0:
-  version "1.0.1"
-
 asap@^2.0.0:
   version "2.0.6"
 
-assertion-error@^1.1.0:
-  version "1.1.0"
+asn1@^0.2.6:
+  version "0.2.6"
+  dependencies:
+    safer-buffer "~2.1.0"
 
-async@^3.2.3:
+async-lock@^1.4.1:
+  version "1.4.1"
+
+async@^3.2.3, async@^3.2.4:
   version "3.2.6"
 
 asynckit@^0.4.0:
@@ -1171,6 +1249,11 @@ basic-auth@~2.0.1:
   dependencies:
     safe-buffer "5.1.2"
 
+bcrypt-pbkdf@^1.0.2:
+  version "1.0.2"
+  dependencies:
+    tweetnacl "^0.14.3"
+
 bcryptjs@^2.4.3:
   version "2.4.3"
   resolved "https://registry.npmjs.org/bcryptjs/-/bcryptjs-2.4.3.tgz"
@@ -1243,9 +1326,6 @@ braces@^3.0.3, braces@~3.0.2:
   dependencies:
     fill-range "^7.1.1"
 
-browser-stdout@1.3.1:
-  version "1.3.1"
-
 browserslist@^4.24.0, "browserslist@>= 4.21.0":
   version "4.24.5"
   dependencies:
@@ -1279,12 +1359,15 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
+buffer-crc32@^1.0.0:
+  version "1.0.0"
+
 buffer-equal-constant-time@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz"
   integrity sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==
 
-buffer-from@^1.0.0, buffer-from@^1.1.0:
+buffer-from@^1.0.0:
   version "1.1.2"
 
 buffer-layout@^1.2.0, buffer-layout@^1.2.2:
@@ -1308,6 +1391,12 @@ bufferutil@^4.0.1:
   version "4.0.9"
   dependencies:
     node-gyp-build "^4.3.0"
+
+buildcheck@~0.0.6:
+  version "0.0.6"
+
+byline@^5.0.0:
+  version "5.0.0"
 
 bytes@3.1.2:
   version "3.1.2"
@@ -1357,13 +1446,13 @@ callsites@^3.0.0:
 camelcase@^5.3.1:
   version "5.3.1"
 
-camelcase@^6.0.0, camelcase@^6.2.0, camelcase@^6.3.0:
+camelcase@^6.2.0, camelcase@^6.3.0:
   version "6.3.0"
 
 caniuse-lite@^1.0.30001716:
   version "1.0.30001718"
 
-"carbonpay-backend@file:/Users/matheussantos/Documents/DevelopmentProjects/carbonpay-platform/app/backend":
+"carbonpay-backend@file:/home/victorcarvalho/Documents/Github/carbonpay-platform/app/backend":
   version "1.0.0"
   resolved "file:app/backend"
   dependencies:
@@ -1387,18 +1476,7 @@ caniuse-lite@^1.0.30001716:
     typeorm "^0.3.12"
     uuid "^9.0.0"
 
-chai@^4.5.0:
-  version "4.5.0"
-  dependencies:
-    assertion-error "^1.1.0"
-    check-error "^1.0.3"
-    deep-eql "^4.1.3"
-    get-func-name "^2.0.2"
-    loupe "^2.3.6"
-    pathval "^1.1.1"
-    type-detect "^4.1.0"
-
-chalk@^4.0.0, chalk@^4.0.2, chalk@^4.1.0:
+chalk@^4.0.0, chalk@^4.0.2, chalk@^4.1.2:
   version "4.1.2"
   dependencies:
     ansi-styles "^4.1.0"
@@ -1413,11 +1491,6 @@ chalk@^5.4.1:
 char-regex@^1.0.2:
   version "1.0.2"
 
-check-error@^1.0.3:
-  version "1.0.3"
-  dependencies:
-    get-func-name "^2.0.2"
-
 chokidar@^3.5.1:
   version "3.5.3"
   dependencies:
@@ -1431,25 +1504,7 @@ chokidar@^3.5.1:
   optionalDependencies:
     fsevents "~2.3.2"
 
-chokidar@3.5.3:
-  version "3.5.3"
-  dependencies:
-    anymatch "~3.1.2"
-    braces "~3.0.2"
-    glob-parent "~5.1.2"
-    is-binary-path "~2.1.0"
-    is-glob "~4.0.1"
-    normalize-path "~3.0.0"
-    readdirp "~3.6.0"
-  optionalDependencies:
-    fsevents "~2.3.2"
-
-chownr@^1.1.1:
-  version "1.1.4"
-  resolved "https://registry.npmjs.org/chownr/-/chownr-1.1.4.tgz"
-  integrity sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==
-
-chownr@^2.0.0:
+chownr@^1.1.1, chownr@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/chownr/-/chownr-2.0.0.tgz"
   integrity sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==
@@ -1464,13 +1519,6 @@ clean-stack@^2.0.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/clean-stack/-/clean-stack-2.2.0.tgz"
   integrity sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==
-
-cliui@^7.0.2:
-  version "7.0.4"
-  dependencies:
-    string-width "^4.2.0"
-    strip-ansi "^6.0.0"
-    wrap-ansi "^7.0.0"
 
 cliui@^8.0.1:
   version "8.0.1"
@@ -1521,6 +1569,15 @@ commander@6.2.0:
 component-emitter@^1.3.0:
   version "1.3.1"
 
+compress-commons@^6.0.2:
+  version "6.0.2"
+  dependencies:
+    crc-32 "^1.2.0"
+    crc32-stream "^6.0.0"
+    is-stream "^2.0.1"
+    normalize-path "^3.0.0"
+    readable-stream "^4.0.0"
+
 concat-map@0.0.1:
   version "0.0.1"
 
@@ -1549,11 +1606,29 @@ cookie@0.7.1:
 cookiejar@^2.1.4:
   version "2.1.4"
 
+core-util-is@~1.0.0:
+  version "1.0.3"
+
 cors@^2.8.5:
   version "2.8.5"
   dependencies:
     object-assign "^4"
     vary "^1"
+
+cpu-features@~0.0.10:
+  version "0.0.10"
+  dependencies:
+    buildcheck "~0.0.6"
+    nan "^2.19.0"
+
+crc-32@^1.2.0:
+  version "1.2.2"
+
+crc32-stream@^6.0.0:
+  version "6.0.0"
+  dependencies:
+    crc-32 "^1.2.0"
+    readable-stream "^4.0.0"
 
 create-jest@^29.7.0:
   version "29.7.0"
@@ -1587,7 +1662,7 @@ crypto-hash@^1.3.0:
 dayjs@^1.11.13:
   version "1.11.13"
 
-debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.3, debug@^4.3.4, debug@^4.4.0, debug@4:
+debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.3, debug@^4.3.4, debug@^4.4.0, debug@^4.4.1, debug@4:
   version "4.4.1"
   dependencies:
     ms "^2.1.3"
@@ -1596,14 +1671,6 @@ debug@2.6.9:
   version "2.6.9"
   dependencies:
     ms "2.0.0"
-
-debug@4.3.3:
-  version "4.3.3"
-  dependencies:
-    ms "2.1.2"
-
-decamelize@^4.0.0:
-  version "4.0.0"
 
 decompress-response@^6.0.0:
   version "6.0.0"
@@ -1614,11 +1681,6 @@ decompress-response@^6.0.0:
 
 dedent@^1.0.0, dedent@^1.6.0:
   version "1.6.0"
-
-deep-eql@^4.1.3:
-  version "4.1.4"
-  dependencies:
-    type-detect "^4.0.0"
 
 deep-extend@^0.6.0:
   version "0.6.0"
@@ -1662,14 +1724,35 @@ dezalgo@^1.0.4:
 diff-sequences@^29.6.3:
   version "29.6.3"
 
-diff@^3.1.0:
-  version "3.5.0"
-
 diff@^4.0.1:
   version "4.0.2"
 
-diff@5.0.0:
-  version "5.0.0"
+diff@^7.0.0:
+  version "7.0.0"
+
+docker-compose@^1.2.0:
+  version "1.2.0"
+  dependencies:
+    yaml "^2.2.2"
+
+docker-modem@^5.0.6:
+  version "5.0.6"
+  dependencies:
+    debug "^4.1.1"
+    readable-stream "^3.5.0"
+    split-ca "^1.0.1"
+    ssh2 "^1.15.0"
+
+dockerode@^4.0.7:
+  version "4.0.7"
+  dependencies:
+    "@balena/dockerignore" "^1.0.2"
+    "@grpc/grpc-js" "^1.11.1"
+    "@grpc/proto-loader" "^0.7.13"
+    docker-modem "^5.0.6"
+    protobufjs "^7.3.2"
+    tar-fs "~2.1.2"
+    uuid "^10.0.0"
 
 doctrine@3.0.0:
   version "3.0.0"
@@ -1818,37 +1901,6 @@ esbuild@^0.24.2:
     "@esbuild/win32-ia32" "0.24.2"
     "@esbuild/win32-x64" "0.24.2"
 
-esbuild@~0.25.0:
-  version "0.25.5"
-  resolved "https://registry.npmjs.org/esbuild/-/esbuild-0.25.5.tgz"
-  integrity sha512-P8OtKZRv/5J5hhz0cUAdu/cLuPIKXpQl1R9pZtvmHWQvrAUVd0UNIPT4IB4W3rNOqVO0rlqHmCIbSwxh/c9yUQ==
-  optionalDependencies:
-    "@esbuild/aix-ppc64" "0.25.5"
-    "@esbuild/android-arm" "0.25.5"
-    "@esbuild/android-arm64" "0.25.5"
-    "@esbuild/android-x64" "0.25.5"
-    "@esbuild/darwin-arm64" "0.25.5"
-    "@esbuild/darwin-x64" "0.25.5"
-    "@esbuild/freebsd-arm64" "0.25.5"
-    "@esbuild/freebsd-x64" "0.25.5"
-    "@esbuild/linux-arm" "0.25.5"
-    "@esbuild/linux-arm64" "0.25.5"
-    "@esbuild/linux-ia32" "0.25.5"
-    "@esbuild/linux-loong64" "0.25.5"
-    "@esbuild/linux-mips64el" "0.25.5"
-    "@esbuild/linux-ppc64" "0.25.5"
-    "@esbuild/linux-riscv64" "0.25.5"
-    "@esbuild/linux-s390x" "0.25.5"
-    "@esbuild/linux-x64" "0.25.5"
-    "@esbuild/netbsd-arm64" "0.25.5"
-    "@esbuild/netbsd-x64" "0.25.5"
-    "@esbuild/openbsd-arm64" "0.25.5"
-    "@esbuild/openbsd-x64" "0.25.5"
-    "@esbuild/sunos-x64" "0.25.5"
-    "@esbuild/win32-arm64" "0.25.5"
-    "@esbuild/win32-ia32" "0.25.5"
-    "@esbuild/win32-x64" "0.25.5"
-
 escalade@^3.1.1, escalade@^3.2.0:
   version "3.2.0"
 
@@ -1857,9 +1909,6 @@ escape-html@~1.0.3:
 
 escape-string-regexp@^2.0.0:
   version "2.0.0"
-
-escape-string-regexp@4.0.0:
-  version "4.0.0"
 
 esprima@^4.0.0:
   version "4.0.1"
@@ -2002,15 +2051,6 @@ find-up@^4.0.0, find-up@^4.1.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
-find-up@5.0.0:
-  version "5.0.0"
-  dependencies:
-    locate-path "^6.0.0"
-    path-exists "^4.0.0"
-
-flat@^5.0.2:
-  version "5.0.2"
-
 foreground-child@^3.1.0:
   version "3.3.1"
   dependencies:
@@ -2026,13 +2066,12 @@ form-data@^4.0.0:
     hasown "^2.0.2"
     mime-types "^2.1.12"
 
-formidable@^2.1.2:
-  version "2.1.5"
+formidable@^3.5.4:
+  version "3.5.4"
   dependencies:
     "@paralleldrive/cuid2" "^2.2.2"
     dezalgo "^1.0.4"
     once "^1.4.0"
-    qs "^6.11.0"
 
 forwarded@0.2.0:
   version "0.2.0"
@@ -2054,9 +2093,6 @@ fs-minipass@^2.0.0:
 
 fs.realpath@^1.0.0:
   version "1.0.0"
-
-fsevents@^2.3.2, fsevents@~2.3.2, fsevents@~2.3.3:
-  version "2.3.3"
 
 function-bind@^1.1.2:
   version "1.1.2"
@@ -2081,9 +2117,6 @@ gensync@^1.0.0-beta.2:
 get-caller-file@^2.0.5:
   version "2.0.5"
 
-get-func-name@^2.0.1, get-func-name@^2.0.2:
-  version "2.0.2"
-
 get-intrinsic@^1.2.5, get-intrinsic@^1.2.6, get-intrinsic@^1.3.0:
   version "1.3.0"
   dependencies:
@@ -2101,6 +2134,9 @@ get-intrinsic@^1.2.5, get-intrinsic@^1.2.6, get-intrinsic@^1.3.0:
 get-package-type@^0.1.0:
   version "0.1.0"
 
+get-port@^7.1.0:
+  version "7.1.0"
+
 get-proto@^1.0.1:
   version "1.0.1"
   dependencies:
@@ -2109,13 +2145,6 @@ get-proto@^1.0.1:
 
 get-stream@^6.0.0:
   version "6.0.1"
-
-get-tsconfig@^4.7.5:
-  version "4.10.1"
-  resolved "https://registry.npmjs.org/get-tsconfig/-/get-tsconfig-4.10.1.tgz"
-  integrity sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==
-  dependencies:
-    resolve-pkg-maps "^1.0.0"
 
 github-from-package@0.0.0:
   version "0.0.0"
@@ -2126,6 +2155,16 @@ glob-parent@~5.1.2:
   version "5.1.2"
   dependencies:
     is-glob "^4.0.1"
+
+glob@^10.0.0:
+  version "10.4.5"
+  dependencies:
+    foreground-child "^3.1.0"
+    jackspeak "^3.1.2"
+    minimatch "^9.0.4"
+    minipass "^7.1.2"
+    package-json-from-dist "^1.0.0"
+    path-scurry "^1.11.1"
 
 glob@^10.4.5:
   version "10.4.5"
@@ -2157,27 +2196,14 @@ glob@7.1.6:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@7.2.0:
-  version "7.2.0"
-  dependencies:
-    fs.realpath "^1.0.0"
-    inflight "^1.0.4"
-    inherits "2"
-    minimatch "^3.0.4"
-    once "^1.3.0"
-    path-is-absolute "^1.0.0"
-
 globals@^11.1.0:
   version "11.12.0"
 
 gopd@^1.2.0:
   version "1.2.0"
 
-graceful-fs@^4.2.6, graceful-fs@^4.2.9:
+graceful-fs@^4.2.0, graceful-fs@^4.2.11, graceful-fs@^4.2.4, graceful-fs@^4.2.6, graceful-fs@^4.2.9:
   version "4.2.11"
-
-growl@1.10.5:
-  version "1.10.5"
 
 has-flag@^4.0.0:
   version "4.0.0"
@@ -2199,9 +2225,6 @@ hasown@^2.0.2:
   version "2.0.2"
   dependencies:
     function-bind "^1.1.2"
-
-he@1.2.0:
-  version "1.2.0"
 
 helmet@8.1.0:
   version "8.1.0"
@@ -2286,7 +2309,7 @@ inflight@^1.0.4:
     once "^1.3.0"
     wrappy "1"
 
-inherits@^2.0.1, inherits@^2.0.3, inherits@^2.0.4, inherits@2, inherits@2.0.4:
+inherits@^2.0.1, inherits@^2.0.3, inherits@^2.0.4, inherits@~2.0.3, inherits@2, inherits@2.0.4:
   version "2.0.4"
 
 ini@~1.3.0:
@@ -2337,17 +2360,17 @@ is-lambda@^1.0.1:
   resolved "https://registry.npmjs.org/is-lambda/-/is-lambda-1.0.1.tgz"
   integrity sha512-z7CMFGNrENq5iFB9Bqo64Xk6Y9sg+epq1myIcdHaGnbMTYOxvzsEtdYqQUylB7LxfkvgrrjP32T6Ywciio9UIQ==
 
+is-node-process@^1.2.0:
+  version "1.2.0"
+
 is-number@^7.0.0:
   version "7.0.0"
 
-is-plain-obj@^2.1.0:
-  version "2.1.0"
-
-is-stream@^2.0.0:
+is-stream@^2.0.0, is-stream@^2.0.1:
   version "2.0.1"
 
-is-unicode-supported@^0.1.0:
-  version "0.1.0"
+isarray@~1.0.0:
+  version "1.0.0"
 
 isexe@^2.0.0:
   version "2.0.0"
@@ -2591,6 +2614,9 @@ jest-pnp-resolver@^1.2.2:
 jest-regex-util@^29.6.3:
   version "29.6.3"
 
+jest-regex-util@30.0.1:
+  version "30.0.1"
+
 jest-resolve-dependencies@^29.7.0:
   version "29.7.0"
   dependencies:
@@ -2725,7 +2751,7 @@ jest-worker@^29.7.0:
     merge-stream "^2.0.0"
     supports-color "^8.0.0"
 
-jest@^29.0.0, jest@^29.5.0:
+"jest@^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0 || ^30.0.0", jest@^29.0.0, jest@^29.7.0:
   version "29.7.0"
   dependencies:
     "@jest/core" "^29.7.0"
@@ -2745,7 +2771,7 @@ js-yaml@^3.13.1:
     argparse "^1.0.7"
     esprima "^4.0.0"
 
-js-yaml@^4.1.0, js-yaml@4.1.0:
+js-yaml@^4.1.0:
   version "4.1.0"
   dependencies:
     argparse "^2.0.1"
@@ -2763,11 +2789,6 @@ json-parse-even-better-errors@^2.3.0:
 
 json-stringify-safe@^5.0.1:
   version "5.0.1"
-
-json5@^1.0.2:
-  version "1.0.2"
-  dependencies:
-    minimist "^1.2.0"
 
 json5@^2.2.3:
   version "2.2.3"
@@ -2817,6 +2838,11 @@ jws@^3.2.2:
 kleur@^3.0.3:
   version "3.0.3"
 
+lazystream@^1.0.0:
+  version "1.0.1"
+  dependencies:
+    readable-stream "^2.0.5"
+
 leven@^3.1.0:
   version "3.1.0"
 
@@ -2840,10 +2866,8 @@ locate-path@^5.0.0:
   dependencies:
     p-locate "^4.1.0"
 
-locate-path@^6.0.0:
-  version "6.0.0"
-  dependencies:
-    p-locate "^5.0.0"
+lodash.camelcase@^4.3.0:
+  version "4.3.0"
 
 lodash.get@^4.4.2:
   version "4.4.2"
@@ -2892,16 +2916,11 @@ lodash.once@^4.0.0:
   resolved "https://registry.npmjs.org/lodash.once/-/lodash.once-4.1.1.tgz"
   integrity sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==
 
-log-symbols@4.1.0:
-  version "4.1.0"
-  dependencies:
-    chalk "^4.1.0"
-    is-unicode-supported "^0.1.0"
+lodash@^4.17.15:
+  version "4.17.21"
 
-loupe@^2.3.6:
-  version "2.3.7"
-  dependencies:
-    get-func-name "^2.0.1"
+long@^5.0.0:
+  version "5.3.2"
 
 lower-case@^2.0.2:
   version "2.0.2"
@@ -3011,15 +3030,15 @@ minimatch@^5.0.1:
   dependencies:
     brace-expansion "^2.0.1"
 
+minimatch@^5.1.0:
+  version "5.1.6"
+  dependencies:
+    brace-expansion "^2.0.1"
+
 minimatch@^9.0.4:
   version "9.0.5"
   dependencies:
     brace-expansion "^2.0.1"
-
-minimatch@4.2.1:
-  version "4.2.1"
-  dependencies:
-    brace-expansion "^1.1.7"
 
 minimist@^1.2.0, minimist@^1.2.3, minimist@^1.2.6:
   version "1.2.8"
@@ -3112,43 +3131,10 @@ mkdirp-classic@^0.5.2, mkdirp-classic@^0.5.3:
   resolved "https://registry.npmjs.org/mkdirp-classic/-/mkdirp-classic-0.5.3.tgz"
   integrity sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==
 
-mkdirp@^0.5.1:
-  version "0.5.6"
-  dependencies:
-    minimist "^1.2.6"
-
 mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
-
-"mocha@^3.X.X || ^4.X.X || ^5.X.X || ^6.X.X || ^7.X.X || ^8.X.X || ^9.X.X || ^10.X.X || ^11.X.X", mocha@^9.0.3:
-  version "9.2.2"
-  dependencies:
-    "@ungap/promise-all-settled" "1.1.2"
-    ansi-colors "4.1.1"
-    browser-stdout "1.3.1"
-    chokidar "3.5.3"
-    debug "4.3.3"
-    diff "5.0.0"
-    escape-string-regexp "4.0.0"
-    find-up "5.0.0"
-    glob "7.2.0"
-    growl "1.10.5"
-    he "1.2.0"
-    js-yaml "4.1.0"
-    log-symbols "4.1.0"
-    minimatch "4.2.1"
-    ms "2.1.3"
-    nanoid "3.3.1"
-    serialize-javascript "6.0.0"
-    strip-json-comments "3.1.1"
-    supports-color "8.1.1"
-    which "2.0.2"
-    workerpool "6.2.0"
-    yargs "16.2.0"
-    yargs-parser "20.2.4"
-    yargs-unparser "2.0.0"
 
 morgan@^1.10.0:
   version "1.10.0"
@@ -3165,11 +3151,8 @@ ms@^2.0.0, ms@^2.1.1, ms@^2.1.3, ms@2.1.3:
 ms@2.0.0:
   version "2.0.0"
 
-ms@2.1.2:
-  version "2.1.2"
-
-nanoid@3.3.1:
-  version "3.3.1"
+nan@^2.19.0, nan@^2.20.0:
+  version "2.22.2"
 
 napi-build-utils@^2.0.0:
   version "2.0.0"
@@ -3200,7 +3183,7 @@ node-abi@^3.3.0:
   dependencies:
     semver "^7.3.5"
 
-node-addon-api@^7.0.0, node-addon-api@^8.3.0:
+node-addon-api@^7.0.0:
   version "7.1.1"
   resolved "https://registry.npmjs.org/node-addon-api/-/node-addon-api-7.1.1.tgz"
   integrity sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==
@@ -3210,7 +3193,7 @@ node-fetch@^2.7.0:
   dependencies:
     whatwg-url "^5.0.0"
 
-node-gyp-build@^4.3.0, node-gyp-build@^4.8.4:
+node-gyp-build@^4.3.0:
   version "4.8.4"
 
 node-gyp@8.x:
@@ -3292,12 +3275,15 @@ onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
+outvariant@^1.4.0, outvariant@^1.4.3:
+  version "1.4.3"
+
 p-limit@^2.2.0:
   version "2.3.0"
   dependencies:
     p-try "^2.0.0"
 
-p-limit@^3.0.2, p-limit@^3.1.0:
+p-limit@^3.1.0:
   version "3.1.0"
   dependencies:
     yocto-queue "^0.1.0"
@@ -3306,11 +3292,6 @@ p-locate@^4.1.0:
   version "4.1.0"
   dependencies:
     p-limit "^2.2.0"
-
-p-locate@^5.0.0:
-  version "5.0.0"
-  dependencies:
-    p-limit "^3.0.2"
 
 p-map@^4.0.0:
   version "4.0.0"
@@ -3359,9 +3340,6 @@ path-scurry@^1.11.1:
 
 path-to-regexp@0.1.12:
   version "0.1.12"
-
-pathval@^1.1.1:
-  version "1.1.1"
 
 pg-cloudflare@^1.2.5:
   version "1.2.5"
@@ -3489,15 +3467,15 @@ prebuild-install@^7.1.1:
     tar-fs "^2.0.0"
     tunnel-agent "^0.6.0"
 
-prettier@^2.6.2:
-  version "2.8.8"
-
 pretty-format@^29.0.0, pretty-format@^29.7.0:
   version "29.7.0"
   dependencies:
     "@jest/schemas" "^29.6.3"
     ansi-styles "^5.0.0"
     react-is "^18.0.0"
+
+process-nextick-args@~2.0.0:
+  version "2.0.1"
 
 promise-inflight@^1.0.1:
   version "1.0.1"
@@ -3517,6 +3495,37 @@ prompts@^2.0.1:
   dependencies:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
+
+propagate@^2.0.0:
+  version "2.0.1"
+
+proper-lockfile@^4.1.2:
+  version "4.1.2"
+  dependencies:
+    graceful-fs "^4.2.4"
+    retry "^0.12.0"
+    signal-exit "^3.0.2"
+
+properties-reader@^2.3.0:
+  version "2.3.0"
+  dependencies:
+    mkdirp "^1.0.4"
+
+protobufjs@^7.2.5, protobufjs@^7.3.2:
+  version "7.5.3"
+  dependencies:
+    "@protobufjs/aspromise" "^1.1.2"
+    "@protobufjs/base64" "^1.1.2"
+    "@protobufjs/codegen" "^2.0.4"
+    "@protobufjs/eventemitter" "^1.1.0"
+    "@protobufjs/fetch" "^1.1.0"
+    "@protobufjs/float" "^1.0.2"
+    "@protobufjs/inquire" "^1.1.0"
+    "@protobufjs/path" "^1.1.2"
+    "@protobufjs/pool" "^1.1.0"
+    "@protobufjs/utf8" "^1.1.0"
+    "@types/node" ">=13.7.0"
+    long "^5.0.0"
 
 proxy-addr@~2.0.7:
   version "2.0.7"
@@ -3539,11 +3548,6 @@ qs@^6.11.0, qs@6.13.0:
   version "6.13.0"
   dependencies:
     side-channel "^1.0.6"
-
-randombytes@^2.1.0:
-  version "2.1.0"
-  dependencies:
-    safe-buffer "^5.1.0"
 
 range-parser@~1.2.1:
   version "1.2.1"
@@ -3569,7 +3573,18 @@ rc@^1.2.7:
 react-is@^18.0.0:
   version "18.3.1"
 
-readable-stream@^3.1.1, readable-stream@^3.4.0, readable-stream@^3.6.0:
+readable-stream@^2.0.5:
+  version "2.3.8"
+  dependencies:
+    core-util-is "~1.0.0"
+    inherits "~2.0.3"
+    isarray "~1.0.0"
+    process-nextick-args "~2.0.0"
+    safe-buffer "~5.1.1"
+    string_decoder "~1.1.1"
+    util-deprecate "~1.0.1"
+
+readable-stream@^3.1.1, readable-stream@^3.4.0, readable-stream@^3.6.0, readable-stream@^4.0.0:
   version "3.6.2"
   resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz"
   integrity sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==
@@ -3577,6 +3592,18 @@ readable-stream@^3.1.1, readable-stream@^3.4.0, readable-stream@^3.6.0:
     inherits "^2.0.3"
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
+
+readable-stream@^3.5.0:
+  version "3.6.2"
+  dependencies:
+    inherits "^2.0.3"
+    string_decoder "^1.1.1"
+    util-deprecate "^1.0.1"
+
+readdir-glob@^1.1.2:
+  version "1.1.3"
+  dependencies:
+    minimatch "^5.1.0"
 
 readdirp@~3.6.0:
   version "3.6.0"
@@ -3599,11 +3626,6 @@ resolve-cwd@^3.0.0:
 
 resolve-from@^5.0.0:
   version "5.0.0"
-
-resolve-pkg-maps@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/resolve-pkg-maps/-/resolve-pkg-maps-1.0.0.tgz"
-  integrity sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==
 
 resolve.exports@^2.0.0:
   version "2.0.3"
@@ -3646,13 +3668,16 @@ rpc-websockets@^9.0.2:
     bufferutil "^4.0.1"
     utf-8-validate "^5.0.2"
 
-safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@~5.2.0, safe-buffer@5.2.1:
+safe-buffer@^5.0.1, safe-buffer@~5.2.0, safe-buffer@5.2.1:
   version "5.2.1"
+
+safe-buffer@~5.1.0, safe-buffer@~5.1.1:
+  version "5.1.2"
 
 safe-buffer@5.1.2:
   version "5.1.2"
 
-"safer-buffer@>= 2.1.2 < 3", "safer-buffer@>= 2.1.2 < 3.0.0":
+"safer-buffer@>= 2.1.2 < 3", "safer-buffer@>= 2.1.2 < 3.0.0", safer-buffer@~2.1.0:
   version "2.1.2"
 
 semver@^6.3.0:
@@ -3661,7 +3686,7 @@ semver@^6.3.0:
 semver@^6.3.1:
   version "6.3.1"
 
-semver@^7.3.5, semver@^7.3.8, semver@^7.5.3, semver@^7.5.4, semver@^7.7.2:
+semver@^7.3.5, semver@^7.5.3, semver@^7.5.4, semver@^7.7.2:
   version "7.7.2"
 
 send@0.19.0:
@@ -3680,11 +3705,6 @@ send@0.19.0:
     on-finished "2.4.1"
     range-parser "~1.2.1"
     statuses "2.0.1"
-
-serialize-javascript@6.0.0:
-  version "6.0.0"
-  dependencies:
-    randombytes "^2.1.0"
 
 serve-static@1.16.2:
   version "1.16.2"
@@ -3748,7 +3768,7 @@ side-channel@^1.0.6:
     side-channel-map "^1.0.1"
     side-channel-weakmap "^1.0.2"
 
-signal-exit@^3.0.3, signal-exit@^3.0.7:
+signal-exit@^3.0.2, signal-exit@^3.0.3, signal-exit@^3.0.7:
   version "3.0.7"
 
 signal-exit@^4.0.1:
@@ -3802,7 +3822,7 @@ socks@^2.6.2:
     ip-address "^9.0.5"
     smart-buffer "^4.2.0"
 
-source-map-support@^0.5.12, source-map-support@^0.5.6:
+source-map-support@^0.5.12:
   version "0.5.21"
   dependencies:
     buffer-from "^1.0.0"
@@ -3816,6 +3836,9 @@ source-map-support@0.5.13:
 
 source-map@^0.6.0, source-map@^0.6.1:
   version "0.6.1"
+
+split-ca@^1.0.1:
+  version "1.0.1"
 
 split2@^4.1.0:
   version "4.2.0"
@@ -3843,6 +3866,21 @@ sqlite3@^5.0.3:
   optionalDependencies:
     node-gyp "8.x"
 
+ssh-remote-port-forward@^1.0.4:
+  version "1.0.4"
+  dependencies:
+    "@types/ssh2" "^0.5.48"
+    ssh2 "^1.4.0"
+
+ssh2@^1.15.0, ssh2@^1.4.0:
+  version "1.16.0"
+  dependencies:
+    asn1 "^0.2.6"
+    bcrypt-pbkdf "^1.0.2"
+  optionalDependencies:
+    cpu-features "~0.0.10"
+    nan "^2.20.0"
+
 ssri@^8.0.0, ssri@^8.0.1:
   version "8.0.1"
   resolved "https://registry.npmjs.org/ssri/-/ssri-8.0.1.tgz"
@@ -3858,8 +3896,8 @@ stack-utils@^2.0.3:
 statuses@2.0.1:
   version "2.0.1"
 
-stream-chain@^2.2.5:
-  version "2.2.5"
+strict-event-emitter@^0.5.1:
+  version "0.5.1"
 
 string_decoder@^1.1.1:
   version "1.3.0"
@@ -3867,6 +3905,11 @@ string_decoder@^1.1.1:
   integrity sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==
   dependencies:
     safe-buffer "~5.2.0"
+
+string_decoder@~1.1.1:
+  version "1.1.1"
+  dependencies:
+    safe-buffer "~5.1.0"
 
 string-length@^4.0.1:
   version "4.0.2"
@@ -3922,7 +3965,7 @@ strip-final-newline@^2.0.0:
 strip-json-comments@^2.0.0:
   version "2.0.1"
 
-strip-json-comments@^3.1.1, strip-json-comments@3.1.1:
+strip-json-comments@^3.1.1:
   version "3.1.1"
 
 strip-json-comments@~2.0.1:
@@ -3930,19 +3973,18 @@ strip-json-comments@~2.0.1:
   resolved "https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-2.0.1.tgz"
   integrity sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==
 
-superagent@^8.1.2:
-  version "8.1.2"
+superagent@^10.2.1:
+  version "10.2.1"
   dependencies:
     component-emitter "^1.3.0"
     cookiejar "^2.1.4"
     debug "^4.3.4"
     fast-safe-stringify "^2.1.1"
     form-data "^4.0.0"
-    formidable "^2.1.2"
+    formidable "^3.5.4"
     methods "^1.1.2"
     mime "2.6.0"
     qs "^6.11.0"
-    semver "^7.3.8"
 
 superstruct@^0.15.4:
   version "0.15.5"
@@ -3955,7 +3997,12 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-supports-color@^8.0.0, supports-color@8.1.1:
+supports-color@^7.2.0:
+  version "7.2.0"
+  dependencies:
+    has-flag "^4.0.0"
+
+supports-color@^8.0.0:
   version "8.1.1"
   dependencies:
     has-flag "^4.0.0"
@@ -3988,7 +4035,7 @@ swagger-ui-express@^5.0.1:
   dependencies:
     swagger-ui-dist ">=5.0.0"
 
-tar-fs@^2.0.0:
+tar-fs@^2.0.0, tar-fs@^3.0.9:
   version "2.1.3"
   resolved "https://registry.npmjs.org/tar-fs/-/tar-fs-2.1.3.tgz"
   integrity sha512-090nwYJDmlhwFwEW3QQl+vaNnxsO2yVsd45eTKRBzSzu+hlb1w2K9inVq5b0ngXuLVqQ4ApvsUHHnu/zQNkWAg==
@@ -3998,7 +4045,15 @@ tar-fs@^2.0.0:
     pump "^3.0.0"
     tar-stream "^2.1.4"
 
-tar-stream@^2.1.4:
+tar-fs@~2.1.2:
+  version "2.1.3"
+  dependencies:
+    chownr "^1.1.1"
+    mkdirp-classic "^0.5.2"
+    pump "^3.0.0"
+    tar-stream "^2.1.4"
+
+tar-stream@^2.1.4, tar-stream@^3.0.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/tar-stream/-/tar-stream-2.2.0.tgz"
   integrity sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==
@@ -4028,11 +4083,33 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
+testcontainers@^11.1.0:
+  version "11.1.0"
+  dependencies:
+    "@balena/dockerignore" "^1.0.2"
+    "@types/dockerode" "^3.3.39"
+    archiver "^7.0.1"
+    async-lock "^1.4.1"
+    byline "^5.0.0"
+    debug "^4.4.1"
+    docker-compose "^1.2.0"
+    dockerode "^4.0.7"
+    get-port "^7.1.0"
+    proper-lockfile "^4.1.2"
+    properties-reader "^2.3.0"
+    ssh-remote-port-forward "^1.0.4"
+    tar-fs "^3.0.9"
+    tmp "^0.2.3"
+    undici "^7.10.0"
+
 text-encoding-utf-8@^1.0.2:
   version "1.0.2"
 
 "through@>=2.2.7 <3":
   version "2.3.8"
+
+tmp@^0.2.3:
+  version "0.2.3"
 
 tmpl@1.0.5:
   version "1.0.5"
@@ -4054,7 +4131,10 @@ tr46@~0.0.3:
 tree-kill@^1.2.2:
   version "1.2.2"
 
-ts-jest@^29.1.0:
+ts-essentials@^10.0.2:
+  version "10.1.1"
+
+ts-jest@^29.1.2:
   version "29.3.4"
   dependencies:
     bs-logger "^0.2.6"
@@ -4067,13 +4147,6 @@ ts-jest@^29.1.0:
     semver "^7.7.2"
     type-fest "^4.41.0"
     yargs-parser "^21.1.1"
-
-ts-mocha@^10.0.0:
-  version "10.1.0"
-  dependencies:
-    ts-node "7.0.1"
-  optionalDependencies:
-    tsconfig-paths "^3.5.0"
 
 ts-node-dev@^2.0.0:
   version "2.0.0"
@@ -4106,26 +4179,6 @@ ts-node@^10.4.0, ts-node@^10.7.0, ts-node@^10.9.1, ts-node@>=9.0.0:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
-ts-node@7.0.1:
-  version "7.0.1"
-  dependencies:
-    arrify "^1.0.0"
-    buffer-from "^1.1.0"
-    diff "^3.1.0"
-    make-error "^1.1.1"
-    minimist "^1.2.0"
-    mkdirp "^0.5.1"
-    source-map-support "^0.5.6"
-    yn "^2.0.0"
-
-tsconfig-paths@^3.5.0:
-  version "3.15.0"
-  dependencies:
-    "@types/json5" "^0.0.29"
-    json5 "^1.0.2"
-    minimist "^1.2.6"
-    strip-bom "^3.0.0"
-
 tsconfig@^7.0.0:
   version "7.0.0"
   dependencies:
@@ -4137,16 +4190,6 @@ tsconfig@^7.0.0:
 tslib@^2.0.3, tslib@^2.8.0, tslib@^2.8.1:
   version "2.8.1"
 
-tsx@^4.20.3:
-  version "4.20.3"
-  resolved "https://registry.npmjs.org/tsx/-/tsx-4.20.3.tgz"
-  integrity sha512-qjbnuR9Tr+FJOMBqJCW5ehvIo/buZq7vH7qD7JziU98h6l3qGy0a/yPFjwO+y0/T7GFpNgNAvEcPPVfyT8rrPQ==
-  dependencies:
-    esbuild "~0.25.0"
-    get-tsconfig "^4.7.5"
-  optionalDependencies:
-    fsevents "~2.3.3"
-
 tunnel-agent@^0.6.0:
   version "0.6.0"
   resolved "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.6.0.tgz"
@@ -4154,10 +4197,13 @@ tunnel-agent@^0.6.0:
   dependencies:
     safe-buffer "^5.0.1"
 
+tweetnacl@^0.14.3:
+  version "0.14.5"
+
 tweetnacl@^1.0.3:
   version "1.0.3"
 
-type-detect@^4.0.0, type-detect@^4.1.0:
+type-detect@^4.1.0:
   version "4.1.0"
 
 type-detect@4.0.8:
@@ -4193,7 +4239,7 @@ typeorm@^0.3.12:
     uuid "^11.1.0"
     yargs "^17.7.2"
 
-typescript@*, typescript@^4.3.5, typescript@>=2.7, "typescript@>=4.3 <6", typescript@>=5:
+typescript@*, "typescript@^3.0.0 || ^4.0.0 || ^5.0.0", typescript@^4.3.5, typescript@>=2.7, "typescript@>=4.3 <6", typescript@>=4.5.0, typescript@>=5:
   version "4.9.5"
 
 typescript@^5.3.0:
@@ -4211,6 +4257,9 @@ undici-types@~5.26.4:
 
 undici-types@~6.21.0:
   version "6.21.0"
+
+undici@^7.10.0:
+  version "7.11.0"
 
 unique-filename@^1.1.1:
   version "1.1.1"
@@ -4240,13 +4289,16 @@ utf-8-validate@^5.0.2, utf-8-validate@>=5.0.2:
   dependencies:
     node-gyp-build "^4.3.0"
 
-util-deprecate@^1.0.1:
+util-deprecate@^1.0.1, util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz"
   integrity sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==
 
 utils-merge@1.0.1:
   version "1.0.1"
+
+uuid@^10.0.0:
+  version "10.0.0"
 
 uuid@^11.1.0:
   version "11.1.0"
@@ -4287,7 +4339,7 @@ whatwg-url@^5.0.0:
     tr46 "~0.0.3"
     webidl-conversions "^3.0.0"
 
-which@^2.0.1, which@^2.0.2, which@2.0.2:
+which@^2.0.1, which@^2.0.2:
   version "2.0.2"
   dependencies:
     isexe "^2.0.0"
@@ -4298,9 +4350,6 @@ wide-align@^1.1.5:
   integrity sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==
   dependencies:
     string-width "^1.0.2 || 2 || 3 || 4"
-
-workerpool@6.2.0:
-  version "6.2.0"
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
   version "7.0.0"
@@ -4352,25 +4401,14 @@ yallist@^4.0.0:
   resolved "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz"
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
+yaml@^2.2.2:
+  version "2.8.0"
+
 yaml@2.0.0-1:
   version "2.0.0-1"
 
-yargs-parser@^20.2.2:
-  version "20.2.9"
-
 yargs-parser@^21.1.1:
   version "21.1.1"
-
-yargs-parser@20.2.4:
-  version "20.2.4"
-
-yargs-unparser@2.0.0:
-  version "2.0.0"
-  dependencies:
-    camelcase "^6.0.0"
-    decamelize "^4.0.0"
-    flat "^5.0.2"
-    is-plain-obj "^2.1.0"
 
 yargs@^17.3.1, yargs@^17.7.2:
   version "17.7.2"
@@ -4382,20 +4420,6 @@ yargs@^17.3.1, yargs@^17.7.2:
     string-width "^4.2.3"
     y18n "^5.0.5"
     yargs-parser "^21.1.1"
-
-yargs@16.2.0:
-  version "16.2.0"
-  dependencies:
-    cliui "^7.0.2"
-    escalade "^3.1.1"
-    get-caller-file "^2.0.5"
-    require-directory "^2.1.1"
-    string-width "^4.2.0"
-    y18n "^5.0.5"
-    yargs-parser "^20.2.2"
-
-yn@^2.0.0:
-  version "2.0.0"
 
 yn@3.1.1:
   version "3.1.1"
@@ -4411,3 +4435,10 @@ z-schema@^5.0.1:
     validator "^13.7.0"
   optionalDependencies:
     commander "^9.4.1"
+
+zip-stream@^6.0.1:
+  version "6.0.1"
+  dependencies:
+    archiver-utils "^5.0.0"
+    compress-commons "^6.0.2"
+    readable-stream "^4.0.0"

@@ -76,39 +76,32 @@ export class ProjectService {
   }
 
   async getProjectById(id: string): Promise<Project | null> {
-    const project = projects.find((p) => p.id === id || p.tokenId === id);
-    return project || null;
+    const project = await this.projectRepository.findOne({
+      where: [{ id }, { tokenId: id }]
+    });
+    return project;
   }
 
-  async updateProjectSupply(
-    id: string,
-    amount: number,
-    isRetirement: boolean
-  ): Promise<Project | null> {
-    const projectIndex = projects.findIndex(
-      (p) => p.id === id || p.tokenId === id
-    );
+  async updateProjectSupply(projectId: string, amount: number, isRetirement: boolean): Promise<Project | null> {
+    const project = await this.projectRepository.findOne({
+      where: [{ id: projectId }, { tokenId: projectId }]
+    });
 
-    if (projectIndex === -1) return null;
-
-    const project = projects[projectIndex];
-
-    // If it's a retirement, reduce the remaining supply
-    if (isRetirement) {
-      if (project.remainingSupply < amount) {
-        throw new Error("Insufficient supply for retirement");
-      }
-
-      project.remainingSupply -= amount;
-    } else {
-      // If it's adding more supply
-      project.totalSupply += amount;
-      project.remainingSupply += amount;
+    if (!project) {
+      return null;
     }
 
-    project.updatedAt = new Date();
-    projects[projectIndex] = project;
+    if (isRetirement) {
+      if (project.available < amount) {
+        throw new Error('Insufficient supply for retirement');
+      }
+      project.available -= amount;
+      project.status = project.available === 0 ? 'sold_out' : 'available';
+    } else {
+      project.totalIssued += amount;
+      project.available += amount;
+    }
 
-    return project;
+    return this.projectRepository.save(project);
   }
 }

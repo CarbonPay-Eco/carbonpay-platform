@@ -34,10 +34,6 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 
-# Testing
-src/__tests__/
-coverage/
-
 # Temporary files
 tmp/
 temp/

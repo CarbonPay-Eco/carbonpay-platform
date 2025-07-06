@@ -17,19 +17,27 @@ export interface Organization {
 
 export interface Project {
   id: string;
-  name: string;
-  description: string;
-  location: string;
-  vintage: string;
-  standard: string;
   tokenId: string;
-  totalSupply: number;
-  remainingSupply: number;
-  certificationUrl?: string;
-  imageUrl?: string;
-  metadata?: Record<string, any>;
+  projectName: string;
+  location?: string;
+  description?: string;
+  certificationBody?: string;
+  projectRefId?: string;
+  methodology?: string;
+  verifierName?: string;
+  vintageYear?: number;
+  standard?: string;
+  totalIssued: number;
+  available: number;
+  pricePerTon?: number;
+  ipfsHash?: string;
+  documentationUrl?: string;
+  onChainMintTx?: string;
+  status: string;
+  projectImageUrl?: string;
+  tags?: string[];
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
 
 export interface Retirement {
