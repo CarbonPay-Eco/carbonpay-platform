@@ -1,9 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 /**
  * Type for Express controller functions
  */
-type ControllerFn = (req: Request, res: Response, next: NextFunction) => Promise<void>;
+type ControllerFn = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<any>;
 
 /**
  * Wrapper for asynchronous functions in controllers
@@ -15,4 +19,4 @@ export const asyncHandler = (fn: ControllerFn) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
-}; 
+};

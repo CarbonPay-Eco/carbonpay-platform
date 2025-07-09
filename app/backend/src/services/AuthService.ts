@@ -63,6 +63,38 @@ export class AuthService {
     return { user, token };
   }
 
+  public static async registerDraft(
+    email: string,
+    password: string,
+    role: string = "user"
+  ): Promise<{ user: User }> {
+    const userRepository = AppDataSource.getRepository(User);
+    const existingUser = await userRepository.findOneBy({ email });
+    if (existingUser) {
+      throw new Error("User already exists");
+    }
+    const user = new User();
+    user.email = email;
+    user.passwordHash = await bcrypt.hash(password, 10);
+    user.role = role;
+    user.draft = true;
+    await userRepository.save(user);
+    return { user };
+  }
+
+  public static async completeRegistration(
+    email: string,
+    fields: Partial<User>
+  ): Promise<{ user: User }> {
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOneBy({ email });
+    if (!user) throw new Error("User not found");
+    Object.assign(user, fields);
+    user.draft = false;
+    await userRepository.save(user);
+    return { user };
+  }
+
   public static verifyToken(token: string): { userId: string } {
     try {
       return jwt.verify(token, this.JWT_SECRET) as { userId: string };

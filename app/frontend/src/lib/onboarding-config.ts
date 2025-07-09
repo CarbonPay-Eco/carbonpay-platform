@@ -1,4 +1,4 @@
-import type { OnboardingStep } from "../../types/onboarding"
+import type { OnboardingStep } from "../../types/onboarding";
 
 export const COMPANY_SIZE_OPTIONS = [
   "1-10 employees",
@@ -7,7 +7,7 @@ export const COMPANY_SIZE_OPTIONS = [
   "201-500 employees",
   "501-1000 employees",
   "1000+ employees",
-]
+];
 
 export const INDUSTRY_OPTIONS = [
   "Technology",
@@ -20,7 +20,7 @@ export const INDUSTRY_OPTIONS = [
   "Retail",
   "Financial Services",
   "Other",
-]
+];
 
 export const EMISSION_SOURCES = [
   "Electricity consumption",
@@ -31,7 +31,7 @@ export const EMISSION_SOURCES = [
   "Waste management",
   "Building operations",
   "Employee commuting",
-]
+];
 
 export const SUSTAINABILITY_PROGRAMS = [
   "ISO 14001 certification",
@@ -41,9 +41,22 @@ export const SUSTAINABILITY_PROGRAMS = [
   "Green building certification",
   "Renewable energy procurement",
   "None currently",
-]
+];
 
 export const onboardingSteps: OnboardingStep[] = [
+  {
+    id: "register",
+    title: "Create Your Account",
+    description: "Sign up to get started with CarbonPay.",
+    isValid: (data) =>
+      Boolean(
+        data.email &&
+          data.password &&
+          data.confirmPassword &&
+          data.acceptedTerms &&
+          data.password === data.confirmPassword
+      ),
+  },
   {
     id: "personal",
     title: "Personal Information",
@@ -54,25 +67,29 @@ export const onboardingSteps: OnboardingStep[] = [
     id: "company",
     title: "Company Details",
     description: "Tell us about your company",
-    isValid: (data) => Boolean(data.companyName && data.country && data.registrationNumber),
+    isValid: (data) =>
+      Boolean(data.companyName && data.country && data.registrationNumber),
   },
   {
     id: "company-context",
     title: "Company Context",
     description: "Help us understand your business better",
-    isValid: (data) => Boolean(data.industry && data.companySize && data.companyDescription),
+    isValid: (data) =>
+      Boolean(data.industry && data.companySize && data.companyDescription),
   },
   {
     id: "emissions-basic",
     title: "Emissions Overview",
     description: "Let's understand your current emissions situation",
-    isValid: (data) => data.hasEmissionsHistory !== undefined && Boolean(data.primaryEmissionSources?.length),
+    isValid: (data) =>
+      data.hasEmissionsHistory !== undefined &&
+      Boolean(data.primaryEmissionSources?.length),
   },
   {
     id: "emissions-detail",
     title: "Emissions Details",
     description: "More specific information about your emissions",
-    isValid: (data) => Boolean(data.sustainabilityPrograms?.length && data.offsettingExperience),
+    isValid: (data) =>
+      Boolean(data.sustainabilityPrograms?.length && data.offsettingExperience),
   },
-]
-
+];

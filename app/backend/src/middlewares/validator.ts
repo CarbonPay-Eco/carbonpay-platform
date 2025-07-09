@@ -6,7 +6,7 @@ import { createError } from "../utils/errorHandler";
  */
 interface ValidationRules {
   [key: string]: {
-    required?: boolean;
+    required?: boolean | ((body: any) => boolean);
     type?: string;
     minLength?: number;
     maxLength?: number;
@@ -30,8 +30,14 @@ export const validate = (rules: ValidationRules) => {
       const value = req.body[field];
 
       // Check if the field is required
+      let isRequired = false;
+      if (typeof rule.required === "function") {
+        isRequired = rule.required(req.body);
+      } else {
+        isRequired = !!rule.required;
+      }
       if (
-        rule.required &&
+        isRequired &&
         (value === undefined || value === null || value === "")
       ) {
         errors.push(rule.message || `The field '${field}' is required`);
@@ -166,15 +172,20 @@ export const userValidations = {
       minLength: 6,
       message: "Password is required and must be at least 6 characters",
     },
+    draft: {
+      type: "boolean",
+      message: "Draft flag must be boolean",
+    },
+    // The rest of the fields are only required if draft is false
     fullName: {
-      required: true,
+      required: (body) => !body.draft,
       type: "string",
       minLength: 2,
       maxLength: 100,
       message: "Full name is required and must be between 2 and 100 characters",
     },
     companyName: {
-      required: true,
+      required: (body) => !body.draft,
       type: "string",
       minLength: 2,
       maxLength: 100,
@@ -182,14 +193,14 @@ export const userValidations = {
         "Company name is required and must be between 2 and 100 characters",
     },
     country: {
-      required: true,
+      required: (body) => !body.draft,
       type: "string",
       minLength: 2,
       maxLength: 50,
       message: "Country is required and must be between 2 and 50 characters",
     },
     acceptedTerms: {
-      required: true,
+      required: (body) => !body.draft,
       type: "boolean",
       custom: (value) => value === true,
       message: "You must accept the terms and conditions",

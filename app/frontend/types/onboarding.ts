@@ -1,4 +1,8 @@
 export interface OnboardingFormData {
+  // Registration
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
   // Personal & Company Info
   name: string;
   companyName: string;

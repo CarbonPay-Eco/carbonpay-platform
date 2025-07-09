@@ -37,11 +37,14 @@ import {
 } from "@/lib/onboarding-config";
 import type { OnboardingFormData } from "../../../../types/onboarding";
 import { createOrganization } from "../../api/organization-service";
-import { useWallet } from "@solana/wallet-adapter-react";
+import {
+  registerUserDraft,
+  completeUserRegistration,
+  loginUser,
+} from "../../api/user-service";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { publicKey } = useWallet();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<OnboardingFormData>>({});
   const [isAnimating, setIsAnimating] = useState(false);
@@ -67,29 +70,52 @@ export default function OnboardingPage() {
   const handleNext = async () => {
     if (isAnimating || !isStepValid) return;
 
-    if (isLastStep) {
-      if (!publicKey) {
-        console.error("Wallet is not connected.");
+    // Registration step - create draft user
+    if (currentStep === 0) {
+      try {
+        const regResult = await registerUserDraft({
+          email: formData.email!,
+          password: formData.password!,
+        });
+        if (!regResult.success) {
+          console.error("Registration error:", regResult.message);
+          return;
+        }
+        // Draft user created successfully, continue to next step
+      } catch (err) {
+        console.error("Registration error:", err);
         return;
       }
+    }
 
+    if (isLastStep) {
       try {
-        // Submit the form data using the service
-        const walletId = publicKey.toBase58();
-        const result = await createOrganization(
-          formData as OnboardingFormData,
-          walletId
-        );
+        // Complete the user registration with all data
+        const result = await completeUserRegistration({
+          email: formData.email!,
+          fullName: formData.name!,
+          companyName: formData.companyName!,
+          country: formData.country!,
+          registrationNumber: formData.registrationNumber,
+          industryType: formData.industry,
+          companySize: formData.companySize,
+          description: formData.companyDescription,
+          tracksEmissions: formData.hasEmissionsHistory,
+          emissionSources: formData.primaryEmissionSources,
+          sustainabilityCertifications: formData.sustainabilityPrograms,
+          priorOffsetting: formData.offsettingExperience === "extensive",
+          contactEmail: formData.contactEmail,
+          websiteUrl: formData.websiteUrl,
+          acceptedTerms: !!formData.acceptedTerms,
+        });
 
         if (result.success) {
-          // Redirect to dashboard on success
           router.push("/webapp/dashboard");
         } else {
-          // Handle error (you could add state for this)
-          console.error("Error saving data:", result.message);
+          console.error("Error completing registration:", result.message);
         }
       } catch (error) {
-        console.error("Error during onboarding:", error);
+        console.error("Error during registration completion:", error);
       }
       return;
     }
@@ -194,8 +220,85 @@ export default function OnboardingPage() {
                   </p>
 
                   <div className="mt-8 space-y-6">
-                    {/* Step 1: Personal Information */}
+                    {/* Step 0: Registration */}
                     {currentStep === 0 && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email || ""}
+                            onChange={(e) =>
+                              handleInputChange("email", e.target.value)
+                            }
+                            className="mt-2 bg-black/50 border-white/20"
+                            placeholder="Enter your email"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="password">Password</Label>
+                          <Input
+                            id="password"
+                            type="password"
+                            value={formData.password || ""}
+                            onChange={(e) =>
+                              handleInputChange("password", e.target.value)
+                            }
+                            className="mt-2 bg-black/50 border-white/20"
+                            placeholder="Enter your password"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="confirmPassword">
+                            Confirm Password
+                          </Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={formData.confirmPassword || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "confirmPassword",
+                                e.target.value
+                              )
+                            }
+                            className="mt-2 bg-black/50 border-white/20"
+                            placeholder="Confirm your password"
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="acceptedTerms"
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id="acceptedTerms"
+                              checked={!!formData.acceptedTerms}
+                              onCheckedChange={(checked) =>
+                                handleInputChange("acceptedTerms", !!checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span>I accept the terms and conditions</span>
+                          </Label>
+                        </div>
+                        <div className="pt-2">
+                          <span className="text-sm text-gray-400">
+                            Already have an account?{" "}
+                          </span>
+                          <a
+                            href="/webapp/login"
+                            className="text-green-400 hover:underline"
+                          >
+                            Login
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 1: Personal Information */}
+                    {currentStep === 1 && (
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="name">What's your name?</Label>
@@ -239,7 +342,7 @@ export default function OnboardingPage() {
                     )}
 
                     {/* Step 2: Company Details */}
-                    {currentStep === 1 && (
+                    {currentStep === 2 && (
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="companyName">Company Name</Label>
@@ -286,7 +389,7 @@ export default function OnboardingPage() {
                     )}
 
                     {/* Step 3: Company Context */}
-                    {currentStep === 2 && (
+                    {currentStep === 3 && (
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="industry">Industry</Label>
@@ -349,7 +452,7 @@ export default function OnboardingPage() {
                     )}
 
                     {/* Step 4: Emissions Overview */}
-                    {currentStep === 3 && (
+                    {currentStep === 4 && (
                       <div className="space-y-6">
                         <div>
                           <Label className="mb-4 block">
@@ -416,7 +519,7 @@ export default function OnboardingPage() {
                     )}
 
                     {/* Step 5: Emissions Details */}
-                    {currentStep === 4 && (
+                    {currentStep === 5 && (
                       <div className="space-y-6">
                         <div>
                           <Label className="mb-4 block">
@@ -485,23 +588,6 @@ export default function OnboardingPage() {
                               </SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
-
-                        <div>
-                          <Label
-                            htmlFor="acceptedTerms"
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id="acceptedTerms"
-                              checked={!!formData.acceptedTerms}
-                              onCheckedChange={(checked) =>
-                                handleInputChange("acceptedTerms", !!checked)
-                              }
-                              className="mr-2"
-                            />
-                            <span>I accept the terms and conditions</span>
-                          </Label>
                         </div>
                       </div>
                     )}

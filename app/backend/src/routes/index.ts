@@ -309,6 +309,67 @@ router.get(
  */
 router.get("/user/profile", authMiddleware, userController.getProfile);
 
+/**
+ * @openapi
+ * /user/complete-registration:
+ *   patch:
+ *     tags:
+ *       - User
+ *     summary: Complete user registration
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullName
+ *               - companyName
+ *               - country
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               registrationNumber:
+ *                 type: string
+ *               industryType:
+ *                 type: string
+ *               companySize:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               tracksEmissions:
+ *                 type: boolean
+ *               emissionSources:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               sustainabilityCertifications:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               priorOffsetting:
+ *                 type: boolean
+ *               contactEmail:
+ *                 type: string
+ *               websiteUrl:
+ *                 type: string
+ *               acceptedTerms:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Registration completed successfully
+ */
+router.patch(
+  "/user/complete-registration",
+  userController.completeRegistration
+);
+
 // ================================
 // PUBLIC PROJECT ROUTES
 // ================================
