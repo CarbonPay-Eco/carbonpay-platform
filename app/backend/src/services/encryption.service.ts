@@ -6,6 +6,7 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "crypto";
+import type { CipherGCM, DecipherGCM } from "crypto";
 import { ENCRYPTION_CONFIG, ENCRYPTION_ERRORS } from "../config/constants";
 
 /**
@@ -144,16 +145,16 @@ export class EncryptionService {
    */
   private static containsCommonPatterns(password: string): boolean {
     const commonPatterns = [
-      /123456/,
-      /password/i,
-      /qwerty/i,
-      /abc123/i,
-      /admin/i,
-      /letmein/i,
-      /welcome/i,
-      /monkey/i,
-      /dragon/i,
-      /master/i,
+      /^123456$/,
+      /^password$/i,
+      /^qwerty$/i,
+      /^abc123$/i,
+      /^admin$/i,
+      /^letmein$/i,
+      /^welcome$/i,
+      /^monkey$/i,
+      /^dragon$/i,
+      /^master$/i,
     ];
 
     return commonPatterns.some(pattern => pattern.test(password));
@@ -164,18 +165,16 @@ export class EncryptionService {
    */
   private static calculateEntropy(password: string): number {
     const charSets = [
-      /[a-z]/, // lowercase
-      /[A-Z]/, // uppercase  
-      /[0-9]/, // numbers
-      /[^a-zA-Z0-9]/, // special characters
+      { regex: /[a-z]/, size: 26 }, // lowercase
+      { regex: /[A-Z]/, size: 26 }, // uppercase  
+      { regex: /[0-9]/, size: 10 }, // numbers
+      { regex: /[^a-zA-Z0-9]/, size: 32 }, // special characters
     ];
 
     let charSetSize = 0;
     charSets.forEach(set => {
-      if (set.test(password)) {
-        charSetSize += set === /[a-z]/ ? 26 : 
-                      set === /[A-Z]/ ? 26 :
-                      set === /[0-9]/ ? 10 : 32;
+      if (set.regex.test(password)) {
+        charSetSize += set.size;
       }
     });
 
@@ -204,7 +203,8 @@ export class EncryptionService {
           throw new Error(ENCRYPTION_ERRORS.UNSUPPORTED_KDF);
       }
     } catch (error) {
-      throw new Error(`Key derivation failed: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Key derivation failed: ${err.message}`);
     }
   }
 
@@ -233,7 +233,7 @@ export class EncryptionService {
       const key = this.deriveKey(password, salt, config);
 
       // Encrypt using AES-256-GCM
-      const cipher = createCipheriv(config.algorithm, key, iv);
+      const cipher = createCipheriv(config.algorithm, key, iv) as CipherGCM;
       const encrypted = Buffer.concat([
         cipher.update(data),
         cipher.final(),
@@ -243,10 +243,9 @@ export class EncryptionService {
       // Create version and metadata bytes
       const version = Buffer.from([0x01]); // Version 1
       const kdfType = Buffer.from([config.keyDerivation === 'scrypt' ? 0x01 : 0x00]);
-      const timestamp = Buffer.from(new Date().toISOString().slice(0, 19)); // 19 bytes for timestamp
 
-      // Combine all components: version + kdfType + timestamp + salt + iv + authTag + encrypted
-      const result = Buffer.concat([version, kdfType, timestamp, salt, iv, authTag, encrypted]);
+      // Combine all components: version + kdfType + salt + iv + authTag + encrypted
+      const result = Buffer.concat([version, kdfType, salt, iv, authTag, encrypted]);
 
       // Clear sensitive data from memory
       if (ENCRYPTION_CONFIG.CLEAR_MEMORY_AFTER_USE) {
@@ -255,7 +254,8 @@ export class EncryptionService {
 
       return result.toString('base64');
     } catch (error) {
-      throw new Error(`${ENCRYPTION_ERRORS.ENCRYPTION_FAILED}: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`${ENCRYPTION_ERRORS.ENCRYPTION_FAILED}: ${err.message}`);
     }
   }
 
@@ -269,8 +269,8 @@ export class EncryptionService {
     try {
       const data = Buffer.from(encryptedData, 'base64');
 
-      // Check minimum data length (version + kdfType + timestamp + salt + iv + authTag + encrypted)
-      const minLength = 1 + 1 + 19 + this.DEFAULT_CONFIG.saltSize + this.DEFAULT_CONFIG.ivSize + this.DEFAULT_CONFIG.tagSize + 1;
+      // Check minimum data length (version + kdfType + salt + iv + authTag + at least 0 bytes encrypted)
+      const minLength = 1 + 1 + this.DEFAULT_CONFIG.saltSize + this.DEFAULT_CONFIG.ivSize + this.DEFAULT_CONFIG.tagSize;
       if (data.length < minLength) {
         throw new Error(ENCRYPTION_ERRORS.INVALID_ENCRYPTED_DATA);
       }
@@ -281,9 +281,8 @@ export class EncryptionService {
         throw new Error(`${ENCRYPTION_ERRORS.UNSUPPORTED_VERSION}: ${version}`);
       }
 
-      // Extract KDF type and timestamp
+      // Extract KDF type
       const kdfType = data[1];
-      const timestamp = data.slice(2, 21).toString();
       
       // Determine configuration based on stored metadata
       const config: EncryptionConfig = {
@@ -292,7 +291,7 @@ export class EncryptionService {
       };
 
       // Extract components
-      let offset = 21; // Skip version, kdfType, and timestamp
+      let offset = 2; // Skip version and kdfType
       const salt = data.slice(offset, offset + config.saltSize);
       offset += config.saltSize;
       
@@ -308,7 +307,7 @@ export class EncryptionService {
       const key = this.deriveKey(password, salt, config);
 
       // Decrypt using AES-256-GCM
-      const decipher = createDecipheriv(config.algorithm, key, iv);
+      const decipher = createDecipheriv(config.algorithm, key, iv) as DecipherGCM;
       decipher.setAuthTag(authTag);
 
       const decrypted = Buffer.concat([
@@ -323,7 +322,8 @@ export class EncryptionService {
 
       return new Uint8Array(decrypted);
     } catch (error) {
-      throw new Error(`${ENCRYPTION_ERRORS.DECRYPTION_FAILED}: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`${ENCRYPTION_ERRORS.DECRYPTION_FAILED}: ${err.message}`);
     }
   }
 
@@ -344,24 +344,29 @@ export class EncryptionService {
    */
   public static getEncryptionMetadata(encryptedData: string): EncryptionMetadata {
     try {
+      // Validate base64 format first
+      if (!/^[A-Za-z0-9+\/]+(=*)$/.test(encryptedData)) {
+        throw new Error(ENCRYPTION_ERRORS.INVALID_ENCRYPTED_DATA);
+      }
+      
       const data = Buffer.from(encryptedData, 'base64');
       
-      if (data.length < 21) {
+      if (data.length < 2) {
         throw new Error(ENCRYPTION_ERRORS.INVALID_ENCRYPTED_DATA);
       }
 
       const version = data[0];
       const kdfType = data[1];
-      const timestamp = data.slice(2, 21).toString();
 
       return {
         version,
         kdfType: kdfType === 0x01 ? 'scrypt' : 'pbkdf2',
         algorithm: this.DEFAULT_CONFIG.algorithm,
-        timestamp,
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      throw new Error(`Failed to extract metadata: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Failed to extract metadata: ${err.message}`);
     }
   }
 

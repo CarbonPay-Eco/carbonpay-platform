@@ -47,7 +47,8 @@ export class WalletService {
       wallet.encryptedPrivateKey = newEncryptedPrivateKey;
       await walletRepository.save(wallet);
     } catch (error) {
-      throw new Error(`Password change failed: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Password change failed: ${err.message}`);
     }
   }
 
@@ -80,7 +81,8 @@ export class WalletService {
 
       return savedWallet;
     } catch (error) {
-      throw new Error(`Wallet creation failed: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Wallet creation failed: ${err.message}`);
     }
   }
 
@@ -112,7 +114,8 @@ export class WalletService {
 
       return keypair;
     } catch (error) {
-      throw new Error(`Failed to retrieve keypair: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Failed to retrieve keypair: ${err.message}`);
     }
   }
 
@@ -141,7 +144,6 @@ export class WalletService {
     encryptedPrivateKey: string;
     encryptionMetadata: any;
     backupTimestamp: string;
-    version: string;
   }> {
     const walletRepository = AppDataSource.getRepository(UserWallet);
     const wallet = await walletRepository.findOneBy({ id: walletId });
@@ -159,7 +161,6 @@ export class WalletService {
       encryptedPrivateKey: wallet.encryptedPrivateKey,
       encryptionMetadata: metadata,
       backupTimestamp: new Date().toISOString(),
-      version: "2.0", // Updated version with enhanced encryption
     };
   }
 
@@ -185,7 +186,8 @@ export class WalletService {
       const walletRepository = AppDataSource.getRepository(UserWallet);
       return await walletRepository.save(wallet);
     } catch (error) {
-      throw new Error(`Wallet restoration failed: ${error.message}`);
+      const err = error as Error;
+      throw new Error(`Wallet restoration failed: ${err.message}`);
     }
   }
 
@@ -247,7 +249,8 @@ export class WalletService {
           throw new Error("Please contact support for wallet migration");
         }
       } catch (error) {
-        throw new Error(`Migration failed: ${error.message}`);
+        const err = error as Error;
+        throw new Error(`Migration failed: ${err.message}`);
       }
     }
   }
