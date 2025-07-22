@@ -2,6 +2,16 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
 export const registerUserDraft = async (data: {
   email: string;
   password: string;
@@ -26,27 +36,18 @@ export const registerUserDraft = async (data: {
   }
 };
 
-export const completeUserRegistration = async (data: {
-  email: string;
-  fullName: string;
-  companyName: string;
-  country: string;
-  registrationNumber?: string;
-  industryType?: string;
-  companySize?: string;
-  description?: string;
-  tracksEmissions?: boolean;
-  emissionSources?: string[];
-  sustainabilityCertifications?: string[];
-  priorOffsetting?: boolean;
-  contactEmail?: string;
-  websiteUrl?: string;
-  acceptedTerms: boolean;
-}) => {
+export const completeUserRegistration = async (
+  data: any,
+  draftToken?: string
+) => {
   try {
+    const config = draftToken
+      ? { headers: { Authorization: `Bearer ${draftToken}` } }
+      : undefined;
     const response = await axios.patch(
       `${API_BASE_URL}/user/complete-registration`,
-      data
+      data,
+      config
     );
     return {
       success: true,
@@ -98,7 +99,7 @@ export const registerUser = async (data: {
 
 export const loginUser = async (data: { email: string; password: string }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, data);
+    const response = await axios.post(`${API_BASE_URL}/user/login`, data);
     return {
       success: true,
       data: response.data,
@@ -107,6 +108,25 @@ export const loginUser = async (data: { email: string; password: string }) => {
     return {
       success: false,
       message: error.response?.data?.message || "Failed to login.",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+export const getUserProfile = async () => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/user/profile`,
+      getAuthHeaders()
+    );
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to get user profile.",
       error: error.response?.data || error.message,
     };
   }

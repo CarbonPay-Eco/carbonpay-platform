@@ -67,8 +67,7 @@ export const onboardingSteps: OnboardingStep[] = [
     id: "company",
     title: "Company Details",
     description: "Tell us about your company",
-    isValid: (data) =>
-      Boolean(data.companyName && data.country && data.registrationNumber),
+    isValid: (data) => Boolean(data.companyName && data.country),
   },
   {
     id: "company-context",

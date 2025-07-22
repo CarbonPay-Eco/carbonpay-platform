@@ -32,27 +32,27 @@ export class OrganizationService {
   ): Promise<Organization> {
     // Get or create the wallet
     const wallet = await this.walletService.getOrCreateWallet(walletAddress);
-
+    
     // Check if organization already exists for this wallet
     const existingOrg = await this.organizationRepository.findOne({
       where: { walletId: wallet.id },
     });
-
+    
     if (existingOrg) {
       throw new Error("An organization already exists for this wallet");
     }
-
+    
     // Set wallet role to 'organization'
     await this.walletService.setWalletRole(wallet.id, "organization");
-
+    
     // Create the organization
     const organization = this.organizationRepository.create({
       ...data,
       walletId: wallet.id,
     });
-
+    
     const savedOrg = await this.organizationRepository.save(organization);
-
+    
     // Log the action
     await this.auditLogService.createAuditLog(
       wallet.id,
@@ -61,7 +61,7 @@ export class OrganizationService {
       savedOrg.id,
       { organization: savedOrg }
     );
-
+    
     return savedOrg;
   }
 
@@ -75,11 +75,11 @@ export class OrganizationService {
   ): Promise<Organization | null> {
     const wallet = await this.walletService.findByAddress(walletAddress);
     console.log("Wallet:", wallet);
-
+    
     if (!wallet) {
       return null;
     }
-
+    
     return this.organizationRepository.findOne({
       where: { walletId: wallet.id },
       relations: ["wallet"],
@@ -97,19 +97,19 @@ export class OrganizationService {
     data: Partial<Organization>
   ): Promise<Organization | null> {
     const wallet = await this.walletService.findByAddress(walletAddress);
-
+    
     if (!wallet) {
       return null;
     }
-
+    
     const organization = await this.organizationRepository.findOne({
       where: { walletId: wallet.id },
     });
-
+    
     if (!organization) {
       return null;
     }
-
+    
     // Update only allowed fields
     const updatableFields = [
       "companyName",
@@ -126,19 +126,19 @@ export class OrganizationService {
       "websiteUrl",
       "acceptedTerms",
     ];
-
+    
     const orgWithIndex = organization as OrganizationWithIndex;
     const dataWithIndex = data as Record<string, any>;
-
+    
     updatableFields.forEach((field) => {
       // Only update if field is provided and is different from current value
       if (field in data && dataWithIndex[field] !== undefined) {
         orgWithIndex[field] = dataWithIndex[field];
       }
     });
-
+    
     const updatedOrg = await this.organizationRepository.save(organization);
-
+    
     // Log the action
     await this.auditLogService.createAuditLog(
       wallet.id,
@@ -147,7 +147,7 @@ export class OrganizationService {
       organization.id,
       { organization: updatedOrg }
     );
-
+    
     return updatedOrg;
   }
 
@@ -173,4 +173,4 @@ export class OrganizationService {
       order: { createdAt: "DESC" },
     });
   }
-}
+} 

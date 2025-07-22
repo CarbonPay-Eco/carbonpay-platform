@@ -21,7 +21,6 @@ use anchor_spl::{
     symbol: String,
 )]
 pub struct InitializeProject<'info> {
-   
     #[account(mut)]
     pub project_owner: Signer<'info>,
 
@@ -78,12 +77,12 @@ pub struct InitializeProject<'info> {
 
     /// Metadata account managed by the Token Metadata Program
     /// CHECK: This account is created via CPI to the token metadata program
-    #[account(mut)] 
+    #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
-    
+
     /// Master Edition account managed by the Token Metadata Program
     /// CHECK: This account is created via CPI to the token metadata program
-    #[account(mut)] 
+    #[account(mut)]
     pub master_edition: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -108,7 +107,7 @@ impl<'info> InitializeProject<'info> {
         self.project.set_inner(Project {
             owner: self.project_owner.key(),
             mint: self.nft_mint.key(),
-            token_mint: self.token_mint.key(),  // Added token_mint field
+            token_mint: self.token_mint.key(), // Added token_mint field
             token_bump: 0,
             amount,
             remaining_amount: amount,
@@ -151,7 +150,7 @@ impl<'info> InitializeProject<'info> {
                 current_authority: self.project_owner.to_account_info(),
             },
         );
-        
+
         set_authority(
             cpi_set_authority,
             anchor_spl::token::spl_token::instruction::AuthorityType::MintTokens,
@@ -165,8 +164,16 @@ impl<'info> InitializeProject<'info> {
             uri,
             seller_fee_basis_points: carbon_pay_fee as u16,
             creators: Some(vec![
-                Creator { address: self.project_owner.key(), verified: true, share: 95 },
-                Creator { address: self.carbon_credits.key(), verified: false, share: 5 },
+                Creator {
+                    address: self.project_owner.key(),
+                    verified: true,
+                    share: 95,
+                },
+                Creator {
+                    address: self.carbon_credits.key(),
+                    verified: false,
+                    share: 5,
+                },
             ]),
             collection: None,
             uses: None,
@@ -176,13 +183,13 @@ impl<'info> InitializeProject<'info> {
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
                 CreateMetadataAccountsV3 {
-                    metadata:        self.metadata.to_account_info(),
-                    mint:            self.nft_mint.to_account_info(),
-                    mint_authority:  self.project_owner.to_account_info(),
-                    payer:           self.project_owner.to_account_info(),
-                    update_authority:self.project_owner.to_account_info(),
-                    system_program:  self.system_program.to_account_info(),
-                    rent:            self.rent.to_account_info(),
+                    metadata: self.metadata.to_account_info(),
+                    mint: self.nft_mint.to_account_info(),
+                    mint_authority: self.project_owner.to_account_info(),
+                    payer: self.project_owner.to_account_info(),
+                    update_authority: self.project_owner.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    rent: self.rent.to_account_info(),
                 },
             ),
             data,
@@ -195,15 +202,15 @@ impl<'info> InitializeProject<'info> {
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
                 CreateMasterEditionV3 {
-                    edition:         self.master_edition.to_account_info(),
-                    mint:            self.nft_mint.to_account_info(),
-                    update_authority:self.project_owner.to_account_info(),
-                    mint_authority:  self.project_owner.to_account_info(),
-                    metadata:        self.metadata.to_account_info(),
-                    payer:           self.project_owner.to_account_info(),
-                    token_program:   self.token_program.to_account_info(),
-                    system_program:  self.system_program.to_account_info(),
-                    rent:            self.rent.to_account_info(),
+                    edition: self.master_edition.to_account_info(),
+                    mint: self.nft_mint.to_account_info(),
+                    update_authority: self.project_owner.to_account_info(),
+                    mint_authority: self.project_owner.to_account_info(),
+                    metadata: self.metadata.to_account_info(),
+                    payer: self.project_owner.to_account_info(),
+                    token_program: self.token_program.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    rent: self.rent.to_account_info(),
                 },
             ),
             Some(0), // Max supply of 0 means there will be no prints (editions) of this NFT

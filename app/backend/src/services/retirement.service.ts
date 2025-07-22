@@ -48,7 +48,7 @@ export class RetirementService {
     if (!wallet) {
       throw new Error("Wallet not found");
     }
-
+    
     // Get the project
     const project = await this.tokenizedProjectService.getProjectById(
       projectId
@@ -56,14 +56,14 @@ export class RetirementService {
     if (!project) {
       throw new Error("Project not found");
     }
-
+    
     // Check if project has enough available credits
     if (project.available < quantity) {
       throw new Error(
         `Insufficient available credits. Project has ${project.available} but tried to retire ${quantity}`
       );
     }
-
+    
     // Execute the retirement on-chain (burn tokens)
     const txHash = await this.solanaService.burnCredit(wallet.walletAddress, {
       tokenId: project.tokenId,
@@ -71,14 +71,14 @@ export class RetirementService {
       beneficiary: options?.beneficiary,
       retirementMessage: options?.retirementMessage,
     });
-
+    
     // Update project available supply
     await this.tokenizedProjectService.updateProjectSupply(
       projectId,
       quantity,
       false // subtract from available
     );
-
+    
     // Create retirement record
     const retirement = this.retirementRepository.create({
       walletId: wallet.id,
@@ -90,9 +90,9 @@ export class RetirementService {
       reportingPeriodStart: options?.reportingPeriodStart,
       reportingPeriodEnd: options?.reportingPeriodEnd,
     });
-
+    
     const savedRetirement = await this.retirementRepository.save(retirement);
-
+    
     // Log the action
     await this.auditLogService.createAuditLog(
       wallet.id,
@@ -106,7 +106,7 @@ export class RetirementService {
         beneficiary: options?.beneficiary,
       }
     );
-
+    
     return savedRetirement;
   }
 
@@ -117,11 +117,11 @@ export class RetirementService {
    */
   async getRetirementsByWallet(walletAddress: string): Promise<Retirement[]> {
     const wallet = await this.walletService.findByAddress(walletAddress);
-
+    
     if (!wallet) {
       return [];
     }
-
+    
     return this.retirementRepository.find({
       where: { walletId: wallet.id },
       relations: ["wallet", "tokenizedProject"],
@@ -138,11 +138,11 @@ export class RetirementService {
     walletAddress: string
   ): Promise<Retirement[]> {
     const wallet = await this.walletService.findByAddress(walletAddress);
-
+    
     if (!wallet) {
       return [];
     }
-
+    
     return this.retirementRepository.find({
       where: { walletId: wallet.id },
       relations: ["wallet", "tokenizedProject"],
@@ -221,4 +221,4 @@ export class RetirementService {
       order: { retirementDate: "DESC" },
     });
   }
-}
+} 

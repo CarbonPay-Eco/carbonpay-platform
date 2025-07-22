@@ -17,8 +17,9 @@ import {
 } from "@/components/webapp/modals/project-details-modal";
 import { getProjects } from "@/app/api/project-service";
 import { getRetirements } from "@/app/api/retirements-service";
-import { useWallet } from "@solana/wallet-adapter-react";
+// import { useWallet } from "@solana/wallet-adapter-react";
 import { CreateProjectModal } from "@/components/webapp/modals/create-project-modal";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Mock data
 const metrics = {
@@ -154,7 +155,7 @@ const recentOffsets = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { publicKey } = useWallet();
+  // const { publicKey } = useWallet();
   const [projects, setProjects] = useState<Project[]>([]);
   const [totalOffset, setTotalOffset] = useState<number>(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
@@ -170,12 +171,13 @@ export default function DashboardPage() {
     localStorage.setItem("walletConnected", "true");
 
     const fetchProjects = async () => {
-      if (!publicKey) {
-        console.error("Wallet is not connected.");
-        return;
-      }
+      // if (!publicKey) {
+      //   console.error("Wallet is not connected.");
+      //   return;
+      // }
 
-      const walletId = publicKey.toBase58();
+      // const walletId = publicKey.toBase58();
+      const walletId = "mock-wallet-id"; // Temporary mock
 
       const result = await getProjects(walletId);
 
@@ -188,12 +190,13 @@ export default function DashboardPage() {
     };
 
     const fetchRetirements = async () => {
-      if (!publicKey) {
-        console.error("Wallet is not connected.");
-        return;
-      }
+      // if (!publicKey) {
+      //   console.error("Wallet is not connected.");
+      //   return;
+      // }
 
-      const walletAddress = publicKey.toBase58();
+      // const walletAddress = publicKey.toBase58();
+      const walletAddress = "mock-wallet-address"; // Temporary mock
       const result = await getRetirements(walletAddress);
 
       if (result.success) {
@@ -205,7 +208,7 @@ export default function DashboardPage() {
 
     fetchProjects();
     fetchRetirements();
-  }, [publicKey]);
+  }, []); // Removed publicKey dependency
 
   const handleViewDetails = (project: Project) => {
     const details = projectDetails[project.id];
@@ -218,184 +221,186 @@ export default function DashboardPage() {
   };
 
   return (
-    <WebappShell>
-      <main className="p-8">
-        <div className="space-y-8">
-          {/* Key Metrics */}
-          <section>
-            <h2 className="text-xl font-semibold">Key Metrics</h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <KeyMetricCard
-                title="Total already offsetted"
-                value={`${totalOffset} T`}
-                icon={<Leaf className="h-full w-full" />}
-                className="flex flex-col items-center justify-center text-center"
-              />
+    <ProtectedRoute>
+      <WebappShell>
+        <main className="p-8">
+          <div className="space-y-8">
+            {/* Key Metrics */}
+            <section>
+              <h2 className="text-xl font-semibold">Key Metrics</h2>
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <KeyMetricCard
+                  title="Total already offsetted"
+                  value={`${totalOffset} T`}
+                  icon={<Leaf className="h-full w-full" />}
+                  className="flex flex-col items-center justify-center text-center"
+                />
 
-              <KeyMetricCard
-                icon={<Wallet className="h-full w-full" />}
-                title="Credits Available"
-                value={`${metrics.creditsAvailable} T`}
-                className="flex flex-col items-center justify-center text-center"
-                action={
+                <KeyMetricCard
+                  icon={<Wallet className="h-full w-full" />}
+                  title="Credits Available"
+                  value={`${metrics.creditsAvailable} T`}
+                  className="flex flex-col items-center justify-center text-center"
+                  action={
+                    <Button
+                      variant="outline"
+                      className="w-full border-white/10 hover:bg-white/5"
+                      onClick={() => setIsPurchaseModalOpen(true)}
+                    >
+                      Manage your credits
+                    </Button>
+                  }
+                />
+                <Card className="bg-black/40 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold">Your emissions</h3>
+                      <p className="text-3xl font-bold">
+                        {metrics.totalEmissions} tons
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {(
+                          metrics.totalEmissions *
+                          (metrics.emissionsOffset / 100)
+                        ).toFixed(2)}{" "}
+                        tons offset
+                      </p>
+                    </div>
+                    <ProgressRing
+                      progress={metrics.emissionsOffset}
+                      size={100}
+                      className="text-green-500"
+                    >
+                      <div className="text-center">
+                        <span className="text-xl font-bold">
+                          {metrics.emissionsOffset}%
+                        </span>
+                        <span className="block text-xs text-gray-400">
+                          offset
+                        </span>
+                      </div>
+                    </ProgressRing>
+                  </div>
                   <Button
-                    variant="outline"
-                    className="w-full border-white/10 hover:bg-white/5"
+                    className="mt-4 w-full bg-green-600 hover:bg-green-500"
                     onClick={() => setIsPurchaseModalOpen(true)}
                   >
-                    Manage your credits
+                    Offset right now
                   </Button>
-                }
-              />
-              <Card className="bg-black/40 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold">Your emissions</h3>
-                    <p className="text-3xl font-bold">
-                      {metrics.totalEmissions} tons
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {(
-                        metrics.totalEmissions *
-                        (metrics.emissionsOffset / 100)
-                      ).toFixed(2)}{" "}
-                      tons offset
-                    </p>
-                  </div>
-                  <ProgressRing
-                    progress={metrics.emissionsOffset}
-                    size={100}
-                    className="text-green-500"
+                </Card>
+              </div>
+            </section>
+
+            {/* Active Projects */}
+            <section>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">
+                  Active Carbon Offset Projects
+                </h2>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="border-white/10"
+                    onClick={() => setIsCreateProjectModalOpen(true)}
                   >
-                    <div className="text-center">
-                      <span className="text-xl font-bold">
-                        {metrics.emissionsOffset}%
-                      </span>
-                      <span className="block text-xs text-gray-400">
-                        offset
-                      </span>
-                    </div>
-                  </ProgressRing>
+                    Create Project
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" className="border-white/10">
+                    View all projects
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  className="mt-4 w-full bg-green-600 hover:bg-green-500"
-                  onClick={() => setIsPurchaseModalOpen(true)}
-                >
-                  Offset right now
-                </Button>
-              </Card>
-            </div>
-          </section>
-
-          {/* Active Projects */}
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
-                Active Carbon Offset Projects
-              </h2>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="border-white/10"
-                  onClick={() => setIsCreateProjectModalOpen(true)}
-                >
-                  Create Project
-                  <ArrowUpRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="border-white/10">
-                  View all projects
-                  <ArrowUpRight className="ml-2 h-4 w-4" />
-                </Button>
               </div>
-            </div>
-            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.isArray(projects) && projects.length > 0 ? (
-                projects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onViewDetails={handleViewDetails}
-                    onPurchase={handlePurchase}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center text-gray-400">
-                  <p>No projects have been created yet.</p>
-                </div>
-              )}
-            </div>
-          </section>
+              <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.isArray(projects) && projects.length > 0 ? (
+                  projects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onViewDetails={handleViewDetails}
+                      onPurchase={handlePurchase}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center text-gray-400">
+                    <p>No projects have been created yet.</p>
+                  </div>
+                )}
+              </div>
+            </section>
 
-          {/* Recent Offsets */}
-          <section>
-            <h2 className="mb-4 text-xl font-semibold">Recent offsets</h2>
-            <div className="rounded-xl border border-white/10 bg-black/40">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
-                        Emission Source
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
-                        Project Name
-                      </th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-400">
-                        Credits Offset (T)
-                      </th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-400">
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentOffsets.map((offset, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-white/10 last:border-0"
-                      >
-                        <td className="whitespace-nowrap px-6 py-4 text-sm">
-                          {offset.source}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm">
-                          {offset.project}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                          {offset.amount}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
-                          {offset.date}
-                        </td>
+            {/* Recent Offsets */}
+            <section>
+              <h2 className="mb-4 text-xl font-semibold">Recent offsets</h2>
+              <div className="rounded-xl border border-white/10 bg-black/40">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
+                          Emission Source
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-400">
+                          Project Name
+                        </th>
+                        <th className="px-6 py-3 text-right text-sm font-medium text-gray-400">
+                          Credits Offset (T)
+                        </th>
+                        <th className="px-6 py-3 text-right text-sm font-medium text-gray-400">
+                          Date
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {recentOffsets.map((offset, index) => (
+                        <tr
+                          key={index}
+                          className="border-b border-white/10 last:border-0"
+                        >
+                          <td className="whitespace-nowrap px-6 py-4 text-sm">
+                            {offset.source}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm">
+                            {offset.project}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                            {offset.amount}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
+                            {offset.date}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
 
-      {/* Purchase Credits Modal */}
-      <PurchaseCreditsModal
-        isOpen={isPurchaseModalOpen}
-        onClose={() => setIsPurchaseModalOpen(false)}
-        projects={projects}
-      />
+        {/* Purchase Credits Modal */}
+        <PurchaseCreditsModal
+          isOpen={isPurchaseModalOpen}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          projects={projects}
+        />
 
-      {/* Project Details Modal */}
-      <ProjectDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        project={selectedProject}
-        onPurchase={handlePurchase}
-      />
+        {/* Project Details Modal */}
+        <ProjectDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+          project={selectedProject}
+          onPurchase={handlePurchase}
+        />
 
-      {/* Create Project Modal */}
-      <CreateProjectModal
-        isOpen={isCreateProjectModalOpen}
-        onClose={() => setIsCreateProjectModalOpen(false)}
-      />
-    </WebappShell>
+        {/* Create Project Modal */}
+        <CreateProjectModal
+          isOpen={isCreateProjectModalOpen}
+          onClose={() => setIsCreateProjectModalOpen(false)}
+        />
+      </WebappShell>
+    </ProtectedRoute>
   );
 }

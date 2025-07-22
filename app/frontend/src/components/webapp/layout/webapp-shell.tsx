@@ -2,15 +2,25 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, BarChart2, Settings, LogOut, Wallet, Bell, Menu, X } from "lucide-react";
+import {
+  Home,
+  BarChart2,
+  Settings,
+  LogOut,
+  Wallet,
+  User,
+  Menu,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/globalAssets/logo";
-import { useWallet } from "@solana/wallet-adapter-react";
+// import { useWallet } from "@solana/wallet-adapter-react";
 import { getOrganization } from "../../../app/api/organization-service";
+import { useAuth } from "@/app/context/AuthContext";
+import Header from "./header";
 
 const navigation = [
   { name: "Dashboard", href: "/webapp/dashboard", icon: Home },
@@ -19,6 +29,7 @@ const navigation = [
 ];
 
 const systemNavigation = [
+  { name: "Profile", href: "/webapp/profile", icon: User },
   { name: "Setting", href: "/webapp/settings", icon: Settings },
   { name: "Logout account", href: "/", icon: LogOut },
 ];
@@ -30,55 +41,54 @@ interface WebappShellProps {
 export default function WebappShell({ children }: WebappShellProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [organization, setOrganization] = useState<any | null>(null);
-  const { publicKey, disconnect } = useWallet();
-  const [walletInitialized, setWalletInitialized] = useState(false);
+  // const { publicKey, disconnect } = useWallet();
+  // const [walletInitialized, setWalletInitialized] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await disconnect();
-      document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      logout();
       router.push("/");
     } catch (error) {
       console.error("Error during logout:", error);
     }
   };
 
-  useEffect(() => {
-    const fetchOrganization = async () => {
-      if (publicKey) {
-        const walletId = publicKey.toBase58();
-        const result = await getOrganization(walletId);
-
-        if (result.success) {
-          setOrganization(result.data || null);
-          console.log("Organization data:", result.data);
-        } else {
-          console.error("Error fetching organization:", result.message);
-        }
-      }
-    };
-
-    if (walletInitialized && !publicKey) {
-      document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      router.push("/");
-    }
-
-    if (publicKey) {
-      fetchOrganization();
-    }
-
-    if (publicKey != undefined) {
-      setWalletInitialized(true);
-    }
-  }, [publicKey, walletInitialized, router]);
+  // useEffect(() => {
+  //   const fetchOrganization = async () => {
+  //     if (publicKey) {
+  //       const walletId = publicKey.toBase58();
+  //       const result = await getOrganization(walletId);
+  //       if (result.success) {
+  //         setOrganization(result.data || null);
+  //         console.log("Organization data:", result.data);
+  //       } else {
+  //         console.error("Error fetching organization:", result.message);
+  //       }
+  //     }
+  //   };
+  //   if (walletInitialized && !publicKey) {
+  //     document.cookie = "walletConnected=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  //     router.push("/");
+  //   }
+  //   if (publicKey) {
+  //     fetchOrganization();
+  //   }
+  //   if (publicKey != undefined) {
+  //     setWalletInitialized(true);
+  //   }
+  // }, [publicKey, walletInitialized, router]);
 
   return (
     <div className="flex h-full">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 bg-black/80 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Mobile sidebar */}
@@ -91,7 +101,10 @@ export default function WebappShell({ children }: WebappShellProps) {
       >
         <div className="flex h-16 items-center px-6">
           <Logo className="h-8 w-auto" />
-          <button className="absolute right-4 top-4 lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <button
+            className="absolute right-4 top-4 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -105,13 +118,17 @@ export default function WebappShell({ children }: WebappShellProps) {
                   href={item.href}
                   className={cn(
                     "group flex items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
-                    isActive ? "bg-green-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    isActive
+                      ? "bg-green-600 text-white"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
                   )}
                 >
                   <item.icon
                     className={cn(
                       "mr-3 h-5 w-5",
-                      isActive ? "text-white" : "text-gray-400 group-hover:text-white"
+                      isActive
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-white"
                     )}
                   />
                   {item.name}
@@ -122,15 +139,23 @@ export default function WebappShell({ children }: WebappShellProps) {
 
           <div className="space-y-1 px-4 py-4 mt-auto border-t border-white/10">
             <div className="px-4 py-2">
-              <h3 className="text-xs font-semibold uppercase text-gray-400">System</h3>
+              <h3 className="text-xs font-semibold uppercase text-gray-400">
+                System
+              </h3>
             </div>
             {systemNavigation.map((item) => (
               <button
                 key={item.name}
-                onClick={item.name === "Logout account" ? handleLogout : () => router.push(item.href)}
+                onClick={
+                  item.name === "Logout account"
+                    ? handleLogout
+                    : () => router.push(item.href)
+                }
                 className={cn(
                   "group flex w-full items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
-                  item.name === "Logout account"
+                  pathname === item.href
+                    ? "bg-green-600 text-white"
+                    : item.name === "Logout account"
                     ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
                     : "text-gray-400 hover:bg-gray-800 hover:text-white"
                 )}
@@ -138,7 +163,9 @@ export default function WebappShell({ children }: WebappShellProps) {
                 <item.icon
                   className={cn(
                     "mr-3 h-5 w-5",
-                    item.name === "Logout account"
+                    pathname === item.href
+                      ? "text-white"
+                      : item.name === "Logout account"
                       ? "text-red-400 group-hover:text-red-300"
                       : "text-gray-400 group-hover:text-white"
                   )}
@@ -152,33 +179,8 @@ export default function WebappShell({ children }: WebappShellProps) {
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden lg:ml-64">
-        {/* Header */}
-        <header className="border-b border-white/10 bg-black/95">
-          <div className="flex h-16 items-center justify-between px-8">
-            <div className="flex items-center">
-              <button className="mr-4 lg:hidden" onClick={() => setSidebarOpen(true)}>
-                <Menu className="h-6 w-6" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold">
-                  {organization ? `Hello, ${organization.data.fullName}!` : "Hello!"}
-                </h1>
-                <p className="text-sm text-gray-400">Track, manage, and offset your emissions seamlessly.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" className="border-white/10">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <Button className="bg-green-600 hover:bg-green-500">
-                <span className="hidden sm:inline">Connected: </span>
-                <span className="font-mono text-xs sm:ml-1">
-                  {publicKey ? `${publicKey.toBase58().slice(0, 6)}...${publicKey.toBase58().slice(-4)}` : "Not Connected"}
-                </span>
-              </Button>
-            </div>
-          </div>
-        </header>
+        {/* Use the Header component */}
+        <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
         <div className="flex-1 overflow-auto">{children}</div>

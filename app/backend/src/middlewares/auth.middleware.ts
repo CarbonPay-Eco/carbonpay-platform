@@ -23,7 +23,7 @@ export const authMiddleware = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-
+    
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.status(401).json({
         success: false,
@@ -32,7 +32,7 @@ export const authMiddleware = async (
       });
       return;
     }
-
+    
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     try {
@@ -54,8 +54,8 @@ export const authMiddleware = async (
       // Attach user to request
       req.user = user;
       req.userId = user.id;
-
-      next();
+    
+    next();
     } catch (jwtError) {
       res.status(401).json({
         success: false,
@@ -90,7 +90,7 @@ export const adminMiddleware = async (
       });
       return;
     }
-
+    
     if (req.user.role !== "admin") {
       res.status(403).json({
         success: false,
@@ -99,7 +99,7 @@ export const adminMiddleware = async (
       });
       return;
     }
-
+    
     next();
   } catch (error) {
     console.error("Admin middleware error:", error);
@@ -109,7 +109,7 @@ export const adminMiddleware = async (
       error,
     });
   }
-};
+}; 
 
 // Legacy middleware for compatibility (can be removed later)
 export const verifyWallet = authMiddleware;

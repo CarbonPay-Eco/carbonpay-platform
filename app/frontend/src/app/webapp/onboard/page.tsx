@@ -42,13 +42,16 @@ import {
   completeUserRegistration,
   loginUser,
 } from "../../api/user-service";
+import { useAuth } from "../../context/AuthContext";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<OnboardingFormData>>({});
   const [isAnimating, setIsAnimating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const draftTokenRef = useRef<string | null>(null);
 
   const currentStepConfig = onboardingSteps[currentStep];
   const isLastStep = currentStep === onboardingSteps.length - 1;
@@ -70,32 +73,49 @@ export default function OnboardingPage() {
   const handleNext = async () => {
     if (isAnimating || !isStepValid) return;
 
+    console.log("=== ONBOARDING DEBUG ===");
+    console.log("Current step:", currentStep);
+    console.log("Form data:", formData);
+    console.log("Is last step:", isLastStep);
+
     // Registration step - create draft user
     if (currentStep === 0) {
       try {
+        console.log("Creating draft user with:", {
+          email: formData.email,
+          password: "***",
+        });
+
         const regResult = await registerUserDraft({
           email: formData.email!,
           password: formData.password!,
         });
+
+        console.log("Draft registration result:", regResult);
+
         if (!regResult.success) {
           console.error("Registration error:", regResult.message);
+          alert(`Registration failed: ${regResult.message}`);
           return;
         }
+        // Salva o token retornado do draft
+        draftTokenRef.current =
+          regResult.data?.data?.token || regResult.data?.token;
         // Draft user created successfully, continue to next step
       } catch (err) {
         console.error("Registration error:", err);
+        alert(`Registration failed: ${err}`);
         return;
       }
     }
 
     if (isLastStep) {
       try {
-        // Complete the user registration with all data
-        const result = await completeUserRegistration({
-          email: formData.email!,
-          fullName: formData.name!,
-          companyName: formData.companyName!,
-          country: formData.country!,
+        console.log("Completing registration with data:", {
+          email: formData.email,
+          fullName: formData.name,
+          companyName: formData.companyName,
+          country: formData.country,
           registrationNumber: formData.registrationNumber,
           industryType: formData.industry,
           companySize: formData.companySize,
@@ -109,13 +129,51 @@ export default function OnboardingPage() {
           acceptedTerms: !!formData.acceptedTerms,
         });
 
+        // Complete the user registration with all data
+        const result = await completeUserRegistration(
+          {
+            email: formData.email!,
+            fullName: formData.name!,
+            companyName: formData.companyName!,
+            country: formData.country!,
+            registrationNumber: formData.registrationNumber,
+            industryType: formData.industry,
+            companySize: formData.companySize,
+            description: formData.companyDescription,
+            tracksEmissions: formData.hasEmissionsHistory,
+            emissionSources: formData.primaryEmissionSources,
+            sustainabilityCertifications: formData.sustainabilityPrograms,
+            priorOffsetting: formData.offsettingExperience !== "never",
+            contactEmail: formData.contactEmail,
+            websiteUrl: formData.websiteUrl,
+            acceptedTerms: !!formData.acceptedTerms,
+          },
+          draftTokenRef.current || undefined
+        );
+
+        console.log("Complete registration result:", result);
+
         if (result.success) {
-          router.push("/webapp/dashboard");
+          // Use auth context to log in the user after successful registration
+          const token = result.data?.token || result.data?.data?.token;
+          console.log("Token received:", token);
+
+          if (token) {
+            login(token);
+            router.push("/webapp/dashboard");
+          } else {
+            console.error("No token received after registration completion");
+            alert(
+              "Registration completed but no login token received. Please try logging in manually."
+            );
+          }
         } else {
           console.error("Error completing registration:", result.message);
+          alert(`Registration failed: ${result.message}`);
         }
       } catch (error) {
         console.error("Error during registration completion:", error);
+        alert(`Registration failed: ${error}`);
       }
       return;
     }

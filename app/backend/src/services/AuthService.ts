@@ -85,14 +85,30 @@ export class AuthService {
   public static async completeRegistration(
     email: string,
     fields: Partial<User>
-  ): Promise<{ user: User }> {
+  ): Promise<{ user: User; token: string }> {
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOneBy({ email });
     if (!user) throw new Error("User not found");
+
+    // Update user data
     Object.assign(user, fields);
     user.draft = false;
     await userRepository.save(user);
-    return { user };
+
+    // Create wallet for user if not exists (since it was created as draft)
+    try {
+      await WalletService.createWallet(user.id, "temp-password");
+    } catch (error) {
+      // Wallet might already exist, that's ok
+      console.log("Wallet already exists or error creating:", error);
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.id }, this.JWT_SECRET, {
+      expiresIn: this.JWT_EXPIRES_IN,
+    });
+
+    return { user, token };
   }
 
   public static verifyToken(token: string): { userId: string } {

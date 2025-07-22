@@ -92,12 +92,51 @@ export class UserController {
     if (!email) {
       throw createError("Email is required to complete registration", 400);
     }
+
+    // Complete the user registration e obtenha o token
     const result = await AuthService.completeRegistration(email, fields);
+
+    // Crie a organização se os campos obrigatórios existirem
+    const organizationData = {
+      userId: result.user.id,
+      fullName: fields.fullName,
+      companyName: fields.companyName,
+      country: fields.country,
+      registrationNumber: fields.registrationNumber,
+      industryType: fields.industryType,
+      companySize: fields.companySize,
+      description: fields.description,
+      tracksEmissions: fields.tracksEmissions,
+      emissionSources: fields.emissionSources,
+      sustainabilityCertifications: fields.sustainabilityCertifications,
+      priorOffsetting: fields.priorOffsetting,
+      contactEmail: fields.contactEmail,
+      websiteUrl: fields.websiteUrl,
+      acceptedTerms: fields.acceptedTerms,
+    };
+
+    let organization: any = null;
+    if (fields.fullName && fields.companyName && fields.country) {
+      try {
+        organization = await userService.createUserOrganization(
+          organizationData
+        );
+      } catch (error) {
+        console.error("Error creating organization:", error);
+      }
+    }
+
     res.status(200).json({
       success: true,
-      message: "Registration completed",
+      message: "Registration completed successfully",
       data: {
-        user: result.user,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          role: result.user.role,
+        },
+        organization,
+        token: result.token, // <-- GARANTE QUE O TOKEN É RETORNADO
       },
     });
   });

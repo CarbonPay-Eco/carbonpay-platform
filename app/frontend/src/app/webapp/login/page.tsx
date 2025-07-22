@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import { loginUser } from "../../api/user-service";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -40,11 +42,14 @@ export default function LoginPage() {
       });
 
       if (result.success) {
-        // Store token if needed
-        if (result.data?.data?.token) {
-          localStorage.setItem("authToken", result.data.data.token);
+        // Use auth context to store token and set authenticated state
+        const token = result.data?.data?.token || result.data?.token;
+        if (token) {
+          login(token);
+          router.push("/webapp/dashboard");
+        } else {
+          setError("No authentication token received");
         }
-        router.push("/webapp/dashboard");
       } else {
         setError(result.message || "Login failed");
       }
