@@ -111,6 +111,24 @@ export const adminMiddleware = async (
   }
 }; 
 
+// Simple approval middleware to require an X-Admin-Approval header for sensitive operations
+export const adminApprovalMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const approval = req.header("x-admin-approval");
+  if (!approval) {
+    res.status(428).json({ // 428 Precondition Required
+      success: false,
+      message: "Admin approval header required",
+      error: "PRECONDITION_REQUIRED",
+    });
+    return;
+  }
+  next();
+};
+
 // Legacy middleware for compatibility (can be removed later)
 export const verifyWallet = authMiddleware;
 export const verifyAdmin = adminMiddleware;

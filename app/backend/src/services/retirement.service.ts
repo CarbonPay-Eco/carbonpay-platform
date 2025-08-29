@@ -43,8 +43,8 @@ export class RetirementService {
       retirementMessage?: string;
     }
   ): Promise<Retirement> {
-    // Get the wallet
-    const wallet = await this.walletService.findByAddress(walletAddress);
+    // Get or create a wallet entry (ensure it exists for audit linkage)
+    const wallet = await this.walletService.getOrCreateWallet(walletAddress);
     if (!wallet) {
       throw new Error("Wallet not found");
     }
@@ -76,15 +76,22 @@ export class RetirementService {
     await this.tokenizedProjectService.updateProjectSupply(
       projectId,
       quantity,
-      false // subtract from available
+      true // is retirement -> subtract available with validation
     );
     
+    // Compute a public verification hash (deterministic from tx + project + qty)
+    const publicHash = require("crypto")
+      .createHash("sha256")
+      .update(`${txHash}|${project.tokenId}|${quantity}`)
+      .digest("hex");
+
     // Create retirement record
     const retirement = this.retirementRepository.create({
       walletId: wallet.id,
       tokenizedProjectId: project.id,
       quantity,
       txHash,
+      publicHash,
       proofUrl: options?.proofUrl,
       autoOffset: options?.autoOffset || false,
       reportingPeriodStart: options?.reportingPeriodStart,

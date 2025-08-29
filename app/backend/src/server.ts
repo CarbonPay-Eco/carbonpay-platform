@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import client from "prom-client";
+import rateLimit from "express-rate-limit";
 import { AppDataSource } from "./database/data-source";
 import routes from "./routes/index";
 import { swaggerUi, swaggerSpec } from "./config/swagger";
@@ -14,6 +16,23 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
+
+// Rate limiting (basic global limiter)
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: Number(process.env.RATE_LIMIT_MAX_REQUESTS || 120),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Prometheus metrics
+client.collectDefaultMetrics();
+const register = client.register;
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
 
 // Main API routes (Web 2.5)
 app.use("/api", routes);

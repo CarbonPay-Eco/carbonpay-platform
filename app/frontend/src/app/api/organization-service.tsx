@@ -1,7 +1,8 @@
 import axios from "axios";
 import type { OnboardingFormData } from "../../../types/onboarding";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 /**
  * Creates a new organization with the provided form data and wallet address.

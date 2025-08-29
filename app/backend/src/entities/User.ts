@@ -20,9 +20,6 @@ export class User {
   @Column({ type: "varchar", default: "user" })
   role: string;
 
-  @Column({ type: "boolean", default: true })
-  draft: boolean = true;
-
   @CreateDateColumn({ type: "timestamp with time zone" })
   createdAt: Date;
 

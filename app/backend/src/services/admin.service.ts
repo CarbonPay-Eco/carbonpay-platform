@@ -123,7 +123,7 @@ export class AdminService {
         "SET_ADMIN_ROLE",
         "wallets",
         targetWallet.id,
-        { targetWallet: targetWalletAddress }
+        { targetWallet: targetWalletAddress, approvalHeaderRequired: true }
       );
     }
 

@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from "typeorm";
-import { UserWallet } from "../../entities/UserWallet";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
 
 @Entity("audit_logs")
 export class AuditLog {
@@ -31,8 +23,5 @@ export class AuditLog {
   @CreateDateColumn({ name: "timestamp" })
   timestamp: Date;
 
-  // Relationships
-  @ManyToOne(() => UserWallet, { eager: false })
-  @JoinColumn({ name: "wallet_id", referencedColumnName: "id" })
-  wallet: UserWallet;
+  // Note: Relationship to wallet intentionally omitted to avoid cross-entity coupling
 }

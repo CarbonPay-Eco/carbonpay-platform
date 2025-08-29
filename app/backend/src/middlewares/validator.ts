@@ -172,37 +172,36 @@ export const userValidations = {
       minLength: 6,
       message: "Password is required and must be at least 6 characters",
     },
-    draft: {
-      type: "boolean",
-      message: "Draft flag must be boolean",
+    role: {
+      type: "string",
+      message: "Role must be a string",
     },
-    // The rest of the fields are only required if draft is false
+    // Organization fields are optional - only validate if provided
     fullName: {
-      required: (body) => !body.draft,
+      required: false,
       type: "string",
       minLength: 2,
       maxLength: 100,
-      message: "Full name is required and must be between 2 and 100 characters",
+      message: "Full name must be between 2 and 100 characters",
     },
     companyName: {
-      required: (body) => !body.draft,
+      required: false,
       type: "string",
       minLength: 2,
       maxLength: 100,
-      message:
-        "Company name is required and must be between 2 and 100 characters",
+      message: "Company name must be between 2 and 100 characters",
     },
     country: {
-      required: (body) => !body.draft,
+      required: false,
       type: "string",
       minLength: 2,
       maxLength: 50,
-      message: "Country is required and must be between 2 and 50 characters",
+      message: "Country must be between 2 and 50 characters",
     },
     acceptedTerms: {
-      required: (body) => !body.draft,
+      required: false,
       type: "boolean",
-      custom: (value) => value === true,
+      custom: (value) => value === undefined || value === true,
       message: "You must accept the terms and conditions",
     },
   }),

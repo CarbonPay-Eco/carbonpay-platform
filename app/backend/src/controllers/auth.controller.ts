@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import { AuthService } from "../services/AuthService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { createError } from "../utils/errorHandler";
+import { AuditLogService } from "../services/audit-log.service";
+
+const auditLogService = new AuditLogService();
 
 export class AuthController {
   // Email/password login
@@ -13,6 +16,17 @@ export class AuthController {
     }
     
     const result = await AuthService.login(email, password);
+
+    // Audit log: user login
+    try {
+      await auditLogService.createAuditLog(
+        result.user.id,
+        "USER_LOGIN",
+        "users",
+        result.user.id,
+        { email }
+      );
+    } catch {}
     
     res.status(200).json({
       success: true,

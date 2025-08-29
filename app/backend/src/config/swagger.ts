@@ -13,7 +13,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
+        url: 'https://7cb2a9e8c950.ngrok-free.app/api',
         description: 'Local development server',
       },
     ],

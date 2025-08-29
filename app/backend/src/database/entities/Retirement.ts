@@ -22,6 +22,9 @@ export class Retirement {
   @Column({ name: 'tx_hash' })
   txHash: string;
 
+  @Column({ name: 'public_hash', nullable: true })
+  publicHash: string;
+
   @Column({ name: 'proof_url', nullable: true })
   proofUrl: string;
 

@@ -10,6 +10,7 @@ import {
 import {
   authMiddleware,
   adminMiddleware,
+  adminApprovalMiddleware,
 } from "../middlewares/auth.middleware";
 
 // Controllers
@@ -365,10 +366,7 @@ router.get("/user/profile", authMiddleware, userController.getProfile);
  *       200:
  *         description: Registration completed successfully
  */
-router.patch(
-  "/user/complete-registration",
-  userController.completeRegistration
-);
+// Removed: complete-registration route (no longer needed)
 
 // ================================
 // PUBLIC PROJECT ROUTES
@@ -468,6 +466,7 @@ router.post(
   "/admin/organizations",
   authMiddleware,
   adminMiddleware,
+  adminApprovalMiddleware,
   organizationValidations.createOrganization,
   organizationController.createOrganization
 );
@@ -555,6 +554,7 @@ router.put(
   "/admin/organizations/:id",
   authMiddleware,
   adminMiddleware,
+  adminApprovalMiddleware,
   organizationValidations.updateOrganization,
   organizationController.updateOrganization
 );
@@ -609,6 +609,7 @@ router.post(
   "/admin/projects",
   authMiddleware,
   adminMiddleware,
+  adminApprovalMiddleware,
   projectValidations.createProject,
   projectController.createProject
 );
@@ -645,5 +646,109 @@ router.get("/admin/projects", projectController.getAllProjects);
  *         description: Project details
  */
 router.get("/admin/projects/:id", projectController.getProjectById);
+
+/**
+ * @openapi
+ * /verify:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Verify retirement certificate by id or hash
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: false
+ *       - in: query
+ *         name: hash
+ *         schema:
+ *           type: string
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: Verification result
+ */
+router.get("/verify", retirementController.verify);
+
+/**
+ * @openapi
+ * /certificate/{id}.html:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Render retirement certificate HTML
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: HTML certificate
+ */
+router.get("/certificate/:id.html", retirementController.certificateHtml);
+
+/**
+ * @openapi
+ * /certificate/{id}.pdf:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Render retirement certificate PDF
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: PDF certificate
+ */
+router.get("/certificate/:id.pdf", retirementController.certificatePdf);
+
+/**
+ * @openapi
+ * /user/retirements.csv:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Export my retirements as CSV
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: CSV export
+ */
+router.get("/user/retirements.csv", authMiddleware, retirementController.exportMyRetirementsCsv);
+
+/**
+ * @openapi
+ * /admin/purchases.csv:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     summary: Export purchases as CSV
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: CSV export
+ */
+router.get("/admin/purchases.csv", authMiddleware, adminMiddleware, userController.exportPurchasesCsv);
+
+/**
+ * @openapi
+ * /metrics:
+ *   get:
+ *     tags:
+ *       - Monitoring
+ *     summary: Prometheus metrics endpoint
+ *     responses:
+ *       200:
+ *         description: Metrics in Prometheus exposition format
+ */
 
 export default router;

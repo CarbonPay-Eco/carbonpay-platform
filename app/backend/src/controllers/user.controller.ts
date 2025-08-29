@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AuditLogService } from "../services/audit-log.service";
 import { AuthService } from "../services/AuthService";
 import { UserService } from "../services/user.service";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -12,7 +13,8 @@ export class UserController {
     const {
       email,
       password,
-      draft = false,
+      role = "user",
+      // Optional organization fields (for web platform)
       fullName,
       companyName,
       country,
@@ -27,118 +29,84 @@ export class UserController {
       contactEmail,
       websiteUrl,
       acceptedTerms,
-      role = "user",
     } = req.body;
 
-    // If draft, only require email and password
-    if (draft) {
-      const result = await AuthService.registerDraft(email, password, role);
+    // Check if this is a simple registration (mobile app) or full registration (web platform)
+    const hasOrganizationData = fullName && companyName && country && acceptedTerms;
+
+    if (hasOrganizationData) {
+      // Full registration with organization data (Web platform)
+      const result = await AuthService.register(email, password, role);
+
+      // Save organization data
+      await userService.createUserOrganization({
+        userId: result.user.id,
+        fullName,
+        companyName,
+        country,
+        registrationNumber,
+        industryType,
+        companySize,
+        description,
+        tracksEmissions: tracksEmissions || false,
+        emissionSources,
+        sustainabilityCertifications,
+        priorOffsetting: priorOffsetting || false,
+        contactEmail,
+        websiteUrl,
+        acceptedTerms: acceptedTerms || false,
+      });
+
+      // Audit log
+      try {
+        const auditLogService = new AuditLogService();
+        await auditLogService.createAuditLog(
+          result.user.id,
+          "USER_REGISTER",
+          "users",
+          result.user.id,
+          { email, hasOrganizationData: true }
+        );
+      } catch {}
+
       return res.status(201).json({
         success: true,
-        message: "Draft user registered successfully",
+        message: "User and organization registered successfully",
+        data: {
+          user: result.user,
+          token: result.token,
+        },
+      });
+    } else {
+      // Simple registration (Mobile app) - just email and password
+      const result = await AuthService.register(email, password, role);
+      
+      // Audit log
+      try {
+        const auditLogService = new AuditLogService();
+        await auditLogService.createAuditLog(
+          result.user.id,
+          "USER_REGISTER",
+          "users",
+          result.user.id,
+          { email, hasOrganizationData: false }
+        );
+      } catch {}
+
+      return res.status(201).json({
+        success: true,
+        message: "User registered successfully",
         data: {
           user: {
-            email,
-            draft: true,
+            id: result.user.id,
+            email: result.user.email,
+            role: result.user.role,
           },
         },
       });
     }
 
-    // Register user and create wallet automatically (Web 2.5 style)
-    const result = await AuthService.register(email, password, role);
-
-    // Create organization/onboarding data
-    const organizationData = {
-      userId: result.user.id,
-      fullName,
-      companyName,
-      country,
-      registrationNumber,
-      industryType,
-      companySize,
-      description,
-      tracksEmissions,
-      emissionSources,
-      sustainabilityCertifications,
-      priorOffsetting,
-      contactEmail,
-      websiteUrl,
-      acceptedTerms,
-    };
-
-    const organization = await userService.createUserOrganization(
-      organizationData
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: {
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          role: result.user.role,
-        },
-        organization,
-        token: result.token,
-      },
-    });
-  });
-
-  // PATCH endpoint to complete registration
-  completeRegistration = asyncHandler(async (req: Request, res: Response) => {
-    const { email, ...fields } = req.body;
-    if (!email) {
-      throw createError("Email is required to complete registration", 400);
-    }
-
-    // Complete the user registration e obtenha o token
-    const result = await AuthService.completeRegistration(email, fields);
-
-    // Crie a organização se os campos obrigatórios existirem
-    const organizationData = {
-      userId: result.user.id,
-      fullName: fields.fullName,
-      companyName: fields.companyName,
-      country: fields.country,
-      registrationNumber: fields.registrationNumber,
-      industryType: fields.industryType,
-      companySize: fields.companySize,
-      description: fields.description,
-      tracksEmissions: fields.tracksEmissions,
-      emissionSources: fields.emissionSources,
-      sustainabilityCertifications: fields.sustainabilityCertifications,
-      priorOffsetting: fields.priorOffsetting,
-      contactEmail: fields.contactEmail,
-      websiteUrl: fields.websiteUrl,
-      acceptedTerms: fields.acceptedTerms,
-    };
-
-    let organization: any = null;
-    if (fields.fullName && fields.companyName && fields.country) {
-      try {
-        organization = await userService.createUserOrganization(
-          organizationData
-        );
-      } catch (error) {
-        console.error("Error creating organization:", error);
-      }
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Registration completed successfully",
-      data: {
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          role: result.user.role,
-        },
-        organization,
-        token: result.token, // <-- GARANTE QUE O TOKEN É RETORNADO
-      },
-    });
+    throw createError("Registration failed", 400);
   });
 
   // Add balance to user account (placeholder for payment integration)
@@ -198,6 +166,23 @@ export class UserController {
         remainingBalance: purchase.remainingBalance,
       },
     });
+  });
+
+  // Admin CSV exports: purchases
+  exportPurchasesCsv = asyncHandler(async (_req: Request, res: Response) => {
+    const repo = (await import("../database/data-source")).AppDataSource.getRepository(
+      (await import("../database/entities/Purchase")).Purchase
+    );
+    const items = await repo.find({ relations: ["project"] }).catch(async () => {
+      return await repo.find();
+    });
+    const { Parser } = await import("json2csv");
+    const fields = ["id","userId","projectId","quantity","totalCost","txHash","createdAt"];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(items);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=purchases.csv");
+    res.send(csv);
   });
 
   // Get user profile (name and company)

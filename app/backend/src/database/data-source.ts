@@ -6,6 +6,7 @@ import { Organization } from "./entities/Organization";
 import { TokenizedProject } from "./entities/TokenizedProject";
 import { Retirement } from "./entities/Retirement";
 import { AuditLog } from "./entities/AuditLog";
+import { Purchase } from "./entities/Purchase";
 import { User } from "../entities/User";
 import "dotenv/config";
 import {
@@ -36,6 +37,7 @@ export const AppDataSource = new DataSource({
     TokenizedProject,
     Retirement,
     AuditLog,
+    Purchase,
   ],
   migrations: [],
   subscribers: [],

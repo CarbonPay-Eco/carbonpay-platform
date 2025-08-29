@@ -7,7 +7,7 @@ import { WalletService } from "./WalletService";
 export class AuthService {
   private static readonly JWT_SECRET =
     process.env.JWT_SECRET || "your-secret-key";
-  private static readonly JWT_EXPIRES_IN = "24h";
+  private static readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "6h";
 
   public static async register(
     email: string,
@@ -63,57 +63,10 @@ export class AuthService {
     return { user, token };
   }
 
-  public static async registerDraft(
-    email: string,
-    password: string,
-    role: string = "user"
-  ): Promise<{ user: User }> {
-    const userRepository = AppDataSource.getRepository(User);
-    const existingUser = await userRepository.findOneBy({ email });
-    if (existingUser) {
-      throw new Error("User already exists");
-    }
-    const user = new User();
-    user.email = email;
-    user.passwordHash = await bcrypt.hash(password, 10);
-    user.role = role;
-    user.draft = true;
-    await userRepository.save(user);
-    return { user };
-  }
-
-  public static async completeRegistration(
-    email: string,
-    fields: Partial<User>
-  ): Promise<{ user: User; token: string }> {
-    const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOneBy({ email });
-    if (!user) throw new Error("User not found");
-
-    // Update user data
-    Object.assign(user, fields);
-    user.draft = false;
-    await userRepository.save(user);
-
-    // Create wallet for user if not exists (since it was created as draft)
+  public static async verifyToken(token: string): Promise<any> {
     try {
-      await WalletService.createWallet(user.id, "temp-password");
-    } catch (error) {
-      // Wallet might already exist, that's ok
-      console.log("Wallet already exists or error creating:", error);
-    }
-
-    // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, this.JWT_SECRET, {
-      expiresIn: this.JWT_EXPIRES_IN,
-    });
-
-    return { user, token };
-  }
-
-  public static verifyToken(token: string): { userId: string } {
-    try {
-      return jwt.verify(token, this.JWT_SECRET) as { userId: string };
+      const decoded = jwt.verify(token, this.JWT_SECRET as string);
+      return decoded;
     } catch (error) {
       throw new Error("Invalid token");
     }
