@@ -6,10 +6,11 @@
     "yarn": ">=1.22.19"
   },
   "scripts": {
-    "anchor": "cd anchor && anchor",
-    "anchor-build": "cd anchor && anchor build",
-    "anchor-localnet": "cd anchor && anchor localnet",
-    "anchor-test": "cd anchor && anchor test",
+    "anchor": "cd ../../.. && anchor",
+    "anchor-build": "cd ../../.. && anchor build",
+    "anchor-localnet": "cd ../../.. && anchor localnet",
+    "anchor-test": "cd ../../.. && anchor test",
+    "generate-types": "cd ../../.. && anchor build && cp target/idl/carbon_pay.json src/types/",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
