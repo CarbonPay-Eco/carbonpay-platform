@@ -34,6 +34,6 @@ export class Wallet {
   @OneToMany(() => Retirement, (retirement) => retirement.wallet)
   retirements: Retirement[];
 
-  @OneToMany(() => AuditLog, (auditLog) => auditLog.wallet)
+  @OneToMany(() => AuditLog, (auditLog) => auditLog.walletId)
   auditLogs: AuditLog[];
 }

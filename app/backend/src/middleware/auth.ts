@@ -13,7 +13,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     }
 
     const token = authHeader.split(' ')[1];
-    const { userId } = AuthService.verifyToken(token);
+    const { userId } = await AuthService.verifyToken(token);
     req.userId = userId;
     next();
   } catch (error) {

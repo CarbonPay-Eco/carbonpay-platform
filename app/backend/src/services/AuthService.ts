@@ -35,7 +35,7 @@ export class AuthService {
     // Generate JWT token
     const token = jwt.sign({ userId: user.id }, this.JWT_SECRET, {
       expiresIn: this.JWT_EXPIRES_IN,
-    });
+    } as jwt.SignOptions);
 
     return { user, token };
   }
@@ -58,7 +58,7 @@ export class AuthService {
 
     const token = jwt.sign({ userId: user.id }, this.JWT_SECRET, {
       expiresIn: this.JWT_EXPIRES_IN,
-    });
+    } as jwt.SignOptions);
 
     return { user, token };
   }

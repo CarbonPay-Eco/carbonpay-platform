@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AuditLogService } from "../services/audit-log.service";
 import { AuthService } from "../services/AuthService";
 import { UserService } from "../services/user.service";
+import { s3Service } from "../services/s3.service";
 import { asyncHandler } from "../utils/asyncHandler";
 import { createError } from "../utils/errorHandler";
 
@@ -168,8 +169,20 @@ export class UserController {
     });
   });
 
-  // Admin CSV exports: purchases
-  exportPurchasesCsv = asyncHandler(async (_req: Request, res: Response) => {
+  // Admin CSV exports: purchases - S3 optimized
+  exportPurchasesCsv = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.userId!;
+    const s3Key = s3Service.generateUserReportKey(userId, 'purchases');
+    
+    // Check if document already exists in S3
+    const exists = await s3Service.documentExists(s3Key);
+    if (exists) {
+      // Redirect to S3 URL
+      const s3Url = await s3Service.getDocumentUrl(s3Key);
+      return res.redirect(s3Url);
+    }
+
+    // Generate CSV if not exists
     const repo = (await import("../database/data-source")).AppDataSource.getRepository(
       (await import("../database/entities/Purchase")).Purchase
     );
@@ -180,6 +193,16 @@ export class UserController {
     const fields = ["id","userId","projectId","quantity","totalCost","txHash","createdAt"];
     const parser = new Parser({ fields });
     const csv = parser.parse(items);
+
+    // Upload to S3
+    await s3Service.uploadDocument(s3Key, csv, 'text/csv', {
+      userId,
+      type: 'report',
+      format: 'csv',
+      reportType: 'purchases'
+    });
+
+    // Serve the CSV
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment; filename=purchases.csv");
     res.send(csv);

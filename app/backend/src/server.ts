@@ -1,4 +1,8 @@
 import "reflect-metadata";
+import { config } from "dotenv";
+
+// Load .env from platform root directory
+config({ path: "../../.env" });
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -8,6 +12,17 @@ import rateLimit from "express-rate-limit";
 import { AppDataSource } from "./database/data-source";
 import routes from "./routes/index";
 import { swaggerUi, swaggerSpec } from "./config/swagger";
+
+// Log environment variables for debugging
+console.log("=== Environment Variables Debug ===");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("AWS_REGION:", process.env.AWS_REGION || 'NOT_SET');
+console.log("AWS_S3_BUCKET_NAME:", process.env.AWS_S3_BUCKET_NAME || 'NOT_SET');
+const accessKey = process.env.AWS_ACCESS_KEY_ID || '';
+const secretKey = process.env.AWS_SECRET_ACCESS_KEY || '';
+console.log("AWS_ACCESS_KEY_ID (first 10 chars):", accessKey ? accessKey.substring(0, 10) + '...' : 'NOT_SET');
+console.log("AWS_SECRET_ACCESS_KEY (first 10 chars):", secretKey ? secretKey.substring(0, 10) + '...' : 'NOT_SET');
+console.log("=====================================");
 
 const app = express();
 
