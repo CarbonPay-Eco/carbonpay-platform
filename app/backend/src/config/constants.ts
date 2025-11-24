@@ -13,4 +13,7 @@ export const DB_HOST = EnvManager.getEnvOrThrow('DB_HOST');
 
 // Solana
 export const SOLANA_NETWORK = EnvManager.getEnvOrThrow('SOLANA_NETWORK');
-export const SOLANA_PROGRAM_ID = EnvManager.getEnv('SOLANA_PROGRAM_ID') || '11111111111111111111111111111111';
+export const SOLANA_PROGRAM_ID = EnvManager.getEnv('SOLANA_PROGRAM_ID') || 'bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg';
+export const SOLANA_RPC_URL = EnvManager.getEnv('SOLANA_RPC_URL') || 'http://127.0.0.1:8899';
+export const SOLANA_SERVER_PRIVATE_KEY = EnvManager.getEnvOrThrow('SOLANA_SERVER_PRIVATE_KEY');
+export const SOLANA_USDC_MINT = EnvManager.getEnv('SOLANA_USDC_MINT') || 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // Mainnet USDC

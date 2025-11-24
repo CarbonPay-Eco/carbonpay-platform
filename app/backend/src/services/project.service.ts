@@ -1,6 +1,7 @@
 import { Project } from "../types";
 import { TokenizedProject } from "../database/entities/TokenizedProject";
 import { SolanaService } from "./solana.service";
+import { SolanaOnchainService } from "./solana-onchain.service";
 import { Repository } from "typeorm";
 import { AppDataSource } from "../database/data-source";
 
@@ -9,10 +10,12 @@ const projects: Project[] = [];
 
 export class ProjectService {
   private solanaService: SolanaService;
+  private solanaOnchainService: SolanaOnchainService;
   private projectRepository: Repository<TokenizedProject>;
 
   constructor() {
     this.solanaService = new SolanaService();
+    this.solanaOnchainService = new SolanaOnchainService();
     this.projectRepository = AppDataSource.getRepository(TokenizedProject); // Initialize the repository
   }
 
@@ -20,18 +23,21 @@ export class ProjectService {
     data: Partial<TokenizedProject>,
     walletAddress: string
   ): Promise<TokenizedProject> {
-    // Interact with Solana to mint new token
-    const mintResult = await this.solanaService.mintCredit(walletAddress, {
-      project: data.projectName || "",
-      vintage: data.vintageYear?.toString() || "",
-      standard: data.standard || "",
+    // Initialize project on-chain using the server wallet
+    const onchainResult = await this.solanaOnchainService.initializeProject({
+      projectName: data.projectName || "",
+      projectSymbol: data.standard || "CRBN",
+      projectUri: data.ipfsHash || `https://carbonpay.com/metadata/${Date.now()}`,
       amount: data.totalIssued || 0,
-      metadata: { tags: data.tags || [] },
+      pricePerToken: Math.floor((data.pricePerTon || 0) * 1_000_000), // Convert to micro-USDC
+      carbonPayFee: 500, // 5% fee
     });
 
-    // Create a new project entity
+    console.log('✅ Project initialized on-chain:', onchainResult);
+
+    // Create a new project entity with on-chain data
     const newProject = this.projectRepository.create({
-      tokenId: mintResult,
+      tokenId: onchainResult.nftMint,
       projectName: data.projectName || "",
       location: data.location || "",
       description: data.description || "",
@@ -46,10 +52,16 @@ export class ProjectService {
       pricePerTon: data.pricePerTon || 0,
       ipfsHash: data.ipfsHash || "",
       documentationUrl: data.documentationUrl || "",
-      onChainMintTx: mintResult,
+      onChainMintTx: onchainResult.txHash,
       status: "available",
       projectImageUrl: data.projectImageUrl || "",
       tags: data.tags || [],
+      // Store on-chain references
+      onChainData: {
+        projectPda: onchainResult.projectPda,
+        nftMint: onchainResult.nftMint,
+        tokenMint: onchainResult.tokenMint,
+      } as any,
     });
 
     // Save the project to the database

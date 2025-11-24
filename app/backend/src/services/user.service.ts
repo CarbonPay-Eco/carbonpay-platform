@@ -6,8 +6,10 @@ import { TokenizedProject } from "../database/entities/TokenizedProject";
 import { UserWallet } from "../entities/UserWallet";
 import { Purchase } from "../database/entities/Purchase";
 import { SolanaService } from "./solana.service";
+import { SolanaOnchainService } from "./solana-onchain.service";
 import { AuditLogService } from "./audit-log.service";
 import { WalletService } from './wallet.service';
+import { SOLANA_USDC_MINT } from "../config/constants";
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -16,6 +18,7 @@ export class UserService {
   private userWalletRepository: Repository<UserWallet>;
   private purchaseRepository: Repository<Purchase>;
   private solanaService: SolanaService;
+  private solanaOnchainService: SolanaOnchainService;
   private auditLogService: AuditLogService;
   private walletService: WalletService;
 
@@ -26,6 +29,7 @@ export class UserService {
     this.userWalletRepository = AppDataSource.getRepository(UserWallet);
     this.purchaseRepository = AppDataSource.getRepository(Purchase);
     this.solanaService = new SolanaService();
+    this.solanaOnchainService = new SolanaOnchainService();
     this.auditLogService = new AuditLogService();
     this.walletService = new WalletService();
   }
@@ -141,32 +145,46 @@ export class UserService {
     // TODO: Check user balance and deduct
     // For now, simulate the purchase
 
-    // Execute onchain transaction (mint credits to user's wallet)
-    const txHash = await this.solanaService.mintCredit(userWallet.publicKey, {
-      project: project.projectName,
-      vintage: project.vintageYear.toString(),
-      standard: project.certificationBody,
+    // Get on-chain project data
+    const onChainData = project.onChainData as any;
+    if (!onChainData || !onChainData.projectPda || !onChainData.tokenMint) {
+      throw new Error("Project on-chain data not found. Project may not be initialized on-chain.");
+    }
+
+    // Get server public key (project owner in Web2.5 model)
+    const serverPublicKey = this.solanaOnchainService.getServerPublicKey();
+
+    // Execute on-chain purchase transaction (server signs on behalf of user)
+    const purchaseResult = await this.solanaOnchainService.purchaseCarbonCredits({
+      projectPda: onChainData.projectPda,
+      projectOwner: serverPublicKey, // Server is the project owner
+      projectTokenMint: onChainData.tokenMint,
+      buyerPublicKey: userWallet.publicKey,
       amount: quantity,
-      metadata: {
-        location: project.location,
-        description: project.description,
-        methodology: project.methodology,
-      },
+      usdcMint: SOLANA_USDC_MINT,
     });
+
+    console.log('✅ Purchase completed on-chain:', purchaseResult);
 
     // Update project availability
     project.available -= quantity;
     await this.projectRepository.save(project);
 
-    // Create purchase record
+    // Create purchase record with on-chain data
     const purchase = this.purchaseRepository.create({
       userId,
       projectId,
       quantity,
       pricePerCredit: project.pricePerTon, // Using pricePerTon
       totalCost,
-      txHash,
+      txHash: purchaseResult.txHash,
       status: "completed",
+      // Store on-chain purchase data
+      metadata: {
+        purchasePda: purchaseResult.purchasePda,
+        purchaseNftMint: purchaseResult.purchaseNftMint,
+        onChainTxHash: purchaseResult.txHash,
+      } as any,
     });
 
     const savedPurchase = await this.purchaseRepository.save(purchase);
@@ -177,13 +195,19 @@ export class UserService {
       "CREDITS_PURCHASE",
       "purchases",
       savedPurchase.id,
-      { projectId, quantity, totalCost, txHash }
+      {
+        projectId,
+        quantity,
+        totalCost,
+        txHash: purchaseResult.txHash,
+        purchasePda: purchaseResult.purchasePda,
+      }
     );
 
     return {
       id: savedPurchase.id,
       totalCost,
-      txHash,
+      txHash: purchaseResult.txHash,
       remainingBalance: 1000 - totalCost, // Placeholder
     };
   }

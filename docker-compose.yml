@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: carbonpay-postgres
+    environment:
+      POSTGRES_USER: carbonpay
+      POSTGRES_PASSWORD: carbonpay
+      POSTGRES_DB: carbonpay
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carbonpay"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - carbonpay-network
+
+  # Opcional: pgAdmin para visualizar o banco de dados
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: carbonpay-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@carbonpay.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - carbonpay-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  carbonpay-network:
+    driver: bridge
