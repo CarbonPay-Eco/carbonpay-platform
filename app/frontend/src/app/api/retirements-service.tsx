@@ -2,32 +2,106 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
-/**
- * Fetches all retirements for the given wallet address.
- * @param walletAddress - The wallet address to fetch retirements for.
- * @returns The total retirements or an error response.
- */
-export const getRetirements = async (walletAddress: string): Promise<{ success: boolean; totalOffset?: number; message?: string }> => {
-  try {
-    // Send the GET request to the backend with the wallet address in the headers
-    const response = await axios.get(`${API_BASE_URL}/retirements`, {
-      headers: {
-        "x-wallet-address": walletAddress,
-      },
-    });
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
 
-    // Sum the quantities from the response data
-    const totalOffset = response.data.data.reduce((sum: number, retirement: any) => sum + retirement.quantity, 0);
+/**
+ * Fetches all retirements for the authenticated user.
+ * @returns The list of retirements or an error response.
+ */
+export const getRetirements = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  totalOffset?: number;
+  message?: string;
+}> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/user/retirements`,
+      getAuthHeaders()
+    );
+
+    const retirements = response.data.data || response.data || [];
+    const totalOffset = retirements.reduce(
+      (sum: number, retirement: any) => sum + (retirement.quantity || 0),
+      0
+    );
 
     return {
       success: true,
+      data: retirements,
       totalOffset,
     };
   } catch (error: any) {
-    // Return a structured error response
     return {
       success: false,
       message: error.response?.data?.message || "Failed to fetch retirements.",
+    };
+  }
+};
+
+/**
+ * Gets a retirement by ID.
+ * @param retirementId The retirement ID
+ * @returns The retirement or an error response
+ */
+export const getRetirementById = async (
+  retirementId: string
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/user/retirements/${retirementId}`,
+      getAuthHeaders()
+    );
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch retirement.",
+    };
+  }
+};
+
+/**
+ * Retires carbon credits to offset emissions.
+ * @param retirementData The retirement data
+ * @returns The retirement result or an error response
+ */
+export const retireEmissions = async (retirementData: {
+  projectId: string;
+  quantity: number;
+  beneficiary?: string;
+  retirementMessage?: string;
+  reportingPeriodStart?: string;
+  reportingPeriodEnd?: string;
+}): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/user/retire-emissions`,
+      retirementData,
+      getAuthHeaders()
+    );
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        error.response?.data?.message || "Failed to retire emissions.",
     };
   }
 };

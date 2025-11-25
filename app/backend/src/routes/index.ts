@@ -581,7 +581,7 @@ router.put(
  *               - certificationBody
  *               - vintageYear
  *               - totalIssued
- *               - pricePerCredit
+ *               - pricePerTon
  *             properties:
  *               projectName:
  *                 type: string
@@ -595,7 +595,7 @@ router.put(
  *                 type: number
  *               totalIssued:
  *                 type: number
- *               pricePerCredit:
+ *               pricePerTon:
  *                 type: number
  *               description:
  *                 type: string

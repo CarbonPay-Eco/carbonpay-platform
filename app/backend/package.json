@@ -11,7 +11,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "db:migrate": "ts-node src/database/migration.ts",
-    "db:sync": "ts-node -e \"import { AppDataSource } from './src/database/data-source'; AppDataSource.initialize().then(() => console.log('Database synchronized'))\""
+    "db:sync": "ts-node -e \"import { AppDataSource } from './src/database/data-source'; AppDataSource.initialize().then(() => console.log('Database synchronized'))\"",
+    "set-admin": "ts-node scripts/set-admin.ts",
+    "hash-password": "ts-node scripts/hash-password.ts"
   },
   "keywords": [
     "carbon",

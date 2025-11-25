@@ -170,8 +170,7 @@ export default function DashboardPage() {
         return;
       }
 
-      const walletId = publicKey.toBase58();  
-      const result = await getProjects(walletId);
+      const result = await getProjects();
 
       if (result.success) {
         setProjects(result.data || []);

@@ -25,7 +25,27 @@ export const validate = (rules: ValidationRules) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const errors: string[] = [];
 
-    // Check each field according to the rules
+    // First pass: Convert string numbers to numbers
+    Object.entries(rules).forEach(([field, rule]) => {
+      if (
+        rule.type === "number" &&
+        req.body[field] !== undefined &&
+        req.body[field] !== null &&
+        req.body[field] !== ""
+      ) {
+        const value = req.body[field];
+        // Convert string numbers to numbers
+        if (
+          typeof value === "string" &&
+          !isNaN(Number(value)) &&
+          value.trim() !== ""
+        ) {
+          req.body[field] = Number(value);
+        }
+      }
+    });
+
+    // Second pass: Validate all fields
     Object.entries(rules).forEach(([field, rule]) => {
       const value = req.body[field];
 
@@ -36,6 +56,7 @@ export const validate = (rules: ValidationRules) => {
       } else {
         isRequired = !!rule.required;
       }
+
       if (
         isRequired &&
         (value === undefined || value === null || value === "")
@@ -54,6 +75,7 @@ export const validate = (rules: ValidationRules) => {
         errors.push(
           rule.message || `The field '${field}' must be of type ${rule.type}`
         );
+        return; // Skip further validation if type is wrong
       }
 
       // Check minimum length
@@ -318,14 +340,20 @@ export const projectValidations = {
     totalIssued: {
       required: true,
       type: "number",
-      custom: (value) => value > 0,
+      custom: (value) => {
+        const num = typeof value === "string" ? Number(value) : value;
+        return !isNaN(num) && num > 0;
+      },
       message: "Total issued must be a positive number",
     },
-    pricePerCredit: {
+    pricePerTon: {
       required: true,
       type: "number",
-      custom: (value) => value > 0,
-      message: "Price per credit must be a positive number",
+      custom: (value) => {
+        const num = typeof value === "string" ? Number(value) : value;
+        return !isNaN(num) && num > 0;
+      },
+      message: "Price per ton must be a positive number",
     },
   }),
 };

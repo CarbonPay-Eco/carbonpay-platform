@@ -121,12 +121,70 @@ export const getUserProfile = async () => {
     );
     return {
       success: true,
-      data: response.data,
+      data: response.data.data || response.data,
     };
   } catch (error: any) {
     return {
       success: false,
       message: error.response?.data?.message || "Failed to get user profile.",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Adds balance to user account.
+ * @param amount - The amount to add
+ * @param paymentMethod - Optional payment method
+ * @returns Success or error response
+ */
+export const addBalance = async (data: {
+  amount: number;
+  paymentMethod?: string;
+}) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/user/add-balance`,
+      data,
+      getAuthHeaders()
+    );
+    return {
+      success: true,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to add balance.",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Purchases carbon credits with account balance.
+ * @param projectId - The project ID
+ * @param quantity - The quantity of credits to purchase
+ * @returns Success or error response
+ */
+export const purchaseCredits = async (data: {
+  projectId: string;
+  quantity: number;
+}) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/user/purchase-credits`,
+      data,
+      getAuthHeaders()
+    );
+    return {
+      success: true,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to purchase credits.",
       error: error.response?.data || error.message,
     };
   }

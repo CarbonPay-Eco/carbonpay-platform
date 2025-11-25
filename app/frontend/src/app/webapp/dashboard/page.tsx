@@ -171,15 +171,7 @@ export default function DashboardPage() {
     localStorage.setItem("walletConnected", "true");
 
     const fetchProjects = async () => {
-      // if (!publicKey) {
-      //   console.error("Wallet is not connected.");
-      //   return;
-      // }
-
-      // const walletId = publicKey.toBase58();
-      const walletId = "mock-wallet-id"; // Temporary mock
-
-      const result = await getProjects(walletId);
+      const result = await getProjects();
 
       if (result.success) {
         console.log("Projects fetched successfully:", result.data);
@@ -190,14 +182,7 @@ export default function DashboardPage() {
     };
 
     const fetchRetirements = async () => {
-      // if (!publicKey) {
-      //   console.error("Wallet is not connected.");
-      //   return;
-      // }
-
-      // const walletAddress = publicKey.toBase58();
-      const walletAddress = "mock-wallet-address"; // Temporary mock
-      const result = await getRetirements(walletAddress);
+      const result = await getRetirements();
 
       if (result.success) {
         setTotalOffset(result.totalOffset || 0);

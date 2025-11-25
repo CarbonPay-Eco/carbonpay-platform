@@ -23,6 +23,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { ArrowRight, CreditCard, Leaf } from "lucide-react";
 import type { Project } from "../../../../types";
+import { purchaseCredits } from "@/app/api/user-service";
 
 interface PurchaseCreditsModalProps {
   isOpen: boolean;
@@ -38,6 +39,8 @@ export function PurchaseCreditsModal({
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const [step, setStep] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const totalCost = selectedProject
@@ -52,18 +55,42 @@ export function PurchaseCreditsModal({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 1) {
       setStep(2);
     } else {
-      // Here you would handle the actual purchase
-      // For now, we'll just close the modal
-      onClose();
-      // Reset the form
-      setStep(1);
-      setSelectedProjectId("");
-      setQuantity(1);
+      // Handle the actual purchase
+      if (!selectedProjectId || quantity <= 0) {
+        setError("Please select a project and quantity");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await purchaseCredits({
+          projectId: selectedProjectId,
+          quantity,
+        });
+
+        if (!result.success) {
+          throw new Error(result.message || "Failed to purchase credits");
+        }
+
+        // Success - close modal and reset
+        onClose();
+        setStep(1);
+        setSelectedProjectId("");
+        setQuantity(1);
+        // Optionally refresh the page or show success message
+        window.location.reload();
+      } catch (err: any) {
+        setError(err.message || "Failed to purchase credits");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -73,6 +100,8 @@ export function PurchaseCreditsModal({
     setStep(1);
     setSelectedProjectId("");
     setQuantity(1);
+    setError(null);
+    setLoading(false);
   };
 
   return (
@@ -89,6 +118,12 @@ export function PurchaseCreditsModal({
                 : "Review your purchase details and confirm."}
             </DialogDescription>
           </DialogHeader>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
 
           {step === 1 ? (
             <div className="space-y-6 py-4">
@@ -214,16 +249,16 @@ export function PurchaseCreditsModal({
                 </div>
                 <p className="text-sm text-gray-400 mb-2">
                   You will be charged {formatCurrency(totalCost)} from your
-                  connected wallet.
+                  account balance.
                 </p>
                 <div className="bg-black/50 border border-white/10 rounded-md p-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Wallet</span>
-                    <span className="font-mono">0x71C...3E4F</span>
+                    <span className="text-gray-400">Payment Method</span>
+                    <span>Account Balance</span>
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-gray-400">Balance</span>
-                    <span>{formatCurrency(5000)}</span>
+                    <span className="text-gray-400">Amount</span>
+                    <span>{formatCurrency(totalCost)}</span>
                   </div>
                 </div>
               </div>
@@ -242,9 +277,13 @@ export function PurchaseCreditsModal({
             <Button
               type="submit"
               className="bg-green-600 hover:bg-green-500"
-              disabled={step === 1 && (!selectedProjectId || quantity <= 0)}
+              disabled={
+                loading || (step === 1 && (!selectedProjectId || quantity <= 0))
+              }
             >
-              {step === 1 ? (
+              {loading ? (
+                "Processing..."
+              ) : step === 1 ? (
                 <>
                   Continue
                   <ArrowRight className="ml-2 h-4 w-4" />

@@ -36,7 +36,6 @@ import {
   onboardingSteps,
 } from "@/lib/onboarding-config";
 import type { OnboardingFormData } from "../../../../types/onboarding";
-import { createOrganization } from "../../api/organization-service";
 import {
   registerUserDraft,
   completeUserRegistration,

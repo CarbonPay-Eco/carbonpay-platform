@@ -2,32 +2,33 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
 /**
- * Fetches all projects from the backend.
- * @param walletAddress - The wallet address to associate with the organization.
- * @returns The list of projects or an error response.
+ * Fetches all available projects from the backend (public endpoint).
+ * @returns The list of available projects or an error response.
  */
-export const getProjects = async (
-  walletAddress: string
-): Promise<{
+export const getProjects = async (): Promise<{
   success: boolean;
   data?: any;
   message?: string;
 }> => {
   try {
-    // Send the GET request to the backend
-    const response = await axios.get(`${API_BASE_URL}/admin/projects`, {
-      headers: {
-        "x-wallet-address": walletAddress,
-      },
-    });
+    const response = await axios.get(`${API_BASE_URL}/projects`);
 
     return {
       success: true,
-      data: response.data.data,
+      data: response.data.data || response.data,
     };
   } catch (error: any) {
-    // Return a structured error response
     return {
       success: false,
       message: error.response?.data?.message || "Failed to fetch projects.",
@@ -36,25 +37,76 @@ export const getProjects = async (
 };
 
 /**
- * Creates a new project.
- * @param projectData The project data to create
- * @param walletAddress The wallet address of the user
- * @returns The created project or an error response
+ * Fetches all projects from the backend (admin endpoint).
+ * @returns The list of all projects or an error response.
  */
-export const createProject = async (
-  projectData: any,
-  walletAddress: string
-): Promise<{ success: boolean; data?: any; message?: string }> => {
+export const getAllProjects = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/projects`, projectData, {
-      headers: {
-        "x-wallet-address": walletAddress,
-      },
-    });
+    const response = await axios.get(
+      `${API_BASE_URL}/admin/projects`,
+      getAuthHeaders()
+    );
 
     return {
       success: true,
-      data: response.data,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch projects.",
+    };
+  }
+};
+
+/**
+ * Gets a project by ID.
+ * @param projectId The project ID
+ * @returns The project or an error response
+ */
+export const getProjectById = async (
+  projectId: string
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/admin/projects/${projectId}`,
+      getAuthHeaders()
+    );
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch project.",
+    };
+  }
+};
+
+/**
+ * Creates a new project (admin only).
+ * @param projectData The project data to create
+ * @returns The created project or an error response
+ */
+export const createProject = async (
+  projectData: any
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/admin/projects`,
+      projectData,
+      getAuthHeaders()
+    );
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
     };
   } catch (error: any) {
     return {

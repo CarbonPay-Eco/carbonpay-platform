@@ -22,7 +22,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Leaf } from "lucide-react";
 import { createProject } from "@/app/api/project-service";
-import { useWallet } from "@solana/wallet-adapter-react";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -33,7 +32,6 @@ export function CreateProjectModal({
   isOpen,
   onClose,
 }: CreateProjectModalProps) {
-  const { publicKey } = useWallet();
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
     projectName: "",
@@ -65,24 +63,17 @@ export function CreateProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!publicKey) {
-      console.error("Wallet not connected");
-      return;
-    }
 
     if (step === 1) {
       setStep(2);
     } else {
       try {
-        const result = await createProject(
-          {
-            ...formData,
-            totalIssued: parseInt(formData.totalIssued),
-            pricePerTon: parseFloat(formData.pricePerTon),
-            vintageYear: parseInt(formData.vintageYear.toString()),
-          },
-          publicKey.toBase58()
-        );
+        const result = await createProject({
+          ...formData,
+          totalIssued: parseInt(formData.totalIssued),
+          pricePerTon: parseFloat(formData.pricePerTon),
+          vintageYear: parseInt(formData.vintageYear.toString()),
+        });
 
         if (!result.success) {
           throw new Error(result.message || "Failed to create project");
