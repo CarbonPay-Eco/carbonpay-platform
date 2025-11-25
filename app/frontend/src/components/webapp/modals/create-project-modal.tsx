@@ -129,9 +129,9 @@ export function CreateProjectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-black border border-white/10">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] bg-black border border-white/10 max-h-[90vh] flex flex-col">
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-xl font-bold">
               {step === 1 ? "Create New Project" : "Confirm Project Details"}
             </DialogTitle>
@@ -143,7 +143,7 @@ export function CreateProjectModal({
           </DialogHeader>
 
           {step === 1 ? (
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
               <div className="space-y-2">
                 <label htmlFor="projectName" className="text-sm font-medium">
                   Project Name
@@ -357,7 +357,7 @@ export function CreateProjectModal({
               </div>
             </div>
           ) : (
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
               <div className="rounded-lg border border-white/10 p-4 bg-black/30">
                 <h3 className="font-medium mb-3">Project Summary</h3>
                 <div className="space-y-2 text-sm">
@@ -416,7 +416,7 @@ export function CreateProjectModal({
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 border-t border-white/10 pt-4 mt-4">
             <Button
               type="button"
               variant="outline"
