@@ -1,16 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import { api } from "./client";
 
 /**
  * Fetches all available projects from the backend (public endpoint).
@@ -22,7 +10,7 @@ export const getProjects = async (): Promise<{
   message?: string;
 }> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/projects`);
+    const response = await api.get("/projects");
 
     return {
       success: true,
@@ -46,10 +34,7 @@ export const getAllProjects = async (): Promise<{
   message?: string;
 }> => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/admin/projects`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/admin/projects");
 
     return {
       success: true,
@@ -72,10 +57,7 @@ export const getProjectById = async (
   projectId: string
 ): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/admin/projects/${projectId}`,
-      getAuthHeaders()
-    );
+    const response = await api.get(`/admin/projects/${projectId}`);
 
     return {
       success: true,
@@ -98,11 +80,7 @@ export const createProject = async (
   projectData: any
 ): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/admin/projects`,
-      projectData,
-      getAuthHeaders()
-    );
+    const response = await api.post("/admin/projects", projectData);
 
     return {
       success: true,

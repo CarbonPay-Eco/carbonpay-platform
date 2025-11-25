@@ -1,16 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import { api } from "./client";
 
 export const registerUserDraft = async (data: {
   email: string;
@@ -18,7 +6,7 @@ export const registerUserDraft = async (data: {
   role?: string;
 }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/user/register`, {
+    const response = await api.post("/user/register", {
       ...data,
       draft: true,
     });
@@ -44,11 +32,7 @@ export const completeUserRegistration = async (
     const config = draftToken
       ? { headers: { Authorization: `Bearer ${draftToken}` } }
       : undefined;
-    const response = await axios.patch(
-      `${API_BASE_URL}/user/complete-registration`,
-      data,
-      config
-    );
+    const response = await api.patch("/user/complete-registration", data, config);
     return {
       success: true,
       data: response.data,
@@ -83,7 +67,7 @@ export const registerUser = async (data: {
   role?: string;
 }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/user/register`, data);
+    const response = await api.post("/user/register", data);
     return {
       success: true,
       data: response.data,
@@ -99,7 +83,7 @@ export const registerUser = async (data: {
 
 export const loginUser = async (data: { email: string; password: string }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/user/login`, data);
+    const response = await api.post("/user/login", data);
     return {
       success: true,
       data: response.data,
@@ -115,10 +99,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
 
 export const getUserProfile = async () => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/user/profile`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/user/profile");
     return {
       success: true,
       data: response.data.data || response.data,
@@ -143,11 +124,7 @@ export const addBalance = async (data: {
   paymentMethod?: string;
 }) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/add-balance`,
-      data,
-      getAuthHeaders()
-    );
+    const response = await api.post("/user/add-balance", data);
     return {
       success: true,
       data: response.data.data || response.data,
@@ -172,11 +149,7 @@ export const purchaseCredits = async (data: {
   quantity: number;
 }) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/purchase-credits`,
-      data,
-      getAuthHeaders()
-    );
+    const response = await api.post("/user/purchase-credits", data);
     return {
       success: true,
       data: response.data.data || response.data,

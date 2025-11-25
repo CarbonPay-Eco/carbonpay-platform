@@ -21,6 +21,7 @@ import Logo from "@/components/globalAssets/logo";
 import { getOrganization } from "../../../app/api/organization-service";
 import { useAuth } from "@/app/context/AuthContext";
 import Header from "./header";
+import { Toaster } from "react-hot-toast";
 
 const navigation = [
   { name: "Dashboard", href: "/webapp/dashboard", icon: Home },
@@ -184,6 +185,7 @@ export default function WebappShell({ children }: WebappShellProps) {
 
         {/* Page content */}
         <div className="flex-1 overflow-auto">{children}</div>
+        <Toaster position="bottom-right" />
       </div>
     </div>
   );

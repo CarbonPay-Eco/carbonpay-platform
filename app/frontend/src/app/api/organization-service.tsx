@@ -1,17 +1,5 @@
-import axios from "axios";
 import type { OnboardingFormData } from "../../../types/onboarding";
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import { api } from "./client";
 
 /**
  * Creates a new organization (admin only).
@@ -57,11 +45,7 @@ export const createOrganization = async (
     };
 
     // Send the POST request to the backend with JWT token
-    const response = await axios.post(
-      `${API_BASE_URL}/admin/organizations`,
-      payload,
-      getAuthHeaders()
-    );
+    const response = await api.post("/admin/organizations", payload);
 
     return {
       success: true,
@@ -88,10 +72,7 @@ export const getAllOrganizations = async (): Promise<{
   message?: string;
 }> => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/admin/organizations`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/admin/organizations");
 
     return {
       success: true,
@@ -118,10 +99,7 @@ export const getOrganization = async (): Promise<{
 }> => {
   try {
     // Get user profile which includes organization info
-    const response = await axios.get(
-      `${API_BASE_URL}/user/profile`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/user/profile");
 
     return {
       success: true,

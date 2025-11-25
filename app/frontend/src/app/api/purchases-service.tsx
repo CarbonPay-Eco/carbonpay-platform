@@ -1,16 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import { api } from "./client";
 
 /**
  * Fetches all purchases (carbon credits) for the authenticated user.
@@ -22,18 +10,7 @@ export const getUserPurchases = async (): Promise<{
   message?: string;
 }> => {
   try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required. Please login.",
-      };
-    }
-
-    const response = await axios.get(
-      `${API_BASE_URL}/user/purchases`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/user/purchases");
 
     return {
       success: true,
@@ -41,14 +18,14 @@ export const getUserPurchases = async (): Promise<{
     };
   } catch (error: any) {
     console.error("Error fetching purchases:", error);
-    
+
     if (error.response?.status === 401) {
       return {
         success: false,
         message: "Authentication required. Please login again.",
       };
     }
-    
+
     if (error.response?.status === 404) {
       return {
         success: false,
@@ -59,7 +36,8 @@ export const getUserPurchases = async (): Promise<{
     if (!error.response) {
       return {
         success: false,
-        message: "Cannot connect to server. Please check if the backend is running.",
+        message:
+          "Cannot connect to server. Please check if the backend is running.",
       };
     }
 
@@ -72,4 +50,3 @@ export const getUserPurchases = async (): Promise<{
     };
   }
 };
-

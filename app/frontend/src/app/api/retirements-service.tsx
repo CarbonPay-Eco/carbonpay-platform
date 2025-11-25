@@ -1,16 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import { api } from "./client";
 
 /**
  * Fetches all retirements for the authenticated user.
@@ -23,10 +11,7 @@ export const getRetirements = async (): Promise<{
   message?: string;
 }> => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/user/retirements`,
-      getAuthHeaders()
-    );
+    const response = await api.get("/user/retirements");
 
     const retirements = response.data.data || response.data || [];
     const totalOffset = retirements.reduce(
@@ -56,10 +41,7 @@ export const getRetirementById = async (
   retirementId: string
 ): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}/user/retirements/${retirementId}`,
-      getAuthHeaders()
-    );
+    const response = await api.get(`/user/retirements/${retirementId}`);
 
     return {
       success: true,
@@ -87,11 +69,7 @@ export const retireEmissions = async (retirementData: {
   reportingPeriodEnd?: string;
 }): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/retire-emissions`,
-      retirementData,
-      getAuthHeaders()
-    );
+    const response = await api.post("/user/retire-emissions", retirementData);
 
     return {
       success: true,
