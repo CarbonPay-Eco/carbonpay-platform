@@ -311,6 +311,21 @@ router.get("/user/profile", authMiddleware, userController.getProfile);
 
 /**
  * @openapi
+ * /user/purchases:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user's carbon credit purchases
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user purchases
+ */
+router.get("/user/purchases", authMiddleware, userController.getPurchases);
+
+/**
+ * @openapi
  * /user/complete-registration:
  *   patch:
  *     tags:

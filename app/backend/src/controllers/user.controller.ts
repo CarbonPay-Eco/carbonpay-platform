@@ -212,4 +212,17 @@ export class UserController {
       data: profile,
     });
   });
+
+  // Get user purchases (carbon credits)
+  getPurchases = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.userId!;
+
+    const purchases = await userService.getUserPurchases(userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Purchases retrieved successfully",
+      data: purchases,
+    });
+  });
 }

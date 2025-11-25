@@ -206,4 +206,15 @@ export class UserService {
       organization
     };
   }
+
+  // Get user purchases with project details
+  async getUserPurchases(userId: string): Promise<Purchase[]> {
+    const purchases = await this.purchaseRepository.find({
+      where: { userId },
+      relations: ["project"],
+      order: { createdAt: "DESC" },
+    });
+
+    return purchases;
+  }
 }
