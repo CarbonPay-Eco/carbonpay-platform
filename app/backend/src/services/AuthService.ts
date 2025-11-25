@@ -3,6 +3,7 @@ import * as jwt from "jsonwebtoken";
 import { AppDataSource } from "../database/data-source";
 import { User } from "../entities/User";
 import { WalletService } from "./WalletService";
+import { createError } from "../utils/errorHandler";
 
 export class AuthService {
   private static readonly JWT_SECRET =
@@ -88,7 +89,9 @@ export class AuthService {
   ): Promise<{ user: User; token: string }> {
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOneBy({ email });
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw createError("User not found", 404);
+    }
 
     // Update user data
     Object.assign(user, fields);
