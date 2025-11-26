@@ -16,6 +16,7 @@ import {
   Users,
   Leaf,
   Edit2,
+  Wallet,
 } from "lucide-react";
 import WebappShell from "@/components/webapp/layout/webapp-shell";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -26,6 +27,7 @@ interface UserProfile {
   email: string;
   role: string;
   createdAt: string;
+  walletBalance?: number;
   organization?: {
     id: string;
     name: string;
@@ -54,7 +56,7 @@ export default function ProfilePage() {
       try {
         const result = await getUserProfile();
         if (result.success) {
-          setProfile(result.data.data);
+          setProfile(result.data);
         } else {
           setError(result.message || "Failed to load profile");
         }
@@ -159,6 +161,18 @@ export default function ProfilePage() {
                       <p>{formatDate(profile.createdAt)}</p>
                     </div>
                   </div>
+
+                  {typeof profile.walletBalance === "number" && (
+                    <div className="flex items-center space-x-3">
+                      <Wallet className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-400">
+                          Account Balance
+                        </p>
+                        <p>${profile.walletBalance.toFixed(2)} USD</p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

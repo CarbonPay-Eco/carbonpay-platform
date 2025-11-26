@@ -21,7 +21,7 @@ import Logo from "@/components/globalAssets/logo";
 import { getOrganization } from "../../../app/api/organization-service";
 import { useAuth } from "@/app/context/AuthContext";
 import Header from "./header";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 
 const navigation = [
   { name: "Dashboard", href: "/webapp/dashboard", icon: Home },

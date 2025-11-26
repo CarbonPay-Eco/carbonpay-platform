@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";

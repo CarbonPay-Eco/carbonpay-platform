@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Leaf } from "lucide-react";
 import { createProject } from "@/app/api/project-service";
+import { toast } from "sonner";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -37,7 +38,8 @@ export function CreateProjectModal({
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
     projectName: "Amazon Rainforest Conservation Project",
-    description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+    description:
+      "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
     location: "Pará, Brazil",
     certificationBody: "Verra VCS",
     projectRefId: "VCS-2024-001",
@@ -48,7 +50,8 @@ export function CreateProjectModal({
     totalIssued: "50000",
     pricePerTon: "25.50",
     documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
-    projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    projectImageUrl:
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
     tags: [] as string[],
   });
 
@@ -81,6 +84,24 @@ export function CreateProjectModal({
           throw new Error(result.message || "Failed to create project");
         }
 
+        // Determine on-chain vs offline status from response data
+        const project = result.data;
+        const isOnChain =
+          project?.onChainMintTx && project.onChainMintTx !== "OFFLINE";
+
+        if (isOnChain) {
+          const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
+          const baseUrl = `https://solscan.io/tx/${project.onChainMintTx}`;
+          const explorerUrl =
+            network === "mainnet" ? baseUrl : `${baseUrl}?cluster=${network}`;
+
+          toast.success(
+            `Project created on-chain successfully. View transaction on Solscan: ${explorerUrl}`
+          );
+        } else {
+          toast.success("Project created offline (no on-chain transaction).");
+        }
+
         // Notify parent so it can refresh the project list without full page reload
         if (onCreated && result.data) {
           onCreated(result.data);
@@ -91,7 +112,8 @@ export function CreateProjectModal({
         setStep(1);
         setFormData({
           projectName: "Amazon Rainforest Conservation Project",
-          description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+          description:
+            "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
           location: "Pará, Brazil",
           certificationBody: "Verra VCS",
           projectRefId: "VCS-2024-001",
@@ -102,12 +124,14 @@ export function CreateProjectModal({
           totalIssued: "50000",
           pricePerTon: "25.50",
           documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
-          projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+          projectImageUrl:
+            "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
           tags: [],
         });
       } catch (error) {
         console.error("Error creating project:", error);
-        // You might want to show an error message to the user here
+        const err = error as Error;
+        toast.error(err.message || "Failed to create project");
       }
     }
   };
@@ -118,7 +142,8 @@ export function CreateProjectModal({
     setStep(1);
     setFormData({
       projectName: "Amazon Rainforest Conservation Project",
-      description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+      description:
+        "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
       location: "Pará, Brazil",
       certificationBody: "Verra VCS",
       projectRefId: "VCS-2024-001",
@@ -129,7 +154,8 @@ export function CreateProjectModal({
       totalIssued: "50000",
       pricePerTon: "25.50",
       documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
-      projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+      projectImageUrl:
+        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
       tags: [],
     });
   };

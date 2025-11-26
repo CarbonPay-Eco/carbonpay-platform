@@ -18,6 +18,7 @@ import {
 import { getProjects } from "@/app/api/project-service";
 import { getRetirements } from "@/app/api/retirements-service";
 import { getUserPurchases } from "@/app/api/purchases-service";
+import { getUserProfile } from "@/app/api/user-service";
 // import { useWallet } from "@solana/wallet-adapter-react";
 import { CreateProjectModal } from "@/components/webapp/modals/create-project-modal";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -160,6 +161,7 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [totalOffset, setTotalOffset] = useState<number>(0);
   const [creditsAvailable, setCreditsAvailable] = useState<number>(0);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
@@ -178,12 +180,17 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [projectsResult, retirementsResult, purchasesResult] =
-          await Promise.all([
-            getProjects(),
-            getRetirements(),
-            getUserPurchases(),
-          ]);
+        const [
+          projectsResult,
+          retirementsResult,
+          purchasesResult,
+          profileResult,
+        ] = await Promise.all([
+          getProjects(),
+          getRetirements(),
+          getUserPurchases(),
+          getUserProfile(),
+        ]);
 
         if (projectsResult.success) {
           const projectsData = projectsResult.data || [];
@@ -202,6 +209,12 @@ export default function DashboardPage() {
           setTotalOffset(retirementsResult.totalOffset || 0);
         } else {
           setError(retirementsResult.message || "Failed to fetch retirements.");
+        }
+
+        if (profileResult.success) {
+          const profile = profileResult.data;
+          const balance = Number(profile.walletBalance || 0);
+          setWalletBalance(balance);
         }
 
         // Calculate available credits
@@ -270,15 +283,15 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold">Key Metrics</h2>
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <KeyMetricCard
-                  title="Total already offsetted"
-                  value={`${totalOffset} T`}
+                  title="Total offset"
+                  value={`${totalOffset.toFixed(2)} T`}
                   icon={<Leaf className="h-full w-full" />}
                   className="flex flex-col items-center justify-center text-center"
                 />
 
                 <KeyMetricCard
                   icon={<Wallet className="h-full w-full" />}
-                  title="Credits Available"
+                  title="Credits available"
                   value={`${loading ? "..." : creditsAvailable.toFixed(2)} T`}
                   className="flex flex-col items-center justify-center text-center"
                   action={
@@ -288,6 +301,26 @@ export default function DashboardPage() {
                       onClick={() => router.push("/webapp/assets")}
                     >
                       Manage your credits
+                    </Button>
+                  }
+                />
+
+                <KeyMetricCard
+                  icon={<Wallet className="h-full w-full" />}
+                  title="Account balance"
+                  value={
+                    loading
+                      ? "..."
+                      : `$${walletBalance.toFixed(2)} USD`
+                  }
+                  className="flex flex-col items-center justify-center text-center"
+                  action={
+                    <Button
+                      variant="outline"
+                      className="w-full border-white/10 hover:bg-white/5"
+                      onClick={() => router.push("/webapp/assets")}
+                    >
+                      Add balance
                     </Button>
                   }
                 />
