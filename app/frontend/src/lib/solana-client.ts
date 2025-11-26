@@ -3,14 +3,27 @@ import {
   PublicKey,
   Transaction,
   sendAndConfirmTransaction,
+  Keypair,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
-import { Program, AnchorProvider, web3, BN } from "@coral-xyz/anchor";
+import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createMint,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
+  getMint,
 } from "@solana/spl-token";
 import { CarbonPay } from "../../../../target/types/carbon_pay";
 import idl from "../../../../target/idl/carbon_pay.json";
+
+// Metadata Program ID from Metaplex
+const METADATA_PROGRAM_ID = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
 
 export class SolanaClient {
   private connection: Connection;
@@ -44,7 +57,7 @@ export class SolanaClient {
     owner: PublicKey,
     allowOwnerOffCurve = false
   ): Promise<PublicKey> {
-    return web3.AssociatedTokenProgram.getAssociatedTokenAddress(
+    return getAssociatedTokenAddress(
       mint,
       owner,
       allowOwnerOffCurve,
@@ -66,7 +79,7 @@ export class SolanaClient {
         .accounts({
           carbonCredits: carbonCreditsPDA,
           payer: this.provider.wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
@@ -130,20 +143,20 @@ export class SolanaClient {
       const [metadataPDA] = await this.findPDA(
         [
           Buffer.from("metadata"),
-          web3.MetadataProgram.programId.toBuffer(),
+          METADATA_PROGRAM_ID.toBuffer(),
           nftMint.toBuffer(),
         ],
-        web3.MetadataProgram.programId
+        METADATA_PROGRAM_ID
       );
 
       const [masterEditionPDA] = await this.findPDA(
         [
           Buffer.from("metadata"),
-          web3.MetadataProgram.programId.toBuffer(),
+          METADATA_PROGRAM_ID.toBuffer(),
           nftMint.toBuffer(),
           Buffer.from("edition"),
         ],
-        web3.MetadataProgram.programId
+        METADATA_PROGRAM_ID
       );
 
       const tx = await this.program.methods
@@ -166,9 +179,9 @@ export class SolanaClient {
           metadata: metadataPDA,
           masterEdition: masterEditionPDA,
           tokenProgram: TOKEN_PROGRAM_ID,
-          tokenMetadataProgram: web3.MetadataProgram.programId,
-          systemProgram: web3.SystemProgram.programId,
-          rent: web3.SYSVAR_RENT_PUBKEY,
+          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         })
         .rpc();
@@ -205,7 +218,7 @@ export class SolanaClient {
           project: projectPDA,
           offsetRequest: offsetRequestPDA,
           requester: this.provider.wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
@@ -225,33 +238,150 @@ export class SolanaClient {
   }) {
     try {
       const { amount, projectPDA, tokenMint } = params;
+      const buyer = this.provider.wallet.publicKey;
 
+      // 1. Buscar dados do projeto para obter o project owner
+      const project = await this.program.account.project.fetch(projectPDA);
+      const projectOwner = project.owner;
+
+      // 2. Buscar dados do carbon credits para obter USDC mint e vault
       const [carbonCreditsPDA] = await this.findPDA(
         [Buffer.from("carbon_credits")],
         this.program.programId
       );
-
-      const buyerTokenAccount = await this.getAssociatedTokenAddress(
-        tokenMint,
-        this.provider.wallet.publicKey
+      const carbonCredits = await this.program.account.carbonCredits.fetch(
+        carbonCreditsPDA
       );
-      const vault = await this.getAssociatedTokenAddress(
+      const usdcMint = carbonCredits.usdcMint;
+      const platformUsdcVault = carbonCredits.usdcVault;
+
+      // 3. Criar purchase NFT mint
+      const purchaseNftMintKeypair = Keypair.generate();
+      const purchaseNftMint = await createMint(
+        this.connection,
+        this.provider.wallet as any,
+        buyer, // mint authority
+        buyer, // freeze authority
+        0, // decimals (NFT)
+        purchaseNftMintKeypair,
+        undefined,
+        TOKEN_PROGRAM_ID
+      );
+
+      // 4. Calcular PDAs e ATAs
+      const buyerTokenAccount = await getAssociatedTokenAddress(
+        tokenMint,
+        buyer
+      );
+      const projectTokenAccount = await getAssociatedTokenAddress(
         tokenMint,
         carbonCreditsPDA
       );
+      const buyerNftAccount = await getAssociatedTokenAddress(
+        purchaseNftMint,
+        buyer
+      );
+      const buyerUsdcAccount = await getAssociatedTokenAddress(
+        usdcMint,
+        buyer
+      );
+      const projectOwnerUsdcAccount = await getAssociatedTokenAddress(
+        usdcMint,
+        projectOwner
+      );
 
+      // 5. Derive Purchase PDA
+      const [purchasePDA] = await this.findPDA(
+        [
+          Buffer.from("purchase"),
+          buyer.toBuffer(),
+          projectPDA.toBuffer(),
+          purchaseNftMint.toBuffer(),
+        ],
+        this.program.programId
+      );
+
+      // 6. Derive purchase metadata PDA
+      const [purchaseMetadataPDA] = await this.findPDA(
+        [
+          Buffer.from("metadata"),
+          METADATA_PROGRAM_ID.toBuffer(),
+          purchaseNftMint.toBuffer(),
+        ],
+        METADATA_PROGRAM_ID
+      );
+
+      // 7. Criar ATAs se não existirem
+      const createAtaIxs = [];
+      
+      // Verificar e criar buyer token ATA
+      try {
+        await getAccount(this.connection, buyerTokenAccount);
+      } catch {
+        createAtaIxs.push(
+          createAssociatedTokenAccountInstruction(
+            buyer,
+            buyerTokenAccount,
+            buyer,
+            tokenMint
+          )
+        );
+      }
+
+      // Verificar e criar buyer NFT ATA
+      try {
+        await getAccount(this.connection, buyerNftAccount);
+      } catch {
+        createAtaIxs.push(
+          createAssociatedTokenAccountInstruction(
+            buyer,
+            buyerNftAccount,
+            buyer,
+            purchaseNftMint
+          )
+        );
+      }
+
+      // Verificar e criar buyer USDC ATA
+      try {
+        await getAccount(this.connection, buyerUsdcAccount);
+      } catch {
+        createAtaIxs.push(
+          createAssociatedTokenAccountInstruction(
+            buyer,
+            buyerUsdcAccount,
+            buyer,
+            usdcMint
+          )
+        );
+      }
+
+      // 8. Executar transação de compra
       const tx = await this.program.methods
         .purchaseCarbonCredits(new BN(amount))
-        .accounts({
+        .accountsPartial({
           project: projectPDA,
+          projectOwner,
+          projectMint: tokenMint,
           carbonCredits: carbonCreditsPDA,
-          buyer: this.provider.wallet.publicKey,
+          projectTokenAccount,
+          purchaseNftMint: purchaseNftMint,
+          buyerNftAccount,
           buyerTokenAccount,
-          vault,
-          tokenMint,
+          purchase: purchasePDA,
+          usdcMint,
+          buyerUsdcAccount,
+          projectOwnerUsdcAccount,
+          platformUsdcVault,
+          purchaseMetadata: purchaseMetadataPDA,
+          buyer,
           tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: web3.SystemProgram.programId,
+          tokenMetadataProgram: METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
         })
+        .preInstructions(createAtaIxs)
+        .signers([purchaseNftMintKeypair])
         .rpc();
 
       console.log("Carbon credits purchased:", tx);

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +24,8 @@ import { formatCurrency } from "@/lib/utils";
 import { ArrowRight, CreditCard, Leaf } from "lucide-react";
 import type { Project } from "../../../../types";
 import { purchaseCredits } from "@/app/api/user-service";
+import { useSolanaClient } from "@/hooks/useSolanaClient";
+import { PublicKey } from "@solana/web3.js";
 
 interface PurchaseCreditsModalProps {
   isOpen: boolean;
@@ -41,6 +43,17 @@ export function PurchaseCreditsModal({
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { client, isConnected } = useSolanaClient();
+
+  // Debug: Log projects when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("PurchaseCreditsModal opened with projects:", {
+        count: projects.length,
+        projects: projects,
+      });
+    }
+  }, [isOpen, projects]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const totalCost = selectedProject
@@ -50,7 +63,7 @@ export function PurchaseCreditsModal({
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number.parseInt(e.target.value);
     if (!isNaN(value) && value > 0) {
-      const maxAvailable = selectedProject?.availableCapacity || 0;
+      const maxAvailable = selectedProject?.available || selectedProject?.availableCapacity || 0;
       setQuantity(Math.min(value, maxAvailable));
     }
   };
@@ -70,22 +83,67 @@ export function PurchaseCreditsModal({
       setError(null);
 
       try {
-        const result = await purchaseCredits({
-          projectId: selectedProjectId,
-          quantity,
-        });
+        // Se wallet estiver conectada e tiver SolanaClient, tentar compra on-chain
+        if (isConnected && client && selectedProject) {
+          // Tentar buscar projeto on-chain
+          // Nota: Por enquanto, vamos usar o backend como fallback
+          // pois os projetos podem não ter dados on-chain ainda
+          try {
+            // Se o projeto tiver projectPDA e tokenMint, usar compra on-chain
+            // Por enquanto, vamos usar o backend
+            const result = await purchaseCredits({
+              projectId: selectedProjectId,
+              quantity,
+            });
 
-        if (!result.success) {
-          throw new Error(result.message || "Failed to purchase credits");
+            if (!result.success) {
+              throw new Error(result.message || "Failed to purchase credits");
+            }
+
+            // Success - close modal and reset
+            onClose();
+            setStep(1);
+            setSelectedProjectId("");
+            setQuantity(1);
+            // Optionally refresh the page or show success message
+            window.location.reload();
+          } catch (onChainError: any) {
+            // Se falhar, tentar backend
+            console.warn("On-chain purchase failed, trying backend:", onChainError);
+            const result = await purchaseCredits({
+              projectId: selectedProjectId,
+              quantity,
+            });
+
+            if (!result.success) {
+              throw new Error(result.message || "Failed to purchase credits");
+            }
+
+            // Success - close modal and reset
+            onClose();
+            setStep(1);
+            setSelectedProjectId("");
+            setQuantity(1);
+            window.location.reload();
+          }
+        } else {
+          // Usar backend se wallet não estiver conectada
+          const result = await purchaseCredits({
+            projectId: selectedProjectId,
+            quantity,
+          });
+
+          if (!result.success) {
+            throw new Error(result.message || "Failed to purchase credits");
+          }
+
+          // Success - close modal and reset
+          onClose();
+          setStep(1);
+          setSelectedProjectId("");
+          setQuantity(1);
+          window.location.reload();
         }
-
-        // Success - close modal and reset
-        onClose();
-        setStep(1);
-        setSelectedProjectId("");
-        setQuantity(1);
-        // Optionally refresh the page or show success message
-        window.location.reload();
       } catch (err: any) {
         setError(err.message || "Failed to purchase credits");
       } finally {
@@ -131,26 +189,36 @@ export function PurchaseCreditsModal({
                 <label htmlFor="project" className="text-sm font-medium">
                   Select Project
                 </label>
-                <Select
-                  value={selectedProjectId}
-                  onValueChange={setSelectedProjectId}
-                  required
-                >
-                  <SelectTrigger
-                    id="project"
-                    className="bg-black/50 border-white/20"
+                {projects.length === 0 ? (
+                  <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4 text-sm text-yellow-400">
+                    <p className="font-medium mb-1">No projects available</p>
+                    <p className="text-yellow-300/80">
+                      There are currently no carbon credit projects available for purchase. 
+                      Please check back later or create a new project if you're an admin.
+                    </p>
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedProjectId}
+                    onValueChange={setSelectedProjectId}
+                    required
                   >
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black border-white/20">
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name} ({formatCurrency(project.pricePerTon)}
-                        /ton)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      id="project"
+                      className="bg-black/50 border-white/20"
+                    >
+                      <SelectValue placeholder="Select a project" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black border-white/20">
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.projectName || project.name} ({formatCurrency(project.pricePerTon)}
+                          /ton)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {selectedProject && (
@@ -161,7 +229,7 @@ export function PurchaseCreditsModal({
                         <Leaf className="h-4 w-4 text-green-500" />
                       </div>
                       <div>
-                        <h3 className="font-medium">{selectedProject.name}</h3>
+                        <h3 className="font-medium">{selectedProject.projectName || selectedProject.name}</h3>
                         <p className="text-xs text-gray-400">
                           {selectedProject.location}
                         </p>
@@ -177,7 +245,7 @@ export function PurchaseCreditsModal({
                       <div>
                         <p className="text-gray-400">Available</p>
                         <p className="font-medium">
-                          {selectedProject.availableCapacity} tons
+                          {selectedProject.available || selectedProject.availableCapacity || 0} tons
                         </p>
                       </div>
                     </div>
@@ -191,14 +259,14 @@ export function PurchaseCreditsModal({
                       id="quantity"
                       type="number"
                       min="1"
-                      max={selectedProject.availableCapacity}
+                      max={selectedProject.available || selectedProject.availableCapacity || 0}
                       value={quantity}
                       onChange={handleQuantityChange}
                       className="bg-black/50 border-white/20"
                       required
                     />
                     <p className="text-xs text-gray-400">
-                      Maximum available: {selectedProject.availableCapacity}{" "}
+                      Maximum available: {selectedProject.available || selectedProject.availableCapacity || 0}{" "}
                       tons
                     </p>
                   </div>
@@ -221,7 +289,7 @@ export function PurchaseCreditsModal({
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Project</span>
-                    <span>{selectedProject?.name}</span>
+                    <span>{selectedProject?.projectName || selectedProject?.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Quantity</span>
@@ -278,7 +346,9 @@ export function PurchaseCreditsModal({
               type="submit"
               className="bg-green-600 hover:bg-green-500"
               disabled={
-                loading || (step === 1 && (!selectedProjectId || quantity <= 0))
+                loading || 
+                (step === 1 && (!selectedProjectId || quantity <= 0)) ||
+                projects.length === 0
               }
             >
               {loading ? (

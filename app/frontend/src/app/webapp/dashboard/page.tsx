@@ -17,15 +17,16 @@ import {
 } from "@/components/webapp/modals/project-details-modal";
 import { getProjects } from "@/app/api/project-service";
 import { getRetirements } from "@/app/api/retirements-service";
+import { getUserPurchases } from "@/app/api/purchases-service";
 // import { useWallet } from "@solana/wallet-adapter-react";
 import { CreateProjectModal } from "@/components/webapp/modals/create-project-modal";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Mock data
-const metrics = {
-  totalOffset: 1.2,
-  creditsAvailable: 3.5,
-  emissionsOffset: 68,
+// Mock data (fallback values)
+const defaultMetrics = {
+  totalOffset: 0,
+  creditsAvailable: 0,
+  emissionsOffset: 0,
   totalEmissions: 767,
 };
 
@@ -158,6 +159,7 @@ export default function DashboardPage() {
   // const { publicKey } = useWallet();
   const [projects, setProjects] = useState<Project[]>([]);
   const [totalOffset, setTotalOffset] = useState<number>(0);
+  const [creditsAvailable, setCreditsAvailable] = useState<number>(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
@@ -165,34 +167,84 @@ export default function DashboardPage() {
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailsProps | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Simulate wallet connection check
   useEffect(() => {
     localStorage.setItem("walletConnected", "true");
 
-    const fetchProjects = async () => {
-      const result = await getProjects();
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [projectsResult, retirementsResult, purchasesResult] =
+          await Promise.all([
+            getProjects(),
+            getRetirements(),
+            getUserPurchases(),
+          ]);
 
-      if (result.success) {
-        console.log("Projects fetched successfully:", result.data);
-        setProjects(result.data || []);
-      } else {
-        setError(result.message || "Failed to fetch projects.");
+        if (projectsResult.success) {
+          const projectsData = projectsResult.data || [];
+          console.log("Projects fetched successfully:", {
+            count: projectsData.length,
+            projects: projectsData,
+          });
+          setProjects(projectsData);
+        } else {
+          console.error("Failed to fetch projects:", projectsResult.message);
+          setError(projectsResult.message || "Failed to fetch projects.");
+          setProjects([]);
+        }
+
+        if (retirementsResult.success) {
+          setTotalOffset(retirementsResult.totalOffset || 0);
+        } else {
+          setError(retirementsResult.message || "Failed to fetch retirements.");
+        }
+
+        // Calculate available credits
+        if (purchasesResult.success) {
+          const purchases = purchasesResult.data || [];
+          const totalPurchased = purchases.reduce(
+            (sum: number, purchase: any) => {
+              const qty = Number(purchase.quantity) || 0;
+              return sum + qty;
+            },
+            0
+          );
+          
+          // Get total retired from retirements
+          const retirements = retirementsResult.data || [];
+          const totalRetired = retirements.reduce(
+            (sum: number, retirement: any) => {
+              const qty = Number(retirement.quantity) || 0;
+              return sum + qty;
+            },
+            0
+          );
+
+          const available = totalPurchased - totalRetired;
+          setCreditsAvailable(Math.max(0, available));
+          console.log("Credits calculation:", {
+            totalPurchased,
+            totalRetired,
+            available,
+            purchases: purchases.length,
+            retirements: retirements.length,
+          });
+        } else {
+          console.warn("Failed to fetch purchases:", purchasesResult.message);
+          setCreditsAvailable(0);
+        }
+      } catch (err: any) {
+        console.error("Error fetching data:", err);
+        setError(err.message || "Failed to fetch data.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchRetirements = async () => {
-      const result = await getRetirements();
-
-      if (result.success) {
-        setTotalOffset(result.totalOffset || 0);
-      } else {
-        setError(result.message || "Failed to fetch retirements.");
-      }
-    };
-
-    fetchProjects();
-    fetchRetirements();
+    fetchData();
   }, []); // Removed publicKey dependency
 
   const handleViewDetails = (project: Project) => {
@@ -224,13 +276,13 @@ export default function DashboardPage() {
                 <KeyMetricCard
                   icon={<Wallet className="h-full w-full" />}
                   title="Credits Available"
-                  value={`${metrics.creditsAvailable} T`}
+                  value={`${loading ? "..." : creditsAvailable.toFixed(2)} T`}
                   className="flex flex-col items-center justify-center text-center"
                   action={
                     <Button
                       variant="outline"
                       className="w-full border-white/10 hover:bg-white/5"
-                      onClick={() => setIsPurchaseModalOpen(true)}
+                      onClick={() => router.push("/webapp/assets")}
                     >
                       Manage your credits
                     </Button>
@@ -241,24 +293,30 @@ export default function DashboardPage() {
                     <div>
                       <h3 className="text-xl font-bold">Your emissions</h3>
                       <p className="text-3xl font-bold">
-                        {metrics.totalEmissions} tons
+                        {defaultMetrics.totalEmissions} tons
                       </p>
                       <p className="text-sm text-gray-400">
-                        {(
-                          metrics.totalEmissions *
-                          (metrics.emissionsOffset / 100)
-                        ).toFixed(2)}{" "}
-                        tons offset
+                        {totalOffset.toFixed(2)} tons offset
                       </p>
                     </div>
                     <ProgressRing
-                      progress={metrics.emissionsOffset}
+                      progress={
+                        defaultMetrics.totalEmissions > 0
+                          ? (totalOffset / defaultMetrics.totalEmissions) * 100
+                          : 0
+                      }
                       size={100}
                       className="text-green-500"
                     >
                       <div className="text-center">
                         <span className="text-xl font-bold">
-                          {metrics.emissionsOffset}%
+                          {defaultMetrics.totalEmissions > 0
+                            ? (
+                                (totalOffset / defaultMetrics.totalEmissions) *
+                                100
+                              ).toFixed(0)
+                            : 0}
+                          %
                         </span>
                         <span className="block text-xs text-gray-400">
                           offset
@@ -368,7 +426,42 @@ export default function DashboardPage() {
         {/* Purchase Credits Modal */}
         <PurchaseCreditsModal
           isOpen={isPurchaseModalOpen}
-          onClose={() => setIsPurchaseModalOpen(false)}
+          onClose={() => {
+            setIsPurchaseModalOpen(false);
+            // Refresh data after purchase
+            const fetchData = async () => {
+              try {
+                const [retirementsResult, purchasesResult] = await Promise.all([
+                  getRetirements(),
+                  getUserPurchases(),
+                ]);
+
+                if (retirementsResult.success) {
+                  setTotalOffset(retirementsResult.totalOffset || 0);
+                }
+
+                if (purchasesResult.success) {
+                  const purchases = purchasesResult.data || [];
+                  const totalPurchased = purchases.reduce(
+                    (sum: number, purchase: any) => sum + (purchase.quantity || 0),
+                    0
+                  );
+                  
+                  const retirements = retirementsResult.data || [];
+                  const totalRetired = retirements.reduce(
+                    (sum: number, retirement: any) => sum + (retirement.quantity || 0),
+                    0
+                  );
+
+                  const available = totalPurchased - totalRetired;
+                  setCreditsAvailable(Math.max(0, available));
+                }
+              } catch (err) {
+                console.error("Error refreshing data:", err);
+              }
+            };
+            fetchData();
+          }}
           projects={projects}
         />
 

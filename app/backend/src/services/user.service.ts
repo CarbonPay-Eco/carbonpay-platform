@@ -57,16 +57,19 @@ export class UserService {
     return savedOrganization;
   }
 
-  // Get existing UserWallet created by AuthService
+  // Get existing UserWallet created by AuthService, creating one if it doesn't exist
   private async getUserWallet(userId: string): Promise<UserWallet> {
-    const userWallet = await this.userWalletRepository.findOneBy({
+    let userWallet = await this.userWalletRepository.findOneBy({
       userId: userId,
     });
 
+    // If wallet doesn't exist (e.g., user created via SQL), create one automatically
     if (!userWallet) {
-      throw new Error(
-        "User wallet not found. This should have been created during registration."
-      );
+      console.log(`Wallet not found for user ${userId}, creating one automatically...`);
+      // Use a default password for auto-created wallets (users created outside normal flow)
+      // In production, users should reset their password after first login
+      userWallet = await WalletService.createWallet(userId, "default-password-change-me");
+      console.log(`Wallet created for user ${userId}: ${userWallet.publicKey}`);
     }
 
     return userWallet;

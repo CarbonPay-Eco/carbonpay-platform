@@ -62,7 +62,24 @@ api.interceptors.response.use(
     const formattedError = error as AxiosError;
     const message = extractErrorMessage(formattedError);
 
-    toast.error(message);
+    // Handle 401 Unauthorized - token is invalid or expired
+    if (formattedError.response?.status === 401) {
+      // Clear invalid token from localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        // Remove cookie
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes("/webapp/login")) {
+          toast.error("Your session has expired. Please login again.");
+          window.location.href = "/webapp/login";
+        }
+      }
+    } else {
+      toast.error(message);
+    }
+    
     return Promise.reject({ ...error, message });
   }
 );

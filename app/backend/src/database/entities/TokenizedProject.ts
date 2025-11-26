@@ -51,8 +51,20 @@ export class TokenizedProject {
   @Column({ name: 'documentation_url', nullable: true })
   documentationUrl: string;
 
-  @Column({ name: 'on_chain_mint_tx' })
+  @Column({ name: 'on_chain_mint_tx', nullable: true })
   onChainMintTx: string;
+
+  @Column({ name: 'project_pda', nullable: true })
+  projectPDA: string;
+
+  @Column({ name: 'token_mint', nullable: true })
+  tokenMint: string;
+
+  @Column({ name: 'nft_mint', nullable: true })
+  nftMint: string;
+
+  @Column({ name: 'project_owner', nullable: true })
+  projectOwner: string;
 
   @Column({ default: 'available' })
   status: string;

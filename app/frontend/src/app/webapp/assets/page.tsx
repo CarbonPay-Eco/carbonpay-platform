@@ -74,12 +74,18 @@ export default function AssetsPage() {
 
   // Calculate totals
   const totalCredits = purchases.reduce(
-    (sum, purchase) => sum + purchase.quantity,
+    (sum, purchase) => {
+      const qty = Number(purchase.quantity) || 0;
+      return sum + qty;
+    },
     0
   );
 
   const totalRetired = retirements.reduce(
-    (sum, retirement) => sum + (retirement.quantity || 0),
+    (sum, retirement) => {
+      const qty = Number(retirement.quantity) || 0;
+      return sum + qty;
+    },
     0
   );
 
@@ -122,7 +128,7 @@ export default function AssetsPage() {
                     <Leaf className="h-5 w-5 text-green-500" />
                   </div>
                   <p className="text-3xl font-bold">
-                    {loading ? "..." : totalCredits.toFixed(2)} T
+                    {loading ? "..." : (Number(totalCredits) || 0).toFixed(2)} T
                   </p>
                 </CardContent>
                 <CardFooter className="border-t border-white/10 py-3 text-sm text-gray-400">
@@ -137,7 +143,7 @@ export default function AssetsPage() {
                     <BarChart className="h-5 w-5 text-blue-500" />
                   </div>
                   <p className="text-3xl font-bold">
-                    {loading ? "..." : availableCredits.toFixed(2)} T
+                    {loading ? "..." : (Number(availableCredits) || 0).toFixed(2)} T
                   </p>
                 </CardContent>
                 <CardFooter className="border-t border-white/10 py-3 text-sm text-gray-400">
@@ -152,7 +158,7 @@ export default function AssetsPage() {
                     <Leaf className="h-5 w-5 text-gray-500" />
                   </div>
                   <p className="text-3xl font-bold">
-                    {loading ? "..." : totalRetired.toFixed(2)} T
+                    {loading ? "..." : (Number(totalRetired) || 0).toFixed(2)} T
                   </p>
                 </CardContent>
                 <CardFooter className="border-t border-white/10 py-3 text-sm text-gray-400">
@@ -230,12 +236,16 @@ export default function AssetsPage() {
                               r.projectId === purchase.projectId
                           );
                           const usedForThisProject = projectRetirements.reduce(
-                            (sum, r) => sum + (r.quantity || 0),
+                            (sum, r) => {
+                              const qty = Number(r.quantity) || 0;
+                              return sum + qty;
+                            },
                             0
                           );
+                          const purchaseQty = Number(purchase.quantity) || 0;
                           const availableForThisPurchase = Math.max(
                             0,
-                            purchase.quantity - usedForThisProject
+                            purchaseQty - usedForThisProject
                           );
 
                           return (
@@ -250,19 +260,19 @@ export default function AssetsPage() {
                                 {purchase.project?.projectName || "Unknown Project"}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                {purchase.quantity.toFixed(2)}
+                                {(Number(purchase.quantity) || 0).toFixed(2)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-green-400">
-                                {availableForThisPurchase.toFixed(2)}
+                                {(Number(availableForThisPurchase) || 0).toFixed(2)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
-                                {usedForThisProject.toFixed(2)}
+                                {(Number(usedForThisProject) || 0).toFixed(2)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
-                                ${purchase.pricePerCredit.toFixed(2)}
+                                ${(Number(purchase.pricePerCredit) || 0).toFixed(2)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                ${purchase.totalCost.toFixed(2)}
+                                ${(Number(purchase.totalCost) || 0).toFixed(2)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
                                 {new Date(

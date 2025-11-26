@@ -14,3 +14,5 @@ export const DB_HOST = EnvManager.getEnvOrThrow('DB_HOST');
 // Solana
 export const SOLANA_NETWORK = EnvManager.getEnvOrThrow('SOLANA_NETWORK');
 export const SOLANA_PROGRAM_ID = EnvManager.getEnv('SOLANA_PROGRAM_ID') || '11111111111111111111111111111111';
+export const SOLANA_RPC_URL = EnvManager.getEnv('SOLANA_RPC_URL');
+export const SOLANA_SERVER_PRIVATE_KEY = EnvManager.getEnvOrThrow('SOLANA_SERVER_PRIVATE_KEY');

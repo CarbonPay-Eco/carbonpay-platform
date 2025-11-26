@@ -1,5 +1,5 @@
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
-import { Program, AnchorProvider, web3 } from '@project-serum/anchor';
+import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
 import { WalletSignature, MintCreditParams, BurnCreditParams, TokenData } from '../types/solana';

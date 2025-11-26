@@ -26,8 +26,10 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "postgres",
   password: process.env.DB_PASSWORD || "postgres",
   database: process.env.DB_DATABASE || "carbonpay",
-  synchronize: process.env.NODE_ENV === "development",
-  dropSchema: process.env.NODE_ENV === "development", // Force schema recreation
+  // Only synchronize if explicitly enabled via env var (for initial setup)
+  // In production, use migrations instead
+  synchronize: process.env.DB_SYNCHRONIZE === "true",
+  dropSchema: false, // Never drop schema - use migrations instead
   logging: process.env.NODE_ENV === "development",
   entities: [
     User,
@@ -39,7 +41,7 @@ export const AppDataSource = new DataSource({
     AuditLog,
     Purchase,
   ],
-  migrations: [],
+  migrations: ["migrations/**/*.ts"],
   subscribers: [],
 });
 

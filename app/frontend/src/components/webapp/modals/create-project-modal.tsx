@@ -34,19 +34,19 @@ export function CreateProjectModal({
 }: CreateProjectModalProps) {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
-    projectName: "",
-    description: "",
-    location: "",
-    certificationBody: "",
-    projectRefId: "",
-    methodology: "",
-    verifierName: "",
+    projectName: "Amazon Rainforest Conservation Project",
+    description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+    location: "Pará, Brazil",
+    certificationBody: "Verra VCS",
+    projectRefId: "VCS-2024-001",
+    methodology: "VM0007 - REDD+ Methodology Framework",
+    verifierName: "SGS",
     vintageYear: new Date().getFullYear(),
-    standard: "",
-    totalIssued: "",
-    pricePerTon: "",
-    documentationUrl: "",
-    projectImageUrl: "",
+    standard: "VCS",
+    totalIssued: "50000",
+    pricePerTon: "25.50",
+    documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
+    projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
     tags: [] as string[],
   });
 
@@ -80,22 +80,22 @@ export function CreateProjectModal({
         }
 
         onClose();
-        // Reset the form
+        // Reset the form with mock data for faster testing
         setStep(1);
         setFormData({
-          projectName: "",
-          description: "",
-          location: "",
-          certificationBody: "",
-          projectRefId: "",
-          methodology: "",
-          verifierName: "",
+          projectName: "Amazon Rainforest Conservation Project",
+          description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+          location: "Pará, Brazil",
+          certificationBody: "Verra VCS",
+          projectRefId: "VCS-2024-001",
+          methodology: "VM0007 - REDD+ Methodology Framework",
+          verifierName: "SGS",
           vintageYear: new Date().getFullYear(),
-          standard: "",
-          totalIssued: "",
-          pricePerTon: "",
-          documentationUrl: "",
-          projectImageUrl: "",
+          standard: "VCS",
+          totalIssued: "50000",
+          pricePerTon: "25.50",
+          documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
+          projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
           tags: [],
         });
       } catch (error) {
@@ -107,22 +107,22 @@ export function CreateProjectModal({
 
   const handleClose = () => {
     onClose();
-    // Reset the form when closing
+    // Reset the form with mock data for faster testing
     setStep(1);
     setFormData({
-      projectName: "",
-      description: "",
-      location: "",
-      certificationBody: "",
-      projectRefId: "",
-      methodology: "",
-      verifierName: "",
+      projectName: "Amazon Rainforest Conservation Project",
+      description: "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
+      location: "Pará, Brazil",
+      certificationBody: "Verra VCS",
+      projectRefId: "VCS-2024-001",
+      methodology: "VM0007 - REDD+ Methodology Framework",
+      verifierName: "SGS",
       vintageYear: new Date().getFullYear(),
-      standard: "",
-      totalIssued: "",
-      pricePerTon: "",
-      documentationUrl: "",
-      projectImageUrl: "",
+      standard: "VCS",
+      totalIssued: "50000",
+      pricePerTon: "25.50",
+      documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
+      projectImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
       tags: [],
     });
   };

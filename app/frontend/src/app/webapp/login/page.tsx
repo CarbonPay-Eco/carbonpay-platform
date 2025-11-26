@@ -14,8 +14,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: "admin@carbonpay.com",
+    password: "admin123",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");

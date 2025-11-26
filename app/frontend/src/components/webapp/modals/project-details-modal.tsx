@@ -53,11 +53,16 @@ export function ProjectDetailsModal({
   project,
   onPurchase,
 }: ProjectDetailsModalProps) {
-  console.log("ProjectDetailsModal rendered with props:", { isOpen, project });
-
-  // Check if project is null or undefined
+  // Check if project is null or undefined - only log in development
+  if (!project && isOpen) {
+    // Only log error if modal is actually open
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("ProjectDetailsModal: project is null or undefined");
+    }
+    return null;
+  }
+  
   if (!project) {
-    console.error("ProjectDetailsModal: project is null or undefined");
     return null;
   }
 

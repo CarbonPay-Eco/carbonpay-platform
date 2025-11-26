@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { AnchorProvider, Program } from '@project-serum/anchor';
+import { AnchorProvider, Program } from '@coral-xyz/anchor';
 
 export interface WalletSignature {
   address: string;
