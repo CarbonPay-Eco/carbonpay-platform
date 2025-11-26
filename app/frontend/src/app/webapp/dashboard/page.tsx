@@ -248,8 +248,48 @@ export default function DashboardPage() {
   }, []); // Removed publicKey dependency
 
   const handleViewDetails = (project: Project) => {
-    const details = projectDetails[project.id];
-    setSelectedProject(details);
+    // Try legacy static details first (for demo projects)
+    const staticDetails = projectDetails[project.id];
+
+    if (staticDetails) {
+      setSelectedProject(staticDetails);
+      setIsDetailsModalOpen(true);
+      return;
+    }
+
+    // Map backend project to ProjectDetailsProps shape
+    const mappedDetails: ProjectDetailsProps = {
+      id: project.id,
+      projectName: project.projectName,
+      projectId: (project as any).projectRefId || project.code || project.id,
+      location: project.location,
+      type: project.methodology,
+      creditsIssued:
+        (project as any).totalIssued ??
+        project.totalCapacity ??
+        (project as any).totalCapacity ??
+        project.available,
+      creditsAvailable: (project as any).available ?? project.available,
+      vintageYear: String((project as any).vintageYear || ""),
+      certification: (project as any).certificationBody || "",
+      verifierName: (project as any).verifierName || "",
+      methodology: project.methodology,
+      standard: (project as any).standard || "",
+      tokenId: (project as any).tokenId || "",
+      lastTransaction: (project as any).onChainMintTx || undefined,
+      co2Reduction:
+        (project as any).co2Reduction ||
+        (project as any).totalIssued ||
+        project.totalCapacity ||
+        project.available ||
+        0,
+      documentation: (project as any).documentationUrl || "",
+      projectImageUrl: project.projectImageUrl,
+      description: project.description || "",
+      pricePerTon: Number((project as any).pricePerTon ?? project.pricePerTon) || 0,
+    };
+
+    setSelectedProject(mappedDetails);
     setIsDetailsModalOpen(true);
   };
 
@@ -477,6 +517,10 @@ export default function DashboardPage() {
         <CreateProjectModal
           isOpen={isCreateProjectModalOpen}
           onClose={() => setIsCreateProjectModalOpen(false)}
+          onCreated={(project: any) => {
+            // Add the newly created project to the top of the list
+            setProjects((prev) => [project, ...(prev || [])]);
+          }}
         />
       </WebappShell>
     </ProtectedRoute>

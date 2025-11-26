@@ -26,11 +26,13 @@ import { createProject } from "@/app/api/project-service";
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCreated?: (project: any) => void;
 }
 
 export function CreateProjectModal({
   isOpen,
   onClose,
+  onCreated,
 }: CreateProjectModalProps) {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
@@ -77,6 +79,11 @@ export function CreateProjectModal({
 
         if (!result.success) {
           throw new Error(result.message || "Failed to create project");
+        }
+
+        // Notify parent so it can refresh the project list without full page reload
+        if (onCreated && result.data) {
+          onCreated(result.data);
         }
 
         onClose();
