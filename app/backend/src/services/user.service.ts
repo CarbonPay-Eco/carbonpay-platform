@@ -127,9 +127,41 @@ export class UserService {
   }> {
     const userWallet = await this.getUserWallet(userId);
 
-    // Get project details
-    const project = await this.projectRepository.findOneBy({ id: projectId });
+    // Get project details, handling UUID, token_id, and project_ref_id
+    // Check if projectId looks like a UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isUuid = uuidRegex.test(projectId);
+
+    let project;
+    
+    if (isUuid) {
+      // If it's a UUID, try matching by ID first, then fallback to other fields
+      // Cast UUID to text for comparison to avoid type mismatch in OR conditions
+      project = await this.projectRepository
+        .createQueryBuilder("project")
+        .where("CAST(project.id AS TEXT) = :projectId", { projectId })
+        .orWhere("project.token_id = :projectId", { projectId })
+        .orWhere("project.projectRefId = :projectId", { projectId })
+        .getOne();
+    } else {
+      // If it's not a UUID, only match against token_id and project_ref_id
+      project = await this.projectRepository
+        .createQueryBuilder("project")
+        .where("project.token_id = :projectId", { projectId })
+        .orWhere("project.projectRefId = :projectId", { projectId })
+        .getOne();
+    }
+
     if (!project) {
+      console.error(`Project not found with ID: ${projectId}`);
+      console.error(`Available projects: ${await this.projectRepository
+        .createQueryBuilder("project")
+        .select("project.id")
+        .addSelect("project.token_id")
+        .addSelect("project.projectRefId")
+        .getMany()
+        .then(projects => JSON.stringify(projects, null, 2))
+      }`);
       throw new Error("Project not found");
     }
 
@@ -200,12 +232,19 @@ export class UserService {
 
     // Get organization data
     const userWallet = await this.getUserWallet(userId);
+    if (!userWallet) {
+      throw new Error("User wallet not found");
+    }
+
     const organization = await this.organizationRepository.findOne({
       where: { walletId: userWallet.id }
     });
 
+    // Return user profile without sensitive data
+    const { passwordHash, ...userWithoutPassword } = user;
+    
     return {
-      ...user,
+      ...userWithoutPassword,
       organization
     };
   }

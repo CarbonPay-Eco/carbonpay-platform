@@ -37,6 +37,8 @@ export default function AssetsPage() {
   const [retirements, setRetirements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [preselectedPurchaseProject, setPreselectedPurchaseProject] =
+    useState<Project | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -307,8 +309,12 @@ export default function AssetsPage() {
         {/* Purchase Credits Modal */}
         <PurchaseCreditsModal
           isOpen={isPurchaseModalOpen}
-          onClose={() => setIsPurchaseModalOpen(false)}
+          onClose={() => {
+            setIsPurchaseModalOpen(false);
+            setPreselectedPurchaseProject(null);
+          }}
           projects={projects}
+          preselectedProject={preselectedPurchaseProject}
         />
       </WebappShell>
     </ProtectedRoute>

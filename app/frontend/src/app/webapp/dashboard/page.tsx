@@ -69,75 +69,75 @@ const defaultMetrics = {
 //   },
 // ];
 
-// Extended project details for the modal
-const projectDetails: Record<string, ProjectDetailsProps> = {
-  "1": {
-    id: "1",
-    name: "São Carlos Solar Energy Project",
-    projectId: "VCS/3447",
-    location: "São Carlos, Brazil",
-    type: "Solar Energy",
-    creditsIssued: 300000,
-    creditsAvailable: 800,
-    vintageYear: "2023",
-    certification: "Verra VCS",
-    verifier: "AENOR Internacional",
-    methodology: "VM0015",
-    tokenId: "CP-SCSE-2023",
-    lastTransaction: "https://explorer.solana.com/tx/123",
-    co2Reduction: 300000,
-    documentation: "https://registry.verra.org/app/projectDetail/VCS/3447",
-    image:
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-    description:
-      "The São Carlos Solar Energy Project is a renewable energy initiative that generates clean electricity through solar power, reducing reliance on fossil fuels and cutting carbon emissions in the São Carlos region of Brazil.",
-    pricePerTon: 20,
-  },
-  "2": {
-    id: "2",
-    name: "Amazon Rainforest Preservation",
-    projectId: "VCS/3448",
-    location: "Amazonas, Brazil",
-    type: "Conservation Forest (REDD+)",
-    creditsIssued: 500000,
-    creditsAvailable: 120000,
-    vintageYear: "2022",
-    certification: "Verra VCS",
-    verifier: "AENOR Internacional",
-    methodology: "VM0015",
-    tokenId: "CP-AMZN-2022",
-    lastTransaction: "https://explorer.solana.com/tx/456",
-    co2Reduction: 500000,
-    documentation: "https://registry.verra.org/app/projectDetail/VCS/3448",
-    image:
-      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
-    description:
-      "The Amazon Rainforest Preservation project protects critical areas of the Amazon rainforest from deforestation and degradation. By preserving these vital ecosystems, the project safeguards biodiversity and prevents significant carbon emissions.",
-    pricePerTon: 10,
-  },
-  "3": {
-    id: "3",
-    name: "Atlantic Rainforest Preservation",
-    projectId: "VCS/3449",
-    location: "São Paulo, Brazil",
-    type: "Conservation Forest (REDD+)",
-    creditsIssued: 400000,
-    creditsAvailable: 90000,
-    vintageYear: "2022",
-    certification: "Verra VCS",
-    verifier: "AENOR Internacional",
-    methodology: "VM0015",
-    tokenId: "CP-ATL-2022",
-    lastTransaction: "https://explorer.solana.com/tx/789",
-    co2Reduction: 400000,
-    documentation: "https://registry.verra.org/app/projectDetail/VCS/3449",
-    image:
-      "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
-    description:
-      "The Atlantic Rainforest Preservation project focuses on protecting and restoring the Atlantic Forest biome, one of the world's most biodiverse and threatened ecosystems. The project implements sustainable forest management practices and prevents deforestation.",
-    pricePerTon: 15,
-  },
-};
+// Extended project details for the modal - NO LONGER USED, using real API data instead
+// const projectDetails: Record<string, ProjectDetailsProps> = {
+//   "1": {
+//     id: "1",
+//     name: "São Carlos Solar Energy Project",
+//     projectId: "VCS/3447",
+//     location: "São Carlos, Brazil",
+//     type: "Solar Energy",
+//     creditsIssued: 300000,
+//     creditsAvailable: 800,
+//     vintageYear: "2023",
+//     certification: "Verra VCS",
+//     verifier: "AENOR Internacional",
+//     methodology: "VM0015",
+//     tokenId: "CP-SCSE-2023",
+//     lastTransaction: "https://explorer.solana.com/tx/123",
+//     co2Reduction: 300000,
+//     documentation: "https://registry.verra.org/app/projectDetail/VCS/3447",
+//     image:
+//       "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+//     description:
+//       "The São Carlos Solar Energy Project is a renewable energy initiative that generates clean electricity through solar power, reducing reliance on fossil fuels and cutting carbon emissions in the São Carlos region of Brazil.",
+//     pricePerTon: 20,
+//   },
+//   "2": {
+//     id: "2",
+//     name: "Amazon Rainforest Preservation",
+//     projectId: "VCS/3448",
+//     location: "Amazonas, Brazil",
+//     type: "Conservation Forest (REDD+)",
+//     creditsIssued: 500000,
+//     creditsAvailable: 120000,
+//     vintageYear: "2022",
+//     certification: "Verra VCS",
+//     verifier: "AENOR Internacional",
+//     methodology: "VM0015",
+//     tokenId: "CP-AMZN-2022",
+//     lastTransaction: "https://explorer.solana.com/tx/456",
+//     co2Reduction: 500000,
+//     documentation: "https://registry.verra.org/app/projectDetail/VCS/3448",
+//     image:
+//       "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
+//     description:
+//       "The Amazon Rainforest Preservation project protects critical areas of the Amazon rainforest from deforestation and degradation. By preserving these vital ecosystems, the project safeguards biodiversity and prevents significant carbon emissions.",
+//     pricePerTon: 10,
+//   },
+//   "3": {
+//     id: "3",
+//     name: "Atlantic Rainforest Preservation",
+//     projectId: "VCS/3449",
+//     location: "São Paulo, Brazil",
+//     type: "Conservation Forest (REDD+)",
+//     creditsIssued: 400000,
+//     creditsAvailable: 90000,
+//     vintageYear: "2022",
+//     certification: "Verra VCS",
+//     verifier: "AENOR Internacional",
+//     methodology: "VM0015",
+//     tokenId: "CP-ATL-2022",
+//     lastTransaction: "https://explorer.solana.com/tx/789",
+//     co2Reduction: 400000,
+//     documentation: "https://registry.verra.org/app/projectDetail/VCS/3449",
+//     image:
+//       "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
+//     description:
+//       "The Atlantic Rainforest Preservation project focuses on protecting and restoring the Atlantic Forest biome, one of the world's most biodiverse and threatened ecosystems. The project implements sustainable forest management practices and prevents deforestation.",
+//     pricePerTon: 15,
+//   },
+// };
 
 const recentOffsets = [
   {
@@ -166,6 +166,8 @@ export default function DashboardPage() {
     useState(false);
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetailsProps | null>(null);
+  const [preselectedPurchaseProject, setPreselectedPurchaseProject] =
+    useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -248,52 +250,13 @@ export default function DashboardPage() {
   }, []); // Removed publicKey dependency
 
   const handleViewDetails = (project: Project) => {
-    // Try legacy static details first (for demo projects)
-    const staticDetails = projectDetails[project.id];
-
-    if (staticDetails) {
-      setSelectedProject(staticDetails);
-      setIsDetailsModalOpen(true);
-      return;
-    }
-
-    // Map backend project to ProjectDetailsProps shape
-    const mappedDetails: ProjectDetailsProps = {
-      id: project.id,
-      projectName: project.projectName,
-      projectId: (project as any).projectRefId || project.code || project.id,
-      location: project.location,
-      type: project.methodology,
-      creditsIssued:
-        (project as any).totalIssued ??
-        project.totalCapacity ??
-        (project as any).totalCapacity ??
-        project.available,
-      creditsAvailable: (project as any).available ?? project.available,
-      vintageYear: String((project as any).vintageYear || ""),
-      certification: (project as any).certificationBody || "",
-      verifierName: (project as any).verifierName || "",
-      methodology: project.methodology,
-      standard: (project as any).standard || "",
-      tokenId: (project as any).tokenId || "",
-      lastTransaction: (project as any).onChainMintTx || undefined,
-      co2Reduction:
-        (project as any).co2Reduction ||
-        (project as any).totalIssued ||
-        project.totalCapacity ||
-        project.available ||
-        0,
-      documentation: (project as any).documentationUrl || "",
-      projectImageUrl: project.projectImageUrl,
-      description: project.description || "",
-      pricePerTon: Number((project as any).pricePerTon ?? project.pricePerTon) || 0,
-    };
-
-    setSelectedProject(mappedDetails);
+    // Use the actual project data instead of mock projectDetails
+    setSelectedProject(project as unknown as ProjectDetailsProps);
     setIsDetailsModalOpen(true);
   };
 
   const handlePurchase = (project: Project | ProjectDetailsProps) => {
+    setPreselectedPurchaseProject(project as Project);
     setIsPurchaseModalOpen(true);
   };
 
@@ -468,6 +431,7 @@ export default function DashboardPage() {
           isOpen={isPurchaseModalOpen}
           onClose={() => {
             setIsPurchaseModalOpen(false);
+            setPreselectedPurchaseProject(null);
             // Refresh data after purchase
             const fetchData = async () => {
               try {
@@ -486,7 +450,7 @@ export default function DashboardPage() {
                     (sum: number, purchase: any) => sum + (purchase.quantity || 0),
                     0
                   );
-                  
+
                   const retirements = retirementsResult.data || [];
                   const totalRetired = retirements.reduce(
                     (sum: number, retirement: any) => sum + (retirement.quantity || 0),
@@ -503,6 +467,7 @@ export default function DashboardPage() {
             fetchData();
           }}
           projects={projects}
+          preselectedProject={preselectedPurchaseProject}
         />
 
         {/* Project Details Modal */}

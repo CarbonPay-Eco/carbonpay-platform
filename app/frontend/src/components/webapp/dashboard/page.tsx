@@ -173,6 +173,7 @@ export default function DashboardPage() {
       const result = await getProjects();
 
       if (result.success) {
+        console.log("Fetched projects:", result.data);
         setProjects(result.data || []);
       } else {
         setError(result.message || "Failed to fetch projects.");
@@ -217,11 +218,6 @@ export default function DashboardPage() {
     <WebappShell>
       <main className="p-8">
         <div className="space-y-8">
-          {/* Test button */}
-          <Button onClick={() => openDetailsModal("1")} className="mb-4">
-            Test Modal
-          </Button>
-
           {/* Onboarding Status */}
           <OnboardingStatus />
 

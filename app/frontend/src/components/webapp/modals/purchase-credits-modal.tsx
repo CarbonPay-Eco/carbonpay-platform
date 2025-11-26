@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,18 +24,22 @@ import { ArrowRight, CreditCard, Leaf } from "lucide-react";
 import type { Project } from "../../../../types";
 import { purchaseCredits } from "@/app/api/user-service";
 import { useSolanaClient } from "@/hooks/useSolanaClient";
-import { PublicKey } from "@solana/web3.js";
+import { toast } from "react-hot-toast";
 
 interface PurchaseCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
   projects: Project[];
+  preselectedProject?: Project | null;
+  onPurchaseSuccess?: () => void;
 }
 
 export function PurchaseCreditsModal({
   isOpen,
   onClose,
   projects,
+  preselectedProject,
+  onPurchaseSuccess,
 }: PurchaseCreditsModalProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
@@ -45,15 +48,12 @@ export function PurchaseCreditsModal({
   const [error, setError] = useState<string | null>(null);
   const { client, isConnected } = useSolanaClient();
 
-  // Debug: Log projects when modal opens
+  // Pre-select project when modal opens with a preselected project
   useEffect(() => {
-    if (isOpen) {
-      console.log("PurchaseCreditsModal opened with projects:", {
-        count: projects.length,
-        projects: projects,
-      });
+    if (isOpen && preselectedProject) {
+      setSelectedProjectId(preselectedProject.id);
     }
-  }, [isOpen, projects]);
+  }, [isOpen, preselectedProject]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const totalCost = selectedProject
@@ -72,89 +72,43 @@ export function PurchaseCreditsModal({
     e.preventDefault();
     if (step === 1) {
       setStep(2);
-    } else {
-      // Handle the actual purchase
-      if (!selectedProjectId || quantity <= 0) {
-        setError("Please select a project and quantity");
-        return;
+      return;
+    }
+
+    if (!selectedProjectId || quantity <= 0) {
+      setError("Please select a project and quantity");
+      return;
+    }
+
+    console.log("Submitting purchase with projectId:", selectedProjectId, "quantity:", quantity);
+    console.log("Selected project object:", selectedProject);
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await purchaseCredits({
+        projectId: selectedProjectId,
+        quantity,
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to purchase credits");
       }
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Se wallet estiver conectada e tiver SolanaClient, tentar compra on-chain
-        if (isConnected && client && selectedProject) {
-          // Tentar buscar projeto on-chain
-          // Nota: Por enquanto, vamos usar o backend como fallback
-          // pois os projetos podem não ter dados on-chain ainda
-          try {
-            // Se o projeto tiver projectPDA e tokenMint, usar compra on-chain
-            // Por enquanto, vamos usar o backend
-            const result = await purchaseCredits({
-              projectId: selectedProjectId,
-              quantity,
-            });
-
-            if (!result.success) {
-              throw new Error(result.message || "Failed to purchase credits");
-            }
-
-            // Success - close modal and reset
-            onClose();
-            setStep(1);
-            setSelectedProjectId("");
-            setQuantity(1);
-            // Optionally refresh the page or show success message
-            window.location.reload();
-          } catch (onChainError: any) {
-            // Se falhar, tentar backend
-            console.warn("On-chain purchase failed, trying backend:", onChainError);
-            const result = await purchaseCredits({
-              projectId: selectedProjectId,
-              quantity,
-            });
-
-            if (!result.success) {
-              throw new Error(result.message || "Failed to purchase credits");
-            }
-
-            // Success - close modal and reset
-            onClose();
-            setStep(1);
-            setSelectedProjectId("");
-            setQuantity(1);
-            window.location.reload();
-          }
-        } else {
-          // Usar backend se wallet não estiver conectada
-          const result = await purchaseCredits({
-            projectId: selectedProjectId,
-            quantity,
-          });
-
-          if (!result.success) {
-            throw new Error(result.message || "Failed to purchase credits");
-          }
-
-          // Success - close modal and reset
-          onClose();
-          setStep(1);
-          setSelectedProjectId("");
-          setQuantity(1);
-          window.location.reload();
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to purchase credits");
-      } finally {
-        setLoading(false);
-      }
+      toast.success("Credits purchased successfully!");
+      onPurchaseSuccess && onPurchaseSuccess();
+      handleClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to purchase credits");
+      toast.error(err.message || "Purchase failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
     onClose();
-    // Reset the form when closing
     setStep(1);
     setSelectedProjectId("");
     setQuantity(1);
@@ -193,7 +147,7 @@ export function PurchaseCreditsModal({
                   <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4 text-sm text-yellow-400">
                     <p className="font-medium mb-1">No projects available</p>
                     <p className="text-yellow-300/80">
-                      There are currently no carbon credit projects available for purchase. 
+                      There are currently no carbon credit projects available for purchase.
                       Please check back later or create a new project if you're an admin.
                     </p>
                   </div>
@@ -346,7 +300,7 @@ export function PurchaseCreditsModal({
               type="submit"
               className="bg-green-600 hover:bg-green-500"
               disabled={
-                loading || 
+                loading ||
                 (step === 1 && (!selectedProjectId || quantity <= 0)) ||
                 projects.length === 0
               }

@@ -6,9 +6,10 @@ import { ProgressRing } from "@/components/webapp/metrics/progress-ring";
 import { ArrowUpRight, Plus, Download, BarChart2 } from "lucide-react";
 import type { Emission, Project } from "../../../../types";
 import WebappShell from "@/components/webapp/layout/webapp-shell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PurchaseCreditsModal } from "@/components/webapp/modals/purchase-credits-modal";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { getProjects } from "@/app/api/project-service";
 
 // Mock data
 const emissions: Emission[] = [
@@ -38,48 +39,63 @@ const emissions: Emission[] = [
   },
 ];
 
-// Mock projects data
-const projects: Project[] = [
-  {
-    id: "1",
-    name: "São Carlos Solar Energy Project",
-    type: "Solar Energy",
-    location: "São Carlos, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-    pricePerTon: 20,
-    totalCapacity: 1000,
-    availableCapacity: 800,
-    code: "SCSE",
-  },
-  {
-    id: "2",
-    name: "Amazon Rainforest Preservation",
-    type: "Preservation",
-    location: "Amazonas, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
-    pricePerTon: 10,
-    totalCapacity: 5000,
-    availableCapacity: 3000,
-    code: "AMZREF",
-  },
-  {
-    id: "3",
-    name: "Atlantic Rainforest Preservation",
-    type: "Preservation",
-    location: "São Paulo, Brazil",
-    image:
-      "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
-    pricePerTon: 15,
-    totalCapacity: 6000,
-    availableCapacity: 4500,
-    code: "ATLREF",
-  },
-];
+// Mock projects data - REMOVED, now fetching from API
+// const projects: Project[] = [
+//   {
+//     id: "1",
+//     name: "São Carlos Solar Energy Project",
+//     type: "Solar Energy",
+//     location: "São Carlos, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+//     pricePerTon: 20,
+//     totalCapacity: 1000,
+//     availableCapacity: 800,
+//     code: "SCSE",
+//   },
+//   {
+//     id: "2",
+//     name: "Amazon Rainforest Preservation",
+//     type: "Preservation",
+//     location: "Amazonas, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
+//     pricePerTon: 10,
+//     totalCapacity: 5000,
+//     availableCapacity: 3000,
+//     code: "AMZREF",
+//   },
+//   {
+//     id: "3",
+//     name: "Atlantic Rainforest Preservation",
+//     type: "Preservation",
+//     location: "São Paulo, Brazil",
+//     image:
+//       "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80",
+//     pricePerTon: 15,
+//     totalCapacity: 6000,
+//     availableCapacity: 4500,
+//     code: "ATLREF",
+//   },
+// ];
 
 export default function EmissionsPage() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [preselectedPurchaseProject, setPreselectedPurchaseProject] =
+    useState<Project | null>(null);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const result = await getProjects();
+      if (result.success) {
+        setProjects(result.data || []);
+      } else {
+        console.error("Failed to fetch projects:", result.message);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Calculate total emissions and offsets
   const totalEmissions = emissions.reduce(
@@ -283,8 +299,12 @@ export default function EmissionsPage() {
         {/* Purchase Credits Modal */}
         <PurchaseCreditsModal
           isOpen={isPurchaseModalOpen}
-          onClose={() => setIsPurchaseModalOpen(false)}
+          onClose={() => {
+            setIsPurchaseModalOpen(false);
+            setPreselectedPurchaseProject(null);
+          }}
           projects={projects}
+          preselectedProject={preselectedPurchaseProject}
         />
       </WebappShell>
     </ProtectedRoute>
