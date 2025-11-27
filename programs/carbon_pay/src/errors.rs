@@ -77,4 +77,7 @@ pub enum ContractError {
 
     #[msg("Invalid USDC mint")]
     InvalidUsdcMint,
+
+    #[msg("USDC mint does not match the program constant")]
+    UsdcMintMismatch,
 }

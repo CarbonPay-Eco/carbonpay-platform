@@ -97,7 +97,20 @@ export function PurchaseCreditsModal({
       }
 
       toast.success("Credits purchased successfully!");
-      onPurchaseSuccess && onPurchaseSuccess();
+      
+      // Call the success callback before closing to refresh data
+      if (onPurchaseSuccess) {
+        try {
+          // If callback is async, await it; otherwise call it directly
+          const result = onPurchaseSuccess();
+          if (result instanceof Promise) {
+            await result;
+          }
+        } catch (error) {
+          console.error("Error in onPurchaseSuccess callback:", error);
+        }
+      }
+      
       handleClose();
     } catch (err: any) {
       setError(err.message || "Failed to purchase credits");

@@ -1,3 +1,4 @@
+use crate::constants::USDC_MINT;
 use crate::state::CarbonCredits;
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -11,7 +12,9 @@ pub struct InitializeCarbonCreditsAccountConstraints<'info> {
     pub admin: Signer<'info>,
 
     /// USDC mint account for payments
+    /// Must match the USDC_MINT constant defined in the program
     #[account(
+        constraint = usdc_mint.key() == USDC_MINT @ crate::errors::ContractError::UsdcMintMismatch,
         constraint = usdc_mint.decimals == 6 @ crate::errors::ContractError::InvalidUsdcDecimals,
     )]
     pub usdc_mint: Account<'info, Mint>,

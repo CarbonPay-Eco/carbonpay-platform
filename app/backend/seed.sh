@@ -151,7 +151,7 @@ echo -e "\n${YELLOW}[5/6] Creating Carbon Credit Projects${NC}"
 # Project 1: Amazon Rainforest Conservation
 PROJECT1_DATA=$(cat <<EOF
 {
-  "projectName": "Amazon Rainforest Conservation Project",
+  "projectName": "Amazon Rainforest Project",
   "location": "Pará, Brazil",
   "methodology": "VM0007 - REDD+ Methodology Framework",
   "certificationBody": "Verra VCS",
@@ -174,7 +174,7 @@ api_call "POST" "/admin/projects" "$PROJECT1_DATA" "$ADMIN_TOKEN" "Creating Amaz
 # Project 2: Atlantic Forest Restoration
 PROJECT2_DATA=$(cat <<EOF
 {
-  "projectName": "Atlantic Forest Restoration Initiative",
+  "projectName": "Atlantic Forest Restoration",
   "location": "São Paulo, Brazil",
   "methodology": "VM0009 - Afforestation and Reforestation",
   "certificationBody": "Verra VCS",
@@ -197,7 +197,7 @@ api_call "POST" "/admin/projects" "$PROJECT2_DATA" "$ADMIN_TOKEN" "Creating Atla
 # Project 3: Solar Energy Project
 PROJECT3_DATA=$(cat <<EOF
 {
-  "projectName": "São Carlos Solar Energy Project",
+  "projectName": "São Carlos Solar Energy",
   "location": "São Carlos, Brazil",
   "methodology": "ACM0002 - Grid-connected renewable electricity",
   "certificationBody": "Gold Standard",

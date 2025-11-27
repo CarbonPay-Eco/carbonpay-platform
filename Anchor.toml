@@ -10,7 +10,7 @@ seeds = false
 carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
 
 [programs.devnet]
-carbon_pay = "7Ju2yb323ApU1G6XCQ3YPRy4ihfDprR5FNJ8wHDmMZcJ"
+carbon_pay = "58iHVTd6UwJPCHmCVYx2FG3AtjgEyVre9Vdreuw8Mq82"
 
 [registry]
 url = "https://api.apr.dev"

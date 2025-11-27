@@ -96,4 +96,106 @@ export class WalletService {
     );
     return Keypair.fromSecretKey(privateKey);
   }
+
+  /**
+   * Derive a server-side master password for a user
+   * Uses JWT_SECRET + userId to create a consistent, server-accessible password
+   */
+  private static getServerMasterPassword(userId: string): string {
+    const jwtSecret = process.env.JWT_SECRET || "your_jwt_secret_here";
+    const serverMasterKey = process.env.SERVER_WALLET_MASTER_KEY;
+    
+    // Use SERVER_WALLET_MASTER_KEY if set, otherwise derive from JWT_SECRET + userId
+    if (serverMasterKey) {
+      return `${serverMasterKey}-${userId}`;
+    }
+    return `${jwtSecret}-${userId}`;
+  }
+
+  /**
+   * Get keypair by userId using server-side master key
+   * This is for server-side operations where we don't have the user's password
+   * Tries multiple known password patterns to decrypt the wallet
+   * Throws an error if decryption fails - wallet must be recreated with proper encryption
+   */
+  public static async getKeypairByUserId(userId: string): Promise<Keypair> {
+    const walletRepository = AppDataSource.getRepository(UserWallet);
+    const wallet = await walletRepository.findOneBy({ userId });
+
+    if (!wallet) {
+      throw new Error(
+        `Wallet not found for user ${userId}. ` +
+        `Please recreate the user wallet using the migration script.`
+      );
+    }
+
+    // Get server master password (derived from JWT_SECRET or SERVER_WALLET_MASTER_KEY)
+    const serverMasterPassword = this.getServerMasterPassword(userId);
+    
+    // List of possible passwords to try (in order of likelihood)
+    const possiblePasswords = [
+      serverMasterPassword, // Server-derived master key (most likely for new wallets)
+      "default-password-change-me", // Common default for auto-created wallets
+      "temp-password", // Used in draft completion
+      process.env.SERVER_WALLET_MASTER_KEY || "default-password-change-me", // Raw master key
+      `${userId}-${process.env.JWT_SECRET || "your_jwt_secret_here"}`, // Alternative derivation
+    ];
+
+    // Try each password until one works
+    for (const password of possiblePasswords) {
+      try {
+        const privateKey = this.decryptPrivateKey(
+          wallet.encryptedPrivateKey,
+          password
+        );
+        const keypair = Keypair.fromSecretKey(privateKey);
+        
+        // Verify the keypair matches the stored public key
+        if (keypair.publicKey.toBase58() === wallet.publicKey) {
+          return keypair;
+        }
+      } catch (error) {
+        // Try next password
+        continue;
+      }
+    }
+
+    // If all passwords failed, throw error - wallet must be recreated
+    throw new Error(
+      `Failed to decrypt wallet for user ${userId}. ` +
+      `Wallet was encrypted with a password we don't have access to. ` +
+      `Please run the wallet migration script to recreate wallets with proper encryption: ` +
+      `npm run migrate:wallets`
+    );
+  }
+
+  /**
+   * Recreate a user's wallet with proper server-side encryption
+   * This should be used when a wallet cannot be decrypted
+   */
+  public static async recreateWallet(userId: string): Promise<UserWallet> {
+    const walletRepository = AppDataSource.getRepository(UserWallet);
+    const existingWallet = await walletRepository.findOneBy({ userId });
+
+    const serverMasterPassword = this.getServerMasterPassword(userId);
+    const newKeypair = Keypair.generate();
+    const encryptedPrivateKey = this.encryptPrivateKey(
+      newKeypair.secretKey,
+      serverMasterPassword
+    );
+
+    if (existingWallet) {
+      // Update existing wallet
+      existingWallet.publicKey = newKeypair.publicKey.toBase58();
+      existingWallet.encryptedPrivateKey = encryptedPrivateKey;
+      return await walletRepository.save(existingWallet);
+    } else {
+      // Create new wallet
+      const wallet = new UserWallet();
+      wallet.userId = userId;
+      wallet.publicKey = newKeypair.publicKey.toBase58();
+      wallet.encryptedPrivateKey = encryptedPrivateKey;
+      return await walletRepository.save(wallet);
+    }
+  }
 }

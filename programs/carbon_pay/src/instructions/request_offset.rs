@@ -17,6 +17,11 @@ pub struct RequestOffset<'info> {
     #[account(mut)]
     pub offset_requester: Signer<'info>,
 
+    /// Payer for account creation (typically the platform/server wallet)
+    /// This allows account abstraction - users don't need SOL to request offsets
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     /// the original Purchase, must belong to requester
     #[account(
         mut,
@@ -88,7 +93,7 @@ pub struct RequestOffset<'info> {
     /// OffsetRequest record
     #[account(
         init,
-        payer = offset_requester,
+        payer = payer, // Use payer instead of offset_requester for account abstraction
         space = OffsetRequest::DISCRIMINATOR_SIZE + OffsetRequest::INIT_SPACE,
         seeds = [b"offset_request", offset_requester.key().as_ref(), purchase.key().as_ref(), request_id.as_bytes()],
         bump
@@ -182,7 +187,7 @@ impl<'info> RequestOffset<'info> {
                 uses: None,
             };
 
-            // CPI to create metadata
+            // CPI to create metadata - use payer for account abstraction
             create_metadata_accounts_v3(
                 CpiContext::new(
                     self.token_metadata_program.to_account_info(),
@@ -190,7 +195,7 @@ impl<'info> RequestOffset<'info> {
                         metadata: self.new_nft_metadata.to_account_info(),
                         mint: self.new_nft_mint.to_account_info(),
                         mint_authority: self.offset_requester.to_account_info(),
-                        payer: self.offset_requester.to_account_info(),
+                        payer: self.payer.to_account_info(), // Use payer instead of offset_requester
                         update_authority: self.offset_requester.to_account_info(),
                         system_program: self.system_program.to_account_info(),
                         rent: self.rent.to_account_info(),
@@ -205,6 +210,10 @@ impl<'info> RequestOffset<'info> {
 
         // 6) update on-chain state
         self.purchase.remaining_amount = remaining;
+        
+        // Note: We cannot update purchase.nft_mint because the purchase PDA is derived from it.
+        // For partial offsets, a new NFT is minted and the backend must track which NFT to use
+        // for subsequent offsets. The purchase account's nft_mint always points to the original NFT.
         self.carbon_credits.offset_credits = self
             .carbon_credits
             .offset_credits

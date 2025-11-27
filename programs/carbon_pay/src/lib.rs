@@ -1,12 +1,14 @@
 use anchor_lang::prelude::*;
 
+mod constants;
 mod errors;
 mod instructions;
 mod state;
 
 use instructions::*;
+pub use constants::USDC_MINT;
 
-declare_id!("bGiephq1pZ8kxJVumdgCMEa2BjCEJuviCSwHgL9rdfg");
+declare_id!("58iHVTd6UwJPCHmCVYx2FG3AtjgEyVre9Vdreuw8Mq82");
 
 #[program]
 pub mod carbon_pay {

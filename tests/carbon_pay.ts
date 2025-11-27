@@ -30,8 +30,10 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
   const program = anchor.workspace.CarbonPay as Program<CarbonPay>;
   const connection = provider.connection;
 
-  // USDC mint (mock for testing)
+  // USDC mint - must match the constant in the program
+  // Using the constant from constants.rs: 59Vpy9CegiGXeDrToTcZVi3xE7nPoa8X9izw4yctnvGT
   let usdcMint: PublicKey;
+  let payer: Keypair; // Payer for account abstraction (server wallet)
 
   // CarbonCredits PDA and bump
   let carbonCreditsPda: PublicKey;
@@ -71,6 +73,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
     // Create test accounts
     projectOwner = Keypair.generate();
     buyer = Keypair.generate();
+    payer = Keypair.generate(); // Payer for account abstraction
 
     // Fund accounts
     const airdrops = await Promise.all([
@@ -79,6 +82,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
         5 * LAMPORTS_PER_SOL
       ),
       provider.connection.requestAirdrop(buyer.publicKey, 5 * LAMPORTS_PER_SOL),
+      provider.connection.requestAirdrop(payer.publicKey, 5 * LAMPORTS_PER_SOL),
     ]);
 
     // Wait for confirmations
@@ -88,14 +92,46 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
       )
     );
 
-    // Create USDC mint (6 decimals)
+    // For localnet testing, always create a new USDC mint
+    // The program has a hardcoded constant, so we need to update it after creating the mint
+    console.log("Creating USDC mint for localnet testing...");
     usdcMint = await createMint(
       provider.connection,
-      provider.wallet.payer as anchor.web3.Keypair,
-      provider.wallet.publicKey,
-      null,
-      6
+      payer,
+      payer.publicKey, // mint authority
+      payer.publicKey, // freeze authority
+      6 // 6 decimals for USDC
     );
+    
+    console.log("✅ Created test USDC mint:", usdcMint.toBase58());
+    console.log("   Mint authority:", payer.publicKey.toBase58());
+    
+    // Automatically update the constant in constants.rs
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const constantsFile = path.join(process.cwd(), 'programs', 'carbon_pay', 'src', 'constants.rs');
+      
+      let content = fs.readFileSync(constantsFile, 'utf-8');
+      const regex = /pub const USDC_MINT: Pubkey = pubkey!\(".*"\);/;
+      const replacement = `pub const USDC_MINT: Pubkey = pubkey!("${usdcMint.toBase58()}");`;
+      
+      if (regex.test(content)) {
+        content = content.replace(regex, replacement);
+        fs.writeFileSync(constantsFile, content, 'utf-8');
+        console.log("✅ Automatically updated constants.rs with new mint address");
+        console.log("⚠️  You need to rebuild the program: anchor build");
+        console.log("⚠️  Tests will fail until you rebuild!");
+      } else {
+        console.log("⚠️  Could not update constants.rs automatically");
+        console.log(`   Manually update: pub const USDC_MINT: Pubkey = pubkey!("${usdcMint.toBase58()}");`);
+      }
+    } catch (error: any) {
+      // If we can't update automatically, just warn
+      console.log("⚠️  Could not update constants.rs automatically:", error.message);
+      console.log(`   Manually update: pub const USDC_MINT: Pubkey = pubkey!("${usdcMint.toBase58()}");`);
+      console.log("   Then run: anchor build");
+    }
 
     console.log("✅ Setup complete");
     console.log("Project Owner:", projectOwner.publicKey.toBase58());
@@ -164,12 +200,27 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
     await provider.sendAndConfirm(createBuyerUsdcTx);
 
     // 8. Mint USDC to buyer for testing (100 USDC)
+    // Get the mint info to verify mint authority
+    const usdcMintInfo = await getMint(connection, usdcMint);
+    const mintAuthority = usdcMintInfo.mintAuthority;
+    
+    if (!mintAuthority) {
+      throw new Error("USDC mint has no mint authority - cannot mint tokens");
+    }
+    
+    // Verify that payer is the mint authority (since we created it with payer)
+    if (!mintAuthority.equals(payer.publicKey)) {
+      console.warn(`⚠️  Mint authority (${mintAuthority.toBase58()}) doesn't match payer (${payer.publicKey.toBase58()})`);
+      console.warn("   This might cause minting to fail. Using payer as signer anyway.");
+    }
+    
+    // Use payer as signer since that's who created the mint
     await mintTo(
       connection,
-      provider.wallet.payer as anchor.web3.Keypair,
+      payer, // Signer must be the mint authority
       usdcMint,
       buyerUsdcAccount,
-      provider.wallet.publicKey,
+      payer.publicKey, // Mint authority
       100_000_000 // 100 USDC (100M micro-USDC)
     );
 
@@ -180,6 +231,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
   // 1) InitializeCarbonCreditsAccountConstraints
   // ──────────────────────────────────────────────────────────────────────────────
   test("1. Initialize CarbonCredits PDA with USDC", async () => {
+    // Note: initialize_carbon_credits uses admin as payer, not a separate payer field
     await program.methods
       .initializeCarbonCredits()
       .accountsPartial({
@@ -319,6 +371,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
         )
         .accountsStrict({
           projectOwner: projectOwner.publicKey,
+          payer: payer.publicKey, // Add payer for account abstraction
           project: projectPda,
           nftMint: nftMint,
           tokenMint: tokenMint,
@@ -333,7 +386,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
           rent: SYSVAR_RENT_PUBKEY,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         })
-        .signers([projectOwner])
+        .signers([projectOwner, payer]) // Both projectOwner and payer must sign
         .rpc();
 
       console.log("Project initialized successfully! Tx:", tx);
@@ -559,6 +612,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
         .accountsPartial({
           project: projectPda,
           projectOwner: projectOwner.publicKey,
+          payer: payer.publicKey, // Add payer for account abstraction
           projectMint: tokenMint,
           carbonCredits: carbonCreditsPda,
           projectTokenAccount: vaultAta,
@@ -577,7 +631,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
           systemProgram: SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
         })
-        .signers([buyer])
+        .signers([buyer, payer]) // Both buyer and payer must sign
         .rpc();
       console.log("Purchase successful! Tx:", tx);
     } catch (thrownObject) {
@@ -707,6 +761,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
       .requestOffset(new BN(offsetAmount), requestId)
       .accountsPartial({
         offsetRequester: buyer.publicKey,
+        payer: payer.publicKey, // Add payer for account abstraction
         purchase: purchasePda,
         project: projectPda,
         originalNftMint: purchaseNftMint,
@@ -723,7 +778,7 @@ describe("🌳 CarbonPay Program Test Suite - Complete Coverage", () => {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
       })
-      .signers([buyer])
+      .signers([buyer, payer]) // Both buyer and payer must sign
       .rpc();
 
     // e) Final verifications

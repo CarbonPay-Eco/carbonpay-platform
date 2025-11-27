@@ -40,37 +40,37 @@ export default function AssetsPage() {
   const [preselectedPurchaseProject, setPreselectedPurchaseProject] =
     useState<Project | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [purchasesResult, retirementsResult, projectsResult] =
-          await Promise.all([
-            getUserPurchases(),
-            getRetirements(),
-            getProjects(),
-          ]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [purchasesResult, retirementsResult, projectsResult] =
+        await Promise.all([
+          getUserPurchases(),
+          getRetirements(),
+          getProjects(),
+        ]);
 
-        if (purchasesResult.success) {
-          setPurchases(purchasesResult.data || []);
-        } else {
-          setError(purchasesResult.message || "Failed to load purchases");
-        }
-
-        if (retirementsResult.success) {
-          setRetirements(retirementsResult.data || []);
-        }
-
-        if (projectsResult.success) {
-          setProjects(projectsResult.data || []);
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load data");
-      } finally {
-        setLoading(false);
+      if (purchasesResult.success) {
+        setPurchases(purchasesResult.data || []);
+      } else {
+        setError(purchasesResult.message || "Failed to load purchases");
       }
-    };
 
+      if (retirementsResult.success) {
+        setRetirements(retirementsResult.data || []);
+      }
+
+      if (projectsResult.success) {
+        setProjects(projectsResult.data || []);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -315,6 +315,10 @@ export default function AssetsPage() {
           }}
           projects={projects}
           preselectedProject={preselectedPurchaseProject}
+          onPurchaseSuccess={() => {
+            // Refresh portfolio after purchase
+            fetchData();
+          }}
         />
       </WebappShell>
     </ProtectedRoute>

@@ -22,6 +22,7 @@ import { getUserProfile } from "@/app/api/user-service";
 // import { useWallet } from "@solana/wallet-adapter-react";
 import { CreateProjectModal } from "@/components/webapp/modals/create-project-modal";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { formatLargeCurrency } from "@/lib/utils";
 
 // Mock data (fallback values)
 const defaultMetrics = {
@@ -176,8 +177,9 @@ export default function DashboardPage() {
   // Simulate wallet connection check
   useEffect(() => {
     localStorage.setItem("walletConnected", "true");
+  }, []);
 
-    const fetchData = async () => {
+  const fetchData = async () => {
       setLoading(true);
       try {
         const [
@@ -259,6 +261,7 @@ export default function DashboardPage() {
       }
     };
 
+  useEffect(() => {
     fetchData();
   }, []); // Removed publicKey dependency
 
@@ -311,7 +314,7 @@ export default function DashboardPage() {
                   value={
                     loading
                       ? "..."
-                      : `$${walletBalance.toFixed(2)} USD`
+                      : formatLargeCurrency(walletBalance)
                   }
                   className="flex flex-col items-center justify-center text-center"
                   action={
@@ -362,7 +365,7 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     className="mt-4 w-full bg-green-600 hover:bg-green-500"
-                    onClick={() => setIsPurchaseModalOpen(true)}
+                    onClick={() => router.push("/webapp/emissions")}
                   >
                     Offset right now
                   </Button>
@@ -465,42 +468,15 @@ export default function DashboardPage() {
           onClose={() => {
             setIsPurchaseModalOpen(false);
             setPreselectedPurchaseProject(null);
-            // Refresh data after purchase
-            const fetchData = async () => {
-              try {
-                const [retirementsResult, purchasesResult] = await Promise.all([
-                  getRetirements(),
-                  getUserPurchases(),
-                ]);
-
-                if (retirementsResult.success) {
-                  setTotalOffset(retirementsResult.totalOffset || 0);
-                }
-
-                if (purchasesResult.success) {
-                  const purchases = purchasesResult.data || [];
-                  const totalPurchased = purchases.reduce(
-                    (sum: number, purchase: any) => sum + (purchase.quantity || 0),
-                    0
-                  );
-
-                  const retirements = retirementsResult.data || [];
-                  const totalRetired = retirements.reduce(
-                    (sum: number, retirement: any) => sum + (retirement.quantity || 0),
-                    0
-                  );
-
-                  const available = totalPurchased - totalRetired;
-                  setCreditsAvailable(Math.max(0, available));
-                }
-              } catch (err) {
-                console.error("Error refreshing data:", err);
-              }
-            };
-            fetchData();
           }}
           projects={projects}
           preselectedProject={preselectedPurchaseProject}
+          onPurchaseSuccess={async () => {
+            // Refresh all data after purchase
+            console.log("Purchase successful, refreshing dashboard data...");
+            await fetchData();
+            console.log("Dashboard data refreshed");
+          }}
         />
 
         {/* Project Details Modal */}
@@ -515,9 +491,9 @@ export default function DashboardPage() {
         <CreateProjectModal
           isOpen={isCreateProjectModalOpen}
           onClose={() => setIsCreateProjectModalOpen(false)}
-          onCreated={(project: any) => {
-            // Add the newly created project to the top of the list
-            setProjects((prev) => [project, ...(prev || [])]);
+          onCreated={() => {
+            // Refresh projects list after creation
+            fetchData();
           }}
         />
       </WebappShell>

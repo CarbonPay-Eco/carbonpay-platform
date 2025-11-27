@@ -10,6 +10,21 @@ export class AuthService {
     process.env.JWT_SECRET || "your-secret-key";
   private static readonly JWT_EXPIRES_IN = "24h";
 
+  /**
+   * Derive a server-side master password for a user
+   * Uses JWT_SECRET + userId to create a consistent, server-accessible password
+   */
+  private static getServerMasterPassword(userId: string): string {
+    const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
+    const serverMasterKey = process.env.SERVER_WALLET_MASTER_KEY;
+    
+    // Use SERVER_WALLET_MASTER_KEY if set, otherwise derive from JWT_SECRET + userId
+    if (serverMasterKey) {
+      return `${serverMasterKey}-${userId}`;
+    }
+    return `${jwtSecret}-${userId}`;
+  }
+
   public static async register(
     email: string,
     password: string,
@@ -30,8 +45,10 @@ export class AuthService {
     user.role = role;
     await userRepository.save(user);
 
-    // Create wallet for user
-    await WalletService.createWallet(user.id, password);
+    // Create wallet for user using server-side master key
+    // This allows server to decrypt wallet for on-chain operations
+    const serverMasterPassword = this.getServerMasterPassword(user.id);
+    await WalletService.createWallet(user.id, serverMasterPassword);
 
     // Generate JWT token
     const token = jwt.sign({ userId: user.id }, this.JWT_SECRET, {
@@ -99,8 +116,10 @@ export class AuthService {
     await userRepository.save(user);
 
     // Create wallet for user if not exists (since it was created as draft)
+    // Use server-side master key for consistency
     try {
-      await WalletService.createWallet(user.id, "temp-password");
+      const serverMasterPassword = this.getServerMasterPassword(user.id);
+      await WalletService.createWallet(user.id, serverMasterPassword);
     } catch (error) {
       // Wallet might already exist, that's ok
       console.log("Wallet already exists or error creating:", error);

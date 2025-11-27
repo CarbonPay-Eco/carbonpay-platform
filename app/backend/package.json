@@ -13,7 +13,10 @@
     "db:migrate": "ts-node src/database/migration.ts",
     "db:sync": "ts-node -e \"import { AppDataSource } from './src/database/data-source'; AppDataSource.initialize().then(() => console.log('Database synchronized'))\"",
     "set-admin": "ts-node scripts/set-admin.ts",
-    "hash-password": "ts-node scripts/hash-password.ts"
+    "hash-password": "ts-node scripts/hash-password.ts",
+    "migrate:wallets": "ts-node scripts/migrate-wallets.ts",
+    "create:devnet-usdc": "ts-node scripts/create-devnet-usdc-mint.ts",
+    "mint:usdc-to-users": "ts-node scripts/mint-usdc-to-users.ts"
   },
   "keywords": [
     "carbon",

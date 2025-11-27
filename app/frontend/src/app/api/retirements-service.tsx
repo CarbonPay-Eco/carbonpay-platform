@@ -67,6 +67,8 @@ export const retireEmissions = async (retirementData: {
   retirementMessage?: string;
   reportingPeriodStart?: string;
   reportingPeriodEnd?: string;
+  emissionId?: string; // Optional: link to emission record
+  purchaseId?: string; // Optional: specific purchase to offset from
 }): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
     const response = await api.post("/user/retire-emissions", retirementData);

@@ -38,6 +38,12 @@ export class Purchase {
   @Column({ name: "tx_hash", nullable: true })
   txHash: string;
 
+  @Column({ name: "purchase_pda", nullable: true, type: "varchar" })
+  purchasePDA: string | null; // On-chain purchase PDA address
+
+  @Column({ name: "nft_mint", nullable: true, type: "varchar" })
+  nftMint: string | null; // Purchase NFT mint address
+
   @Column({
     type: "enum",
     enum: ["pending", "completed", "failed"],

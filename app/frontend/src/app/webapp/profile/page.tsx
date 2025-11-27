@@ -21,6 +21,7 @@ import {
 import WebappShell from "@/components/webapp/layout/webapp-shell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { getUserProfile } from "../../api/user-service";
+import { formatLargeCurrency } from "@/lib/utils";
 
 interface UserProfile {
   id: string;
@@ -169,7 +170,7 @@ export default function ProfilePage() {
                         <p className="text-sm text-gray-400">
                           Account Balance
                         </p>
-                        <p>${profile.walletBalance.toFixed(2)} USD</p>
+                        <p>{formatLargeCurrency(profile.walletBalance)}</p>
                       </div>
                     </div>
                   )}

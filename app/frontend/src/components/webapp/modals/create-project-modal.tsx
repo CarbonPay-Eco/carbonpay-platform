@@ -36,8 +36,10 @@ export function CreateProjectModal({
   onCreated,
 }: CreateProjectModalProps) {
   const [step, setStep] = useState<number>(1);
+  const [error, setError] = useState<string | null>(null);
+  const MAX_PROJECT_NAME_LENGTH = 32;
   const [formData, setFormData] = useState({
-    projectName: "Amazon Rainforest Conservation Project",
+    projectName: "Amazon Rainforest Project",
     description:
       "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
     location: "Pará, Brazil",
@@ -48,7 +50,7 @@ export function CreateProjectModal({
     vintageYear: new Date().getFullYear(),
     standard: "VCS",
     totalIssued: "50000",
-    pricePerTon: "25.50",
+    pricePerTon: "25",
     documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
     projectImageUrl:
       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
@@ -59,6 +61,15 @@ export function CreateProjectModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    
+    // Enforce max length for project name
+    if (name === "projectName" && value.length > MAX_PROJECT_NAME_LENGTH) {
+      setError(`Project name must be ${MAX_PROJECT_NAME_LENGTH} characters or less`);
+      return;
+    } else if (name === "projectName") {
+      setError(null);
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -68,6 +79,13 @@ export function CreateProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    // Validate project name length
+    if (formData.projectName.length > MAX_PROJECT_NAME_LENGTH) {
+      setError(`Project name must be ${MAX_PROJECT_NAME_LENGTH} characters or less`);
+      return;
+    }
 
     if (step === 1) {
       setStep(2);
@@ -110,8 +128,9 @@ export function CreateProjectModal({
         onClose();
         // Reset the form with mock data for faster testing
         setStep(1);
+        setError(null);
         setFormData({
-          projectName: "Amazon Rainforest Conservation Project",
+          projectName: "Amazon Rainforest Project",
           description:
             "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
           location: "Pará, Brazil",
@@ -122,7 +141,7 @@ export function CreateProjectModal({
           vintageYear: new Date().getFullYear(),
           standard: "VCS",
           totalIssued: "50000",
-          pricePerTon: "25.50",
+          pricePerTon: "25",
           documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
           projectImageUrl:
             "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
@@ -140,8 +159,9 @@ export function CreateProjectModal({
     onClose();
     // Reset the form with mock data for faster testing
     setStep(1);
+    setError(null);
     setFormData({
-      projectName: "Amazon Rainforest Conservation Project",
+      projectName: "Amazon Rainforest Project",
       description:
         "A comprehensive reforestation and conservation initiative in the Brazilian Amazon, protecting 10,000 hectares of primary forest and restoring 5,000 hectares of degraded land. This project generates verified carbon credits through avoided deforestation and forest restoration activities.",
       location: "Pará, Brazil",
@@ -152,7 +172,7 @@ export function CreateProjectModal({
       vintageYear: new Date().getFullYear(),
       standard: "VCS",
       totalIssued: "50000",
-      pricePerTon: "25.50",
+      pricePerTon: "25",
       documentationUrl: "https://carbonpay.eco/projects/vcs-2024-001",
       projectImageUrl:
         "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
@@ -175,20 +195,32 @@ export function CreateProjectModal({
             </DialogDescription>
           </DialogHeader>
 
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           {step === 1 ? (
             <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
               <div className="space-y-2">
                 <label htmlFor="projectName" className="text-sm font-medium">
-                  Project Name
+                  Project Name <span className="text-gray-500 text-xs">(max {MAX_PROJECT_NAME_LENGTH} chars)</span>
                 </label>
                 <Input
                   id="projectName"
                   name="projectName"
                   value={formData.projectName}
                   onChange={handleInputChange}
+                  maxLength={MAX_PROJECT_NAME_LENGTH}
                   className="bg-black/50 border-white/20"
                   required
                 />
+                {formData.projectName.length > 0 && (
+                  <p className="text-xs text-gray-500">
+                    {formData.projectName.length}/{MAX_PROJECT_NAME_LENGTH} characters
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -462,7 +494,8 @@ export function CreateProjectModal({
               type="submit"
               className="bg-green-600 hover:bg-green-500"
               disabled={
-                step === 1 && (!formData.projectName || !formData.standard)
+                step === 1 && (!formData.projectName || !formData.standard || formData.projectName.length > MAX_PROJECT_NAME_LENGTH) ||
+                !!error
               }
             >
               {step === 1 ? (

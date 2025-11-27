@@ -24,10 +24,15 @@ pub struct InitializeProject<'info> {
     #[account(mut)]
     pub project_owner: Signer<'info>,
 
+    /// Payer for account creation (typically the platform/server wallet)
+    /// This allows account abstraction - users don't need SOL to create projects
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     /// On-chain state of the project
     #[account(
         init,
-        payer = project_owner,
+        payer = payer, // Use payer instead of project_owner
         space = Project::DISCRIMINATOR_SIZE + Project::INIT_SPACE,
         seeds = [b"project", project_owner.key().as_ref(), nft_mint.key().as_ref()],
         bump
@@ -178,7 +183,7 @@ impl<'info> InitializeProject<'info> {
             collection: None,
             uses: None,
         };
-        // Metadata
+        // Metadata - use payer for account creation costs
         create_metadata_accounts_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -186,7 +191,7 @@ impl<'info> InitializeProject<'info> {
                     metadata: self.metadata.to_account_info(),
                     mint: self.nft_mint.to_account_info(),
                     mint_authority: self.project_owner.to_account_info(),
-                    payer: self.project_owner.to_account_info(),
+                    payer: self.payer.to_account_info(), // Use payer instead of project_owner
                     update_authority: self.project_owner.to_account_info(),
                     system_program: self.system_program.to_account_info(),
                     rent: self.rent.to_account_info(),
@@ -197,7 +202,7 @@ impl<'info> InitializeProject<'info> {
             true,
             None,
         )?;
-        // Master edition
+        // Master edition - use payer for account creation costs
         create_master_edition_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -207,7 +212,7 @@ impl<'info> InitializeProject<'info> {
                     update_authority: self.project_owner.to_account_info(),
                     mint_authority: self.project_owner.to_account_info(),
                     metadata: self.metadata.to_account_info(),
-                    payer: self.project_owner.to_account_info(),
+                    payer: self.payer.to_account_info(), // Use payer instead of project_owner
                     token_program: self.token_program.to_account_info(),
                     system_program: self.system_program.to_account_info(),
                     rent: self.rent.to_account_info(),

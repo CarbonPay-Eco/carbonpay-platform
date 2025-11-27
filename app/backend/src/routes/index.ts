@@ -18,6 +18,7 @@ import { UserController } from "../controllers/user.controller";
 import { OrganizationController } from "../controllers/organization.controller";
 import { ProjectController } from "../controllers/project.controller";
 import { RetirementController } from "../controllers/retirement.controller";
+import { EmissionController } from "../controllers/emission.controller";
 
 // Instantiating controllers
 const authController = new AuthController();
@@ -25,6 +26,7 @@ const userController = new UserController();
 const organizationController = new OrganizationController();
 const projectController = new ProjectController();
 const retirementController = new RetirementController();
+const emissionController = new EmissionController();
 
 const router = Router();
 
@@ -292,6 +294,181 @@ router.get(
   "/user/retirements/:id",
   authMiddleware,
   retirementController.getRetirementById
+);
+
+/**
+ * @openapi
+ * /user/emissions:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user's emissions
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user emissions
+ */
+router.get(
+  "/user/emissions",
+  authMiddleware,
+  emissionController.getUserEmissions
+);
+
+/**
+ * @openapi
+ * /user/emissions/stats:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user's emission statistics
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Emission statistics
+ */
+router.get(
+  "/user/emissions/stats",
+  authMiddleware,
+  emissionController.getEmissionStats
+);
+
+/**
+ * @openapi
+ * /user/emissions:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Create a new emission record
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - source
+ *               - amount
+ *               - date
+ *             properties:
+ *               source:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Emission created successfully
+ */
+router.post(
+  "/user/emissions",
+  authMiddleware,
+  emissionController.createEmission
+);
+
+/**
+ * @openapi
+ * /user/emissions/{id}:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get emission by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Emission ID
+ *     responses:
+ *       200:
+ *         description: Emission details
+ */
+router.get(
+  "/user/emissions/:id",
+  authMiddleware,
+  emissionController.getEmissionById
+);
+
+/**
+ * @openapi
+ * /user/emissions/{id}:
+ *   put:
+ *     tags:
+ *       - User
+ *     summary: Update an emission record
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Emission ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               source:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Emission updated successfully
+ */
+router.put(
+  "/user/emissions/:id",
+  authMiddleware,
+  emissionController.updateEmission
+);
+
+/**
+ * @openapi
+ * /user/emissions/{id}:
+ *   delete:
+ *     tags:
+ *       - User
+ *     summary: Delete an emission record
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Emission ID
+ *     responses:
+ *       200:
+ *         description: Emission deleted successfully
+ */
+router.delete(
+  "/user/emissions/:id",
+  authMiddleware,
+  emissionController.deleteEmission
 );
 
 /**

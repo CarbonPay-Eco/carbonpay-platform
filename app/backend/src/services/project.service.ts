@@ -4,7 +4,7 @@ import { AnchorService } from "./anchor.service";
 import { Repository } from "typeorm";
 import { AppDataSource } from "../database/data-source";
 import { UserWallet } from "../entities/UserWallet";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 
 export class ProjectService {
   private anchorService: AnchorService;
@@ -29,9 +29,13 @@ export class ProjectService {
     if (!userWallet) {
       console.log(`Wallet not found for user ${userId}, creating one automatically...`);
       const { WalletService } = await import("./WalletService");
-      // Use a default password for auto-created wallets (users created outside normal flow)
-      // In production, users should reset their password after first login
-      userWallet = await WalletService.createWallet(userId, "default-password-change-me");
+      // Use server master password for consistency (derived from JWT_SECRET + userId)
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
+      const serverMasterKey = process.env.SERVER_WALLET_MASTER_KEY;
+      const serverPassword = serverMasterKey 
+        ? `${serverMasterKey}-${userId}` 
+        : `${jwtSecret}-${userId}`;
+      userWallet = await WalletService.createWallet(userId, serverPassword);
       console.log(`Wallet created for user ${userId}: ${userWallet.publicKey}`);
     }
 
@@ -42,9 +46,27 @@ export class ProjectService {
     data: Partial<TokenizedProject>,
     userId: string
   ): Promise<TokenizedProject> {
-    // Get user wallet to get the public key
+    // Get user wallet - MUST use user's wallet as project owner
     const userWallet = await this.getUserWallet(userId);
-    const projectOwner = new PublicKey(userWallet.publicKey);
+    
+    // Get user's keypair for signing the transaction
+    // This will throw an error if decryption fails - wallet must be recreated
+    const { WalletService } = await import("./WalletService");
+    const projectOwnerKeypair = await WalletService.getKeypairByUserId(userId);
+    
+    // Always use the user's wallet as project owner
+    const projectOwner = projectOwnerKeypair.publicKey;
+    
+    // Verify the keypair matches the stored public key
+    if (projectOwner.toBase58() !== userWallet.publicKey) {
+      throw new Error(
+        `Wallet public key mismatch for user ${userId}. ` +
+        `Stored: ${userWallet.publicKey}, Decrypted: ${projectOwner.toBase58()}. ` +
+        `Please run 'npm run migrate:wallets' to fix this.`
+      );
+    }
+    
+    console.log(`Using user wallet ${projectOwner.toBase58()} as project owner signer`);
 
     // Prepare metadata URI (can be IPFS hash or URL)
     const metadataUri = data.ipfsHash 
@@ -58,27 +80,39 @@ export class ProjectService {
     // Carbon pay fee in basis points (e.g., 500 = 5%)
     const carbonPayFee = 500; // 5% default fee
 
-    // Try to create project on-chain, but allow offline creation if RPC is unavailable
+
+    // Create project on-chain - this will throw if it fails
+    // We want to fail fast rather than creating offline projects
     let onChainResult: {
       tx: string;
       projectPDA: PublicKey;
       nftMint: PublicKey;
       tokenMint: PublicKey;
-    } | null = null;
+    };
+    
     try {
+      // Token Metadata Program has a 32 character limit for the name field
+      // Truncate the project name if it's too long
+      const maxNameLength = 32;
+      const projectName = data.projectName || "Carbon Project";
+      const truncatedName = projectName.length > maxNameLength 
+        ? projectName.substring(0, maxNameLength - 3) + "..."
+        : projectName;
+
       onChainResult = await this.anchorService.initializeProject({
         projectOwner,
+        projectOwnerKeypair, // REQUIRED: User's keypair for signing
         amount: data.totalIssued || 0,
         pricePerToken,
         carbonPayFee,
         uri: metadataUri,
-        name: data.projectName || "Carbon Project",
+        name: truncatedName,
         symbol: data.standard?.substring(0, 6).toUpperCase() || "CARBON",
       });
       console.log("Project created on-chain successfully:", onChainResult.tx);
     } catch (error: any) {
-      console.warn("Failed to create project on-chain (continuing offline):", error.message);
-      // Continue with offline project creation
+      console.error("Failed to create project on-chain:", error);
+      throw new Error(`Failed to create project on-chain: ${error.message}`);
     }
 
     // Create a new project entity with on-chain data (if available)
@@ -100,10 +134,10 @@ export class ProjectService {
       pricePerTon: data.pricePerTon || 0,
       ipfsHash: data.ipfsHash || "",
       documentationUrl: data.documentationUrl || "",
-      onChainMintTx: onChainResult?.tx || "OFFLINE",
-      projectPDA: onChainResult?.projectPDA.toBase58() || undefined,
-      tokenMint: onChainResult?.tokenMint.toBase58() || undefined,
-      nftMint: onChainResult?.nftMint.toBase58() || undefined,
+      onChainMintTx: onChainResult.tx,
+      projectPDA: onChainResult.projectPDA.toBase58(),
+      tokenMint: onChainResult.tokenMint.toBase58(),
+      nftMint: onChainResult.nftMint.toBase58(),
       projectOwner: projectOwner.toBase58(),
       status: "available",
       projectImageUrl: data.projectImageUrl || "",

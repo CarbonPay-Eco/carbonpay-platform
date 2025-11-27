@@ -20,19 +20,16 @@ export class RetirementController {
         retirementMessage,
         reportingPeriodStart,
         reportingPeriodEnd,
+        emissionId, // Optional: link to emission record
+        purchaseId, // Optional: specific purchase to offset from
       } = req.body;
 
       if (!projectId || !quantity || quantity <= 0) {
         throw createError("Project ID and quantity (> 0) are required", 400);
       }
 
-      // Get user's wallet address (backend manages this in Web 2.5)
-      const walletAddress = await retirementService.getUserWalletAddress(
-        userId
-      );
-
       const retirement = await retirementService.retireCredits(
-        walletAddress,
+        userId,
         projectId,
         quantity,
         {
@@ -44,12 +41,14 @@ export class RetirementController {
           reportingPeriodEnd: reportingPeriodEnd
             ? new Date(reportingPeriodEnd)
             : undefined,
+          emissionId,
+          purchaseId,
         }
       );
 
       res.status(200).json({
         success: true,
-        message: "Credits retired successfully",
+        message: "Credits offset successfully on-chain",
         data: retirement,
       });
     }

@@ -8,6 +8,7 @@ import { Retirement } from "./entities/Retirement";
 import { AuditLog } from "./entities/AuditLog";
 import { User } from "../entities/User";
 import { Purchase } from "./entities/Purchase";
+import { Emission } from "./entities/Emission";
 import "dotenv/config";
 import {
   DB_HOST,
@@ -40,6 +41,7 @@ export const AppDataSource = new DataSource({
     Retirement,
     AuditLog,
     Purchase,
+    Emission,
   ],
   migrations: ["migrations/**/*.ts"],
   subscribers: [],

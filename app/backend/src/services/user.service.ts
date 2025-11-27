@@ -7,7 +7,9 @@ import { UserWallet } from "../entities/UserWallet";
 import { Purchase } from "../database/entities/Purchase";
 import { SolanaService } from "./solana.service";
 import { AuditLogService } from "./audit-log.service";
-import { WalletService } from './wallet.service';
+import { WalletService } from './WalletService';
+import { AnchorService } from "./anchor.service";
+import { PublicKey } from "@solana/web3.js";
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -18,6 +20,7 @@ export class UserService {
   private solanaService: SolanaService;
   private auditLogService: AuditLogService;
   private walletService: WalletService;
+  private anchorService: AnchorService;
 
   constructor() {
     this.userRepository = AppDataSource.getRepository(User);
@@ -28,6 +31,7 @@ export class UserService {
     this.solanaService = new SolanaService();
     this.auditLogService = new AuditLogService();
     this.walletService = new WalletService();
+    this.anchorService = new AnchorService();
   }
 
   // Create organization data for user during registration
@@ -66,10 +70,19 @@ export class UserService {
     // If wallet doesn't exist (e.g., user created via SQL), create one automatically
     if (!userWallet) {
       console.log(`Wallet not found for user ${userId}, creating one automatically...`);
-      // Use a default password for auto-created wallets (users created outside normal flow)
-      // In production, users should reset their password after first login
-      userWallet = await WalletService.createWallet(userId, "default-password-change-me");
+      // Use server master password for consistency (derived from JWT_SECRET + userId)
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
+      const serverMasterKey = process.env.SERVER_WALLET_MASTER_KEY;
+      const serverPassword = serverMasterKey 
+        ? `${serverMasterKey}-${userId}` 
+        : `${jwtSecret}-${userId}`;
+      const { WalletService: WS } = await import('./WalletService');
+      userWallet = await WS.createWallet(userId, serverPassword);
       console.log(`Wallet created for user ${userId}: ${userWallet.publicKey}`);
+    }
+
+    if (!userWallet) {
+      throw new Error(`Failed to create wallet for user ${userId}`);
     }
 
     return userWallet;
@@ -173,34 +186,54 @@ export class UserService {
     // Calculate total cost using pricePerTon instead of pricePerCredit
     const totalCost = quantity * project.pricePerTon;
 
-    // TODO: Check user balance and deduct
-    // For now, simulate the purchase
+    // Check if project has on-chain PDA
+    if (!project.projectPDA) {
+      throw new Error("Project does not have an on-chain PDA. Project must be created on-chain first.");
+    }
 
-    // Execute onchain transaction (mint credits to user's wallet)
-    const txHash = await this.solanaService.mintCredit(userWallet.publicKey, {
-      project: project.projectName,
-      vintage: project.vintageYear.toString(),
-      standard: project.certificationBody,
-      amount: quantity,
-      metadata: {
-        location: project.location,
-        description: project.description,
-        methodology: project.methodology,
-      },
-    });
+    if (!project.tokenMint) {
+      throw new Error("Project does not have a token mint. Project must be created on-chain first.");
+    }
+
+    // Get user's keypair for signing
+    const { WalletService } = await import("./WalletService");
+    const userKeypair = await WalletService.getKeypairByUserId(userId);
+
+    // Execute on-chain purchase transaction
+    let onChainResult: {
+      tx: string;
+      purchasePDA: PublicKey;
+      nftMint: PublicKey;
+    };
+
+    try {
+      onChainResult = await this.anchorService.purchaseCarbonCredits({
+        buyerKeypair: userKeypair,
+        projectPDA: new PublicKey(project.projectPDA),
+        projectOwner: new PublicKey(project.projectOwner || project.projectPDA), // Fallback to projectPDA if owner not set
+        projectTokenMint: new PublicKey(project.tokenMint),
+        amount: quantity,
+      });
+      console.log("Purchase created on-chain successfully:", onChainResult.tx);
+    } catch (error: any) {
+      console.error("Failed to create purchase on-chain:", error);
+      throw new Error(`Failed to create purchase on-chain: ${error.message}`);
+    }
 
     // Update project availability
     project.available -= quantity;
     await this.projectRepository.save(project);
 
-    // Create purchase record
+    // Create purchase record with on-chain data
     const purchase = this.purchaseRepository.create({
       userId,
       projectId,
       quantity,
       pricePerCredit: project.pricePerTon, // Using pricePerTon
       totalCost,
-      txHash,
+      txHash: onChainResult.tx,
+      purchasePDA: onChainResult.purchasePDA.toBase58(),
+      nftMint: onChainResult.nftMint.toBase58(),
       status: "completed",
     });
 
@@ -212,13 +245,13 @@ export class UserService {
       "CREDITS_PURCHASE",
       "purchases",
       savedPurchase.id,
-      { projectId, quantity, totalCost, txHash }
+      { projectId, quantity, totalCost, txHash: onChainResult.tx }
     );
 
     return {
       id: savedPurchase.id,
       totalCost,
-      txHash,
+      txHash: onChainResult.tx,
       remainingBalance: 1000 - totalCost, // Placeholder
     };
   }
@@ -240,12 +273,53 @@ export class UserService {
       where: { walletId: userWallet.id }
     });
 
+    // Get USDC token balance
+    let walletBalance = 0;
+    try {
+      const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
+      const { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } = await import('@solana/spl-token');
+      
+      const usdcMintAddress = process.env.SOLANA_USDC_MINT;
+      if (usdcMintAddress) {
+        // Initialize connection
+        const rpcUrl = process.env.SOLANA_RPC_URL || 
+          (process.env.SOLANA_NETWORK === 'devnet' 
+            ? clusterApiUrl('devnet').toString()
+            : clusterApiUrl('mainnet-beta').toString());
+        const connection = new Connection(rpcUrl, 'confirmed');
+        
+        const usdcMint = new PublicKey(usdcMintAddress);
+        const userPublicKey = new PublicKey(userWallet.publicKey);
+        
+        // Get associated token account
+        const tokenAccount = await getAssociatedTokenAddress(
+          usdcMint,
+          userPublicKey,
+          false,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+        
+        try {
+          const accountInfo = await connection.getTokenAccountBalance(tokenAccount);
+          walletBalance = Number(accountInfo.value.amount) / Math.pow(10, accountInfo.value.decimals);
+        } catch (error) {
+          // Token account doesn't exist yet, balance is 0
+          walletBalance = 0;
+        }
+      }
+    } catch (error: any) {
+      console.warn(`Failed to fetch USDC balance for user ${userId}: ${error.message}`);
+      walletBalance = 0;
+    }
+
     // Return user profile without sensitive data
     const { passwordHash, ...userWithoutPassword } = user;
     
     return {
       ...userWithoutPassword,
-      organization
+      organization,
+      walletBalance
     };
   }
 

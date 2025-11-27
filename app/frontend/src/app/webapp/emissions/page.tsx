@@ -4,40 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProgressRing } from "@/components/webapp/metrics/progress-ring";
 import { ArrowUpRight, Plus, Download, BarChart2 } from "lucide-react";
-import type { Emission, Project } from "../../../../types";
+import type { Project } from "../../../../types";
+import type { Emission } from "@/app/api/emission-service";
 import WebappShell from "@/components/webapp/layout/webapp-shell";
 import { useState, useEffect } from "react";
 import { PurchaseCreditsModal } from "@/components/webapp/modals/purchase-credits-modal";
+import { AddEmissionModal } from "@/components/webapp/modals/add-emission-modal";
+import { OffsetEmissionModal } from "@/components/webapp/modals/offset-emission-modal";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { getProjects } from "@/app/api/project-service";
-
-// Mock data
-const emissions: Emission[] = [
-  {
-    id: "1",
-    source: "Office Energy Consumption",
-    amount: 250,
-    date: new Date("2024-03-01"),
-    offset: 200,
-    projectName: "São Carlos Solar Energy",
-  },
-  {
-    id: "2",
-    source: "Business Travel",
-    amount: 175,
-    date: new Date("2024-02-15"),
-    offset: 100,
-    projectName: "Amazon Rainforest",
-  },
-  {
-    id: "3",
-    source: "Manufacturing Process",
-    amount: 342,
-    date: new Date("2024-01-20"),
-    offset: 200,
-    projectName: "Atlantic Rainforest",
-  },
-];
+import {
+  getEmissions,
+  getEmissionStats,
+  type EmissionStats,
+} from "@/app/api/emission-service";
 
 // Mock projects data - REMOVED, now fetching from API
 // const projects: Project[] = [
@@ -81,32 +61,85 @@ const emissions: Emission[] = [
 
 export default function EmissionsPage() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isAddEmissionModalOpen, setIsAddEmissionModalOpen] = useState(false);
+  const [isOffsetModalOpen, setIsOffsetModalOpen] = useState(false);
+  const [selectedEmission, setSelectedEmission] = useState<Emission | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [emissions, setEmissions] = useState<Emission[]>([]);
+  const [stats, setStats] = useState<EmissionStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [preselectedPurchaseProject, setPreselectedPurchaseProject] =
     useState<Project | null>(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const result = await getProjects();
-      if (result.success) {
-        setProjects(result.data || []);
-      } else {
-        console.error("Failed to fetch projects:", result.message);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [projectsResult, emissionsResult, statsResult] = await Promise.all([
+        getProjects(),
+        getEmissions(),
+        getEmissionStats(),
+      ]);
+
+      if (projectsResult.success) {
+        setProjects(projectsResult.data || []);
       }
-    };
-    fetchProjects();
+
+      if (emissionsResult.success) {
+        setEmissions(emissionsResult.data || []);
+      }
+
+      if (statsResult.success) {
+        setStats(statsResult.data || null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  // Calculate total emissions and offsets
-  const totalEmissions = emissions.reduce(
-    (acc, emission) => acc + emission.amount,
+  // Calculate stats from emissions if stats API fails
+  const totalEmissions = stats?.totalEmissions || emissions.reduce(
+    (acc, emission) => acc + Number(emission.amount),
     0
   );
-  const totalOffset = emissions.reduce(
-    (acc, emission) => acc + emission.offset,
+  const totalOffset = stats?.totalOffset || emissions.reduce(
+    (acc, emission) => acc + Number(emission.offset),
     0
   );
-  const offsetPercentage = Math.round((totalOffset / totalEmissions) * 100);
+  const offsetPercentage = stats?.offsetPercentage || (totalEmissions > 0
+    ? Math.round((totalOffset / totalEmissions) * 100)
+    : 0);
+
+  // Find largest source
+  const largestSource = emissions.length > 0
+    ? emissions.reduce((max, e) =>
+        Number(e.amount) > Number(max.amount) ? e : max
+      )
+    : null;
+  const largestSourcePercentage = largestSource && totalEmissions > 0
+    ? Math.round((Number(largestSource.amount) / totalEmissions) * 100)
+    : 0;
+
+  // Calculate monthly average (last 3 months)
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const recentEmissions = emissions.filter(
+    (e) => new Date(e.date) >= threeMonthsAgo
+  );
+  const monthlyAverage =
+    recentEmissions.length > 0
+      ? Math.round(
+          recentEmissions.reduce(
+            (sum, e) => sum + Number(e.amount),
+            0
+          ) / 3
+        )
+      : 0;
 
   return (
     <ProtectedRoute>
@@ -126,13 +159,31 @@ export default function EmissionsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Export Data
                 </Button>
-                <Button variant="outline" className="border-white/10">
+                <Button
+                  variant="outline"
+                  className="border-white/10"
+                  onClick={() => setIsAddEmissionModalOpen(true)}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Emission
                 </Button>
                 <Button
                   className="bg-green-600 hover:bg-green-500"
-                  onClick={() => setIsPurchaseModalOpen(true)}
+                  onClick={() => {
+                    // If there's an emission with remaining amount, select it
+                    const emissionWithRemaining = emissions.find((e) => {
+                      const amount = Number(e.amount);
+                      const offset = Number(e.offset);
+                      return amount > offset;
+                    });
+                    if (emissionWithRemaining) {
+                      setSelectedEmission(emissionWithRemaining);
+                      setIsOffsetModalOpen(true);
+                    } else {
+                      // Otherwise, open purchase modal to buy credits first
+                      setIsPurchaseModalOpen(true);
+                    }
+                  }}
                 >
                   Offset Emissions
                   <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -169,15 +220,17 @@ export default function EmissionsPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400">Largest Source</p>
-                        <p className="text-xl font-bold">Manufacturing</p>
+                        <p className="text-xl font-bold">
+                          {largestSource?.source || "N/A"}
+                        </p>
                         <p className="text-sm text-gray-400 mt-1">
-                          {Math.round((342 / totalEmissions) * 100)}% of total
+                          {largestSourcePercentage}% of total
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-400">Monthly Average</p>
                         <p className="text-xl font-bold">
-                          {Math.round(totalEmissions / 3)} tCO₂e
+                          {monthlyAverage} tCO₂e
                         </p>
                         <p className="text-sm text-gray-400 mt-1">
                           Last 3 months
@@ -202,7 +255,21 @@ export default function EmissionsPage() {
                     </ProgressRing>
                     <Button
                       className="w-full bg-green-600 hover:bg-green-500"
-                      onClick={() => setIsPurchaseModalOpen(true)}
+                      onClick={() => {
+                        // If there's an emission with remaining amount, select it
+                        const emissionWithRemaining = emissions.find((e) => {
+                          const amount = Number(e.amount);
+                          const offset = Number(e.offset);
+                          return amount > offset;
+                        });
+                        if (emissionWithRemaining) {
+                          setSelectedEmission(emissionWithRemaining);
+                          setIsOffsetModalOpen(true);
+                        } else {
+                          // Otherwise, open purchase modal to buy credits first
+                          setIsPurchaseModalOpen(true);
+                        }
+                      }}
                     >
                       Offset More
                       <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -250,44 +317,69 @@ export default function EmissionsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {emissions.map((emission) => (
-                        <tr
-                          key={emission.id}
-                          className="border-b border-white/10 last:border-0"
-                        >
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">
-                            {emission.source}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            {emission.amount}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            {emission.offset}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            {Math.round(
-                              (emission.offset / emission.amount) * 100
-                            )}
-                            %
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">
-                            {emission.projectName}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
-                            {emission.date.toLocaleDateString()}
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-white/10"
-                              onClick={() => setIsPurchaseModalOpen(true)}
-                            >
-                              Offset
-                            </Button>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                            Loading emissions...
                           </td>
                         </tr>
-                      ))}
+                      ) : emissions.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                            No emissions recorded yet. Click "Add Emission" to get started.
+                          </td>
+                        </tr>
+                      ) : (
+                        emissions.map((emission) => {
+                          const emissionAmount = Number(emission.amount);
+                          const offsetAmount = Number(emission.offset);
+                          const offsetPercentage =
+                            emissionAmount > 0
+                              ? Math.round((offsetAmount / emissionAmount) * 100)
+                              : 0;
+                          const emissionDate = new Date(emission.date);
+
+                          return (
+                            <tr
+                              key={emission.id}
+                              className="border-b border-white/10 last:border-0"
+                            >
+                              <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                {emission.source}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                {emissionAmount.toFixed(2)}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                {offsetAmount.toFixed(2)}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                {offsetPercentage}%
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                {emission.offsetProject?.projectName || "Not offset"}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-400">
+                                {emissionDate.toLocaleDateString()}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-white/10"
+                                  onClick={() => {
+                                    setSelectedEmission(emission);
+                                    setIsOffsetModalOpen(true);
+                                  }}
+                                  disabled={offsetAmount >= emissionAmount}
+                                >
+                                  {offsetAmount >= emissionAmount ? "Fully Offset" : "Offset"}
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -305,6 +397,33 @@ export default function EmissionsPage() {
           }}
           projects={projects}
           preselectedProject={preselectedPurchaseProject}
+          onPurchaseSuccess={() => {
+            // Refresh projects list after purchase (in case availability changed)
+            fetchData();
+          }}
+        />
+
+        {/* Add Emission Modal */}
+        <AddEmissionModal
+          isOpen={isAddEmissionModalOpen}
+          onClose={() => setIsAddEmissionModalOpen(false)}
+          onEmissionCreated={() => {
+            fetchData(); // Refresh emissions list
+          }}
+        />
+
+        {/* Offset Emission Modal */}
+        <OffsetEmissionModal
+          isOpen={isOffsetModalOpen}
+          onClose={() => {
+            setIsOffsetModalOpen(false);
+            setSelectedEmission(null);
+          }}
+          emission={selectedEmission}
+          projects={projects}
+          onOffsetSuccess={() => {
+            fetchData(); // Refresh emissions list and stats
+          }}
         />
       </WebappShell>
     </ProtectedRoute>

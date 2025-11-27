@@ -1,3 +1,4 @@
+use crate::constants::USDC_MINT;
 use crate::errors::ContractError;
 use crate::state::{CarbonCredits, Project, Purchase};
 use anchor_lang::prelude::*;
@@ -20,7 +21,7 @@ pub struct PurchaseCarbonCredits<'info> {
         seeds = [b"project", project.owner.as_ref(), project.mint.as_ref()],
         bump = project.project_bump,
     )]
-    pub project: Account<'info, Project>,
+    pub project: Box<Account<'info, Project>>,
 
     /// CHECK: project owner is the project owner
     /// who receives the payment
@@ -30,12 +31,17 @@ pub struct PurchaseCarbonCredits<'info> {
     )]
     pub project_owner: UncheckedAccount<'info>,
 
+    /// Payer for account creation (typically the platform/server wallet)
+    /// This allows account abstraction - users don't need SOL to make purchases
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     /// project's fungible token mint (separate from NFT mint)
     #[account(
         mut,
         constraint = project_mint.key() == project.token_mint @ ContractError::InvalidProjectMint
     )]
-    pub project_mint: Account<'info, Mint>,
+    pub project_mint: Box<Account<'info, Mint>>,
 
     /// CarbonCredits PDA
     #[account(
@@ -43,7 +49,7 @@ pub struct PurchaseCarbonCredits<'info> {
         seeds = [b"carbon_credits"], bump = carbon_credits.bump,
         constraint = carbon_credits.key() == project.carbon_pay_authority @ ContractError::InvalidCarbonPayAuthority
     )]
-    pub carbon_credits: Account<'info, CarbonCredits>,
+    pub carbon_credits: Box<Account<'info, CarbonCredits>>,
 
     /// project's vault ATA (already created off-chain)
     #[account(
@@ -52,14 +58,14 @@ pub struct PurchaseCarbonCredits<'info> {
         token::authority = carbon_credits,
         owner = token::ID
     )]
-    pub project_token_account: Account<'info, TokenAccount>,
+    pub project_token_account: Box<Account<'info, TokenAccount>>,
 
     /// purchase NFT mint (create off-chain)
     #[account(
         mut,
         constraint = purchase_nft_mint.mint_authority.unwrap() == buyer.key() @ ContractError::Unauthorized
     )]
-    pub purchase_nft_mint: Account<'info, Mint>,
+    pub purchase_nft_mint: Box<Account<'info, Mint>>,
 
     /// buyer's ATA for the purchase NFT (create off-chain)
     #[account(
@@ -68,7 +74,7 @@ pub struct PurchaseCarbonCredits<'info> {
         token::authority = buyer,
         owner = token::ID
     )]
-    pub buyer_nft_account: Account<'info, TokenAccount>,
+    pub buyer_nft_account: Box<Account<'info, TokenAccount>>,
 
     /// buyer's ATA for the fungible tokens (create off-chain)
     #[account(
@@ -77,12 +83,12 @@ pub struct PurchaseCarbonCredits<'info> {
         token::authority = buyer,
         owner = token::ID
     )]
-    pub buyer_token_account: Account<'info, TokenAccount>,
+    pub buyer_token_account: Box<Account<'info, TokenAccount>>,
 
     /// on-chain purchase record
     #[account(
         init,
-        payer = buyer,
+        payer = payer, // Use payer instead of buyer for account abstraction
         space = Purchase::DISCRIMINATOR_SIZE + Purchase::INIT_SPACE,
         seeds = [b"purchase", buyer.key().as_ref(), project.key().as_ref(), purchase_nft_mint.key().as_ref()],
         bump
@@ -90,11 +96,13 @@ pub struct PurchaseCarbonCredits<'info> {
     pub purchase: Box<Account<'info, Purchase>>,
 
     /// USDC mint for payments
+    /// Must match the USDC_MINT constant and the mint stored in carbon_credits state
     #[account(
+        constraint = usdc_mint.key() == USDC_MINT @ ContractError::UsdcMintMismatch,
         constraint = usdc_mint.key() == carbon_credits.usdc_mint @ ContractError::InvalidUsdcMint,
         constraint = usdc_mint.decimals == 6 @ ContractError::InvalidUsdcDecimals,
     )]
-    pub usdc_mint: Account<'info, Mint>,
+    pub usdc_mint: Box<Account<'info, Mint>>,
 
     /// Buyer's USDC token account (must exist and have sufficient balance)
     #[account(
@@ -102,7 +110,7 @@ pub struct PurchaseCarbonCredits<'info> {
         token::mint = usdc_mint,
         token::authority = buyer,
     )]
-    pub buyer_usdc_account: Account<'info, TokenAccount>,
+    pub buyer_usdc_account: Box<Account<'info, TokenAccount>>,
 
     /// Project owner's USDC token account (for receiving payment)
     #[account(
@@ -110,7 +118,7 @@ pub struct PurchaseCarbonCredits<'info> {
         token::mint = usdc_mint,
         token::authority = project_owner,
     )]
-    pub project_owner_usdc_account: Account<'info, TokenAccount>,
+    pub project_owner_usdc_account: Box<Account<'info, TokenAccount>>,
 
     /// Platform USDC vault (for receiving fees)
     #[account(
@@ -119,7 +127,7 @@ pub struct PurchaseCarbonCredits<'info> {
         token::mint = usdc_mint,
         token::authority = carbon_credits,
     )]
-    pub platform_usdc_vault: Account<'info, TokenAccount>,
+    pub platform_usdc_vault: Box<Account<'info, TokenAccount>>,
 
     /// purchase NFT metadata account (CPI will create)
     /// CHECK: This account will be initialized by the Token Metadata program via CPI. Safe because we're just passing it to the authorized CPI call.
@@ -197,7 +205,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
             1,
         )?;
 
-        // 5) create NFT metadata
+        // 5) create NFT metadata - use payer for account abstraction
         create_metadata_accounts_v3(
             CpiContext::new(
                 self.token_metadata_program.to_account_info(),
@@ -205,7 +213,7 @@ impl<'info> PurchaseCarbonCredits<'info> {
                     metadata: self.purchase_metadata.to_account_info(),
                     mint: self.purchase_nft_mint.to_account_info(),
                     mint_authority: self.buyer.to_account_info(),
-                    payer: self.buyer.to_account_info(),
+                    payer: self.payer.to_account_info(), // Use payer instead of buyer
                     update_authority: self.buyer.to_account_info(),
                     system_program: self.system_program.to_account_info(),
                     rent: self.rent.to_account_info(),
